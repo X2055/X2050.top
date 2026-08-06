@@ -6,35 +6,36 @@
   <title>>_<</title>
   <style>
     /* ==========================================
-       全局变量与主题设置
+       全局变量与主题设置（去磨砂、纯实色）
        ========================================== */
     :root {
-      --bg-color: #f2f2f7;
-      --card-bg: rgba(255, 255, 255, 0.8);
+      --bg-gradient: linear-gradient(135deg, #f5f5f7 0%, #e8e8ed 100%);
+      --card-bg: #ffffff;
       --text-main: #000000;
       --text-sub: #8e8e93;
       --accent-color: #007aff;
-      --modal-bg: rgba(255, 255, 255, 0.88);
+      --modal-bg: #ffffff;
       --modal-overlay: rgba(0, 0, 0, 0.35);
       --border-color: rgba(60, 60, 67, 0.18);
       --shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
       --icon-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
-      --blur-val: blur(25px) saturate(180%);
-      --sidebar-bg: rgba(255, 255, 255, 0.75);
+      --header-bg: #ffffff;
+      --sidebar-bg: #ffffff;
     }
 
     [data-theme="dark"] {
-      --bg-color: #000000;
-      --card-bg: rgba(28, 28, 30, 0.8);
+      --bg-gradient: linear-gradient(135deg, #1c1c1e 0%, #000000 100%);
+      --card-bg: #2c2c2e;
       --text-main: #ffffff;
       --text-sub: #8e8e93;
       --accent-color: #0a84ff;
-      --modal-bg: rgba(30, 30, 32, 0.88);
+      --modal-bg: #1e1e20;
       --modal-overlay: rgba(0, 0, 0, 0.65);
       --border-color: rgba(84, 84, 88, 0.35);
       --shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
       --icon-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-      --sidebar-bg: rgba(28, 28, 30, 0.75);
+      --header-bg: #1c1c1e;
+      --sidebar-bg: #1c1c1e;
     }
 
     * {
@@ -46,32 +47,30 @@
     }
 
     body {
-      background-color: var(--bg-color);
+      background: var(--bg-gradient);
       color: var(--text-main);
-      transition: background-color 0.3s ease, color 0.3s ease;
+      transition: color 0.3s ease, background 0.3s ease;
       min-height: 100vh;
       padding-bottom: 50px;
     }
 
     /* ==========================================
-       顶部导航栏 & 日夜切换开关
+       顶部导航栏（无磨砂，纯实色）
        ========================================== */
     .header-bar {
       position: sticky;
       top: 0;
-      z-index: 100;
+      z-index: 1600;
       display: flex;
       justify-content: space-between;
       align-items: center;
       padding: 12px 24px;
-      backdrop-filter: var(--blur-val);
-      -webkit-backdrop-filter: var(--blur-val);
-      background-color: var(--card-bg);
+      background-color: var(--header-bg);
       border-bottom: 0.5px solid var(--border-color);
       height: 60px;
+      transition: background-color 0.3s ease, border-color 0.3s ease;
     }
 
-    /* 三道杠按钮风格 */
     .sidebar-toggle-btn {
       background: transparent;
       border: none;
@@ -82,7 +81,7 @@
       width: 24px;
       height: 18px;
       padding: 0;
-      z-index: 101;
+      z-index: 1601;
     }
     .sidebar-toggle-btn span {
       display: block;
@@ -118,7 +117,7 @@
     [data-theme="dark"] .star { opacity: 1; transform: translateY(0); }
 
     /* ==========================================
-       iOS 侧边栏及遮罩样式
+       侧边栏（无磨砂纯实色，调节时包括上面三个框全部完全透明）
        ========================================== */
     .sidebar-overlay {
       position: fixed;
@@ -127,12 +126,10 @@
       width: 100vw;
       height: 100vh;
       background: var(--modal-overlay);
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
       z-index: 1500;
       opacity: 0;
       visibility: hidden;
-      transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.4s;
+      transition: opacity 0.45s cubic-bezier(0.32, 0.72, 0, 1), visibility 0.45s;
     }
     .sidebar-overlay.active {
       opacity: 1;
@@ -146,12 +143,10 @@
       width: 280px;
       height: 100%;
       background: var(--sidebar-bg);
-      backdrop-filter: var(--blur-val);
-      -webkit-backdrop-filter: var(--blur-val);
       border-right: 0.5px solid var(--border-color);
       z-index: 1501;
       transform: translateX(-100%);
-      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: transform 0.45s cubic-bezier(0.32, 0.72, 0, 1), background-color 0.3s ease, border-color 0.3s ease;
       box-shadow: 5px 0 25px rgba(0, 0, 0, 0.15);
       display: flex;
       flex-direction: column;
@@ -161,39 +156,39 @@
       transform: translateX(0);
     }
 
-    /* 逐层显示效果 */
+    /* 调节时：侧边栏、标题以及上方三个框全部完全透明 */
+    .ios-sidebar.previewing {
+      background: transparent !important;
+      border-color: transparent !important;
+      box-shadow: none !important;
+    }
+    .ios-sidebar.previewing .sidebar-header,
+    .ios-sidebar.previewing .sidebar-content-item {
+      opacity: 0 !important;
+      visibility: hidden !important;
+      transition: opacity 0.2s ease, visibility 0.2s ease;
+    }
+
     .sidebar-header,
-    .sidebar-content-item {
+    .sidebar-content-item,
+    .sidebar-slider-container {
       opacity: 0;
       transform: translateX(-20px);
-      transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: opacity 0.4s cubic-bezier(0.32, 0.72, 0, 1), transform 0.4s cubic-bezier(0.32, 0.72, 0, 1), background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
     }
 
-    .sidebar-header { transition-delay: 0.0s; }
-    .sidebar-content-item:nth-child(1) { transition-delay: 0.03s; }
-    .sidebar-content-item:nth-child(2) { transition-delay: 0.06s; }
-    .sidebar-content-item:nth-child(3) { transition-delay: 0.09s; }
+    .ios-sidebar.active .sidebar-header,
+    .ios-sidebar.active .sidebar-content-item,
+    .ios-sidebar.active .sidebar-slider-container {
+      opacity: 1;
+      transform: translateX(0);
+    }
 
-    .ios-sidebar.active .sidebar-header {
-      opacity: 1;
-      transform: translateX(0);
-      transition-delay: 0.15s;
-    }
-    .ios-sidebar.active .sidebar-content-item:nth-child(1) {
-      opacity: 1;
-      transform: translateX(0);
-      transition-delay: 0.22s;
-    }
-    .ios-sidebar.active .sidebar-content-item:nth-child(2) {
-      opacity: 1;
-      transform: translateX(0);
-      transition-delay: 0.28s;
-    }
-    .ios-sidebar.active .sidebar-content-item:nth-child(3) {
-      opacity: 1;
-      transform: translateX(0);
-      transition-delay: 0.34s;
-    }
+    .ios-sidebar.active .sidebar-header { transition-delay: 0.12s; }
+    .ios-sidebar.active .sidebar-content-item:nth-child(1) { transition-delay: 0.18s; }
+    .ios-sidebar.active .sidebar-content-item:nth-child(2) { transition-delay: 0.24s; }
+    .ios-sidebar.active .sidebar-content-item:nth-child(3) { transition-delay: 0.30s; }
+    .ios-sidebar.active .sidebar-slider-container { transition-delay: 0.36s; }
 
     .sidebar-header {
       font-size: 28px;
@@ -209,7 +204,7 @@
       flex: 1;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 16px;
       overflow-y: auto;
     }
 
@@ -225,6 +220,60 @@
       padding: 0 16px;
     }
 
+    /* 颜色滑钮向下放：使用 margin-top: auto 推到靠下位置 */
+    .sidebar-slider-container {
+      width: 100%;
+      margin-top: auto;
+      padding: 20px 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    
+    /* 正常鲜艳全色域渐变（去除黑色杂边） */
+    .gradient-slider {
+      width: 100%;
+      -webkit-appearance: none;
+      appearance: none;
+      height: 38px;
+      border-radius: 9999px;
+      background: linear-gradient(90deg, 
+        #ff3b30 0%, 
+        #ff9500 16%, 
+        #ffcc00 33%, 
+        #34c759 50%, 
+        #00c7be 66%, 
+        #007aff 83%, 
+        #af52de 100%
+      );
+      outline: none;
+      cursor: pointer;
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.12), 0 4px 15px rgba(0, 0, 0, 0.05);
+      padding: 0 5px;
+    }
+
+    /* iOS 玻璃质感按钮 */
+    .gradient-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.72);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1.5px solid rgba(255, 255, 255, 0.95);
+      box-shadow: 0 8px 22px rgba(0, 0, 0, 0.22), inset 0 1px 3px rgba(255, 255, 255, 1);
+      cursor: pointer;
+      transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.2s ease, background 0.2s ease;
+    }
+    .gradient-slider::-webkit-slider-thumb:active {
+      transform: scale(1.2);
+      background: rgba(255, 255, 255, 0.9);
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28), inset 0 1px 4px rgba(255, 255, 255, 1);
+    }
+
     /* ==========================================
        灵动岛 (Dynamic Island) 音乐播放器
        ========================================== */
@@ -236,11 +285,16 @@
       background-color: #000000;
       color: #ffffff;
       border-radius: 30px;
-      z-index: 1000;
+      z-index: 2000;
       cursor: pointer;
       overflow: hidden;
       box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-      transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      will-change: width, height, border-radius, padding;
+      transition: width 0.45s cubic-bezier(0.32, 0.72, 0, 1),
+                  height 0.45s cubic-bezier(0.32, 0.72, 0, 1),
+                  border-radius 0.45s cubic-bezier(0.32, 0.72, 0, 1),
+                  padding 0.45s cubic-bezier(0.32, 0.72, 0, 1),
+                  box-shadow 0.45s ease;
       width: 140px;
       height: 36px;
       display: flex;
@@ -265,7 +319,7 @@
       justify-content: space-between;
       align-items: center;
       width: 100%;
-      transition: opacity 0.3s ease;
+      transition: opacity 0.25s ease;
     }
     .dynamic-island.expanded .island-collapsed-content { display: none; }
 
@@ -303,7 +357,7 @@
       width: 100%;
       height: 100%;
       opacity: 0;
-      transition: opacity 0.3s ease 0.2s;
+      transition: opacity 0.3s ease 0.15s;
     }
     .dynamic-island.expanded .island-expanded-content {
       display: flex;
@@ -373,7 +427,7 @@
        主内容区域
        ========================================== */
     .container { max-width: 800px; margin: 0 auto; padding: 0 20px; }
-    .main-title { font-size: 34px; font-weight: 700; letter-spacing: -0.5px; margin: 24px 0 16px 0; }
+    .main-title { font-size: 34px; font-weight: 700; letter-spacing: -0.5px; margin: 24px 0 16px 0; transition: color 0.3s ease; }
     
     .carousel-container { 
       position: relative; 
@@ -387,6 +441,7 @@
       user-select: none;
       -webkit-user-select: none;
       touch-action: pan-y;
+      transition: box-shadow 0.3s ease;
     }
     .carousel-container:active { cursor: grabbing; }
 
@@ -410,19 +465,19 @@
     .nav-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); gap: 20px 16px; justify-items: center; }
     .nav-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; width: 72px; transition: transform 0.2s ease; }
     .nav-item:active { transform: scale(0.88); }
-    .icon-box { width: 60px; height: 60px; border-radius: 14px; background: var(--card-bg); display: flex; justify-content: center; align-items: center; font-size: 28px; box-shadow: var(--icon-shadow); margin-bottom: 8px; border: 0.5px solid var(--border-color); overflow: hidden; position: relative; }
+    .icon-box { width: 60px; height: 60px; border-radius: 14px; background: var(--card-bg); display: flex; justify-content: center; align-items: center; font-size: 28px; box-shadow: var(--icon-shadow); margin-bottom: 8px; border: 0.5px solid var(--border-color); overflow: hidden; position: relative; transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease; }
     .icon-box img { width: 100%; height: 100%; object-fit: cover; }
-    .icon-title { font-size: 12px; color: var(--text-main); text-align: center; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 400; }
+    .icon-title { font-size: 12px; color: var(--text-main); text-align: center; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 400; transition: color 0.3s ease; }
 
-    .ios-modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--modal-overlay); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); display: flex; justify-content: center; align-items: center; z-index: 2000; opacity: 0; pointer-events: none; transition: opacity 0.25s ease; }
+    .ios-modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--modal-overlay); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); display: flex; justify-content: center; align-items: center; z-index: 2500; opacity: 0; pointer-events: none; transition: opacity 0.25s ease, background-color 0.3s ease; }
     .ios-modal-overlay.active { opacity: 1; pointer-events: auto; }
-    .ios-modal { width: 270px; background: var(--modal-bg); backdrop-filter: var(--blur-val); -webkit-backdrop-filter: var(--blur-val); border-radius: 14px; text-align: center; overflow: hidden; transform: scale(1.15); transition: transform 0.25s cubic-bezier(0.1, 0.9, 0.2, 1); box-shadow: var(--shadow); border: 0.5px solid var(--border-color); }
+    .ios-modal { width: 270px; background: var(--modal-bg); border-radius: 14px; text-align: center; overflow: hidden; transform: scale(1.15); transition: transform 0.25s cubic-bezier(0.1, 0.9, 0.2, 1), background-color 0.3s ease, border-color 0.3s ease; box-shadow: var(--shadow); border: 0.5px solid var(--border-color); }
     .ios-modal-overlay.active .ios-modal { transform: scale(1); }
     .ios-modal-content { padding: 20px 16px 16px 16px; }
-    .ios-modal-title { font-size: 17px; font-weight: 600; color: var(--text-main); margin-bottom: 6px; }
-    .ios-modal-body { font-size: 13px; color: var(--text-main); line-height: 1.4; }
-    .ios-modal-actions { border-top: 0.5px solid var(--border-color); display: flex; }
-    .ios-modal-btn { flex: 1; background: transparent; border: none; padding: 12px 0; font-size: 17px; color: var(--accent-color); font-weight: 600; cursor: pointer; }
+    .ios-modal-title { font-size: 17px; font-weight: 600; color: var(--text-main); margin-bottom: 6px; transition: color 0.3s ease; }
+    .ios-modal-body { font-size: 13px; color: var(--text-main); line-height: 1.4; transition: color 0.3s ease; }
+    .ios-modal-actions { border-top: 0.5px solid var(--border-color); display: flex; transition: border-color 0.3s ease; }
+    .ios-modal-btn { flex: 1; background: transparent; border: none; padding: 12px 0; font-size: 17px; color: var(--accent-color); font-weight: 600; cursor: pointer; transition: color 0.3s ease, background-color 0.2s ease; }
     .ios-modal-btn:active { background-color: rgba(120, 120, 128, 0.1); }
   </style>
 </head>
@@ -430,7 +485,7 @@
 
   <!-- 顶部栏 -->
   <header class="header-bar">
-    <button class="sidebar-toggle-btn" onclick="toggleSidebar()" aria-label="打开侧边栏">
+    <button class="sidebar-toggle-btn" onclick="toggleSidebar()" aria-label="打开/收回侧边栏">
       <span></span>
       <span></span>
       <span></span>
@@ -461,6 +516,10 @@
       <div class="sidebar-content-item"></div>
       <div class="sidebar-content-item"></div>
       <div class="sidebar-content-item"></div>
+      <!-- 正常鲜艳色彩色谱滑钮（下移布局） -->
+      <div class="sidebar-slider-container">
+        <input type="range" id="gradientSlider" min="0" max="100" value="0" class="gradient-slider">
+      </div>
     </div>
   </aside>
 
@@ -469,7 +528,7 @@
     <audio id="audioPlayer" autoplay preload="auto"></audio>
 
     <div class="island-collapsed-content">
-      <img src="" id="miniCover" class="island-mini-cover" alt="美国国旗">
+      <img src="" id="miniCover" class="island-mini-cover" alt="封面">
       <div class="island-waveform" id="miniWaveform">
         <span></span><span></span><span></span>
       </div>
@@ -477,9 +536,8 @@
 
     <div class="island-expanded-content">
       <div class="island-top-row">
-        <img src="" id="largeCover" class="island-large-cover" alt="美国国旗">
+        <img src="" id="largeCover" class="island-large-cover" alt="封面">
         <div class="island-info">
-          <!-- 已将 a 标签改为 span 标签，去掉了超链接跳转 -->
           <div class="island-title" id="musicTitle">加载中...</div>
           <div class="island-artist" id="musicArtist">...</div>
         </div>
@@ -504,7 +562,7 @@
 
     <div class="carousel-container" id="carouselContainer">
       <div class="carousel-track" id="carouselTrack">
-        <a href="https://tool.gljlw.com/qq/?qq=1431365085" target="_blank" class="slide">
+        <a href="http://x2050.top/" target="_blank" class="slide">
           <img src="https://a1.boltp.com/2026/08/06/6a7410fae4d72.jpg" alt="Slide 1">
           <div class="slide-caption">为中国人民谋幸福，为中华民族谋复兴</div>
         </a>
@@ -542,7 +600,6 @@
   </div>
 
   <script>
-    /* 侧边栏开关逻辑 */
     function toggleSidebar() {
       const sidebar = document.getElementById("iosSidebar");
       const overlay = document.getElementById("sidebarOverlay");
@@ -550,10 +607,39 @@
       overlay.classList.toggle("active");
     }
 
-    /* 美国国旗图片链接 */
+    const gradientSlider = document.getElementById("gradientSlider");
+    const sidebarElement = document.getElementById("iosSidebar");
+
+    const startPreview = () => {
+      sidebarElement.classList.add("previewing");
+    };
+
+    const endPreview = () => {
+      sidebarElement.classList.remove("previewing");
+    };
+
+    gradientSlider.addEventListener("mousedown", startPreview);
+    gradientSlider.addEventListener("touchstart", startPreview, { passive: true });
+
+    gradientSlider.addEventListener("mouseup", endPreview);
+    gradientSlider.addEventListener("touchend", endPreview);
+    gradientSlider.addEventListener("touchcancel", endPreview);
+
+    gradientSlider.addEventListener("input", (e) => {
+      if (document.documentElement.hasAttribute("data-theme")) {
+        return;
+      }
+      
+      const val = e.target.value;
+      const hue = (val / 100) * 360;
+      const color1 = `hsl(${hue}, 90%, 65%)`;
+      const color2 = `hsl(${(hue + 50) % 360}, 90%, 55%)`;
+
+      document.body.style.background = `linear-gradient(135deg, ${color1} 0%, ${color2} 100%)`;
+    });
+
     const usFlagUrl = "https://a1.boltp.com/2026/08/06/6a740f673073b.jpg";
 
-    /* 音乐播放配置 */
     const musicPlaylist = [
       {
         title: "あの夏へ",
@@ -581,7 +667,6 @@
         playPromise.then(() => {
           updatePlayState(true);
         }).catch(error => {
-          console.log("浏览器拦截了无交互自动播放，将在用户点击页面时自动播放");
           const triggerOnUserAction = () => {
             audioPlayer.play().then(() => {
               updatePlayState(true);
@@ -646,9 +731,8 @@
     const dynamicIsland = document.getElementById("dynamicIsland");
     
     function toggleIsland(event) {
-      if (!dynamicIsland.classList.contains("expanded")) {
-        dynamicIsland.classList.add("expanded");
-      }
+      if (event) event.stopPropagation();
+      dynamicIsland.classList.toggle("expanded");
     }
 
     document.addEventListener("click", function(event) {
@@ -658,12 +742,11 @@
       }
     });
 
-    /* 20个导航图标控制列表 */
     const navItemsConfig = [
       { id: 1,  title: "意识形态",    icon: "🌐", isImg: false, url: "https://2050.cn.lu/ntest.html", visible: true },
       { id: 2,  title: "苏联",      icon: "https://a1.boltp.com/2026/08/06/6a741d9d311dd.png", isImg: true, url: "https://2050.cn.lu/", visible: true },
       { id: 3,  title: "中国",  icon: "https://a1.boltp.com/2026/08/06/6a7418b0a51d4.png", isImg: true, url:"https://www.gov.cn/index.html", visible: true }, 
-      { id: 4,  title: "太阳",      icon: "☀️", isImg: false, url: "http://www.kcna.kp/cn", visible: true },
+      { id: 4,  title: "朝鲜",      icon: "🇰🇵", isImg: false, url: "http://www.kcna.kp/cn", visible: true },
       { id: 5,  title: "设置",      icon: "⚙️", isImg: false, url: "#", visible: false },
       { id: 6,  title: "邮件",      icon: "✉️", isImg: false, url: "#", visible: false },
       { id: 7,  title: "地图",      icon: "🗺️", isImg: false, url: "#", visible: false },
@@ -702,7 +785,6 @@
       });
     }
 
-    // 页面完全加载后初始化
     window.addEventListener("DOMContentLoaded", () => {
       loadSong(0);
       startAutoPlay();
@@ -715,13 +797,15 @@
 
     const themeToggle = document.getElementById("themeToggle");
     themeToggle.addEventListener("change", (e) => {
-      if (e.target.checked) document.documentElement.setAttribute("data-theme", "dark");
-      else document.documentElement.removeAttribute("data-theme");
+      if (e.target.checked) {
+        document.documentElement.setAttribute("data-theme", "dark");
+        document.body.style.background = ""; 
+      } else {
+        document.documentElement.removeAttribute("data-theme");
+        gradientSlider.dispatchEvent(new Event("input"));
+      }
     });
 
-    /* ==========================================
-       轮播图控制逻辑（支持自动轮播 + 触摸/鼠标滑动）
-       ========================================== */
     let currentSlide = 0;
     const totalSlides = 3;
     const track = document.getElementById("carouselTrack");
