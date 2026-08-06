@@ -55,7 +55,7 @@
     }
 
     /* ==========================================
-       顶部导航栏（无磨砂，纯实色）
+       顶部导航栏（支持同频渐变与平滑过渡）
        ========================================== */
     .header-bar {
       position: sticky;
@@ -117,7 +117,7 @@
     [data-theme="dark"] .star { opacity: 1; transform: translateY(0); }
 
     /* ==========================================
-       侧边栏（无磨砂纯实色，调节时包括上面三个框全部完全透明）
+       侧边栏
        ========================================== */
     .sidebar-overlay {
       position: fixed;
@@ -156,7 +156,6 @@
       transform: translateX(0);
     }
 
-    /* 调节时：侧边栏、标题以及上方三个框全部完全透明 */
     .ios-sidebar.previewing {
       background: transparent !important;
       border-color: transparent !important;
@@ -220,7 +219,6 @@
       padding: 0 16px;
     }
 
-    /* 颜色滑钮向下放：使用 margin-top: auto 推到靠下位置 */
     .sidebar-slider-container {
       width: 100%;
       margin-top: auto;
@@ -230,7 +228,6 @@
       justify-content: center;
     }
     
-    /* 正常鲜艳全色域渐变（去除黑色杂边） */
     .gradient-slider {
       width: 100%;
       -webkit-appearance: none;
@@ -238,12 +235,13 @@
       height: 38px;
       border-radius: 9999px;
       background: linear-gradient(90deg, 
-        #ff3b30 0%, 
-        #ff9500 16%, 
-        #ffcc00 33%, 
-        #34c759 50%, 
-        #00c7be 66%, 
-        #007aff 83%, 
+        #ffffff 0%, 
+        #ff3b30 16.6%, 
+        #ff9500 28%, 
+        #ffcc00 42%, 
+        #34c759 56%, 
+        #00c7be 70%, 
+        #007aff 85%, 
         #af52de 100%
       );
       outline: none;
@@ -253,7 +251,6 @@
       padding: 0 5px;
     }
 
-    /* iOS 玻璃质感按钮 */
     .gradient-slider::-webkit-slider-thumb {
       -webkit-appearance: none;
       appearance: none;
@@ -275,7 +272,7 @@
     }
 
     /* ==========================================
-       灵动岛 (Dynamic Island) 音乐播放器
+       灵动岛音乐播放器
        ========================================== */
     .dynamic-island {
       position: fixed;
@@ -484,7 +481,7 @@
 <body>
 
   <!-- 顶部栏 -->
-  <header class="header-bar">
+  <header class="header-bar" id="headerBar">
     <button class="sidebar-toggle-btn" onclick="toggleSidebar()" aria-label="打开/收回侧边栏">
       <span></span>
       <span></span>
@@ -516,7 +513,7 @@
       <div class="sidebar-content-item"></div>
       <div class="sidebar-content-item"></div>
       <div class="sidebar-content-item"></div>
-      <!-- 正常鲜艳色彩色谱滑钮（下移布局） -->
+      <!-- 带有白色起点的色谱滑钮 -->
       <div class="sidebar-slider-container">
         <input type="range" id="gradientSlider" min="0" max="100" value="0" class="gradient-slider">
       </div>
@@ -609,6 +606,7 @@
 
     const gradientSlider = document.getElementById("gradientSlider");
     const sidebarElement = document.getElementById("iosSidebar");
+    const headerBar = document.getElementById("headerBar");
 
     const startPreview = () => {
       sidebarElement.classList.add("previewing");
@@ -631,11 +629,20 @@
       }
       
       const val = e.target.value;
-      const hue = (val / 100) * 360;
+      if (val == 0) {
+        document.body.style.background = "";
+        headerBar.style.backgroundColor = "";
+        return;
+      }
+
+      const hue = ((val - 1) / 99) * 360;
       const color1 = `hsl(${hue}, 90%, 65%)`;
       const color2 = `hsl(${(hue + 50) % 360}, 90%, 55%)`;
 
       document.body.style.background = `linear-gradient(135deg, ${color1} 0%, ${color2} 100%)`;
+      
+      // 同步顶部栏颜色，确保与主体背景同频变色
+      headerBar.style.backgroundColor = `hsla(${hue}, 90%, 90%, 0.85)`;
     });
 
     const usFlagUrl = "https://a1.boltp.com/2026/08/06/6a740f673073b.jpg";
@@ -795,14 +802,32 @@
 
     function closeIosModal() { document.getElementById("iosModalOverlay").classList.remove("active"); }
 
+    let savedBodyBg = "";
+    let savedHeaderBg = "";
+    let savedSliderVal = "0";
+
     const themeToggle = document.getElementById("themeToggle");
     themeToggle.addEventListener("change", (e) => {
       if (e.target.checked) {
+        if (!document.documentElement.hasAttribute("data-theme")) {
+          savedBodyBg = document.body.style.background;
+          savedHeaderBg = headerBar.style.backgroundColor;
+          savedSliderVal = gradientSlider.value;
+        }
         document.documentElement.setAttribute("data-theme", "dark");
         document.body.style.background = ""; 
+        headerBar.style.backgroundColor = ""; 
       } else {
         document.documentElement.removeAttribute("data-theme");
-        gradientSlider.dispatchEvent(new Event("input"));
+        if (savedSliderVal !== "0" && savedBodyBg) {
+          document.body.style.background = savedBodyBg;
+          headerBar.style.backgroundColor = savedHeaderBg;
+          gradientSlider.value = savedSliderVal;
+        } else {
+          document.body.style.background = "";
+          headerBar.style.backgroundColor = "";
+          gradientSlider.value = "0";
+        }
       }
     });
 
