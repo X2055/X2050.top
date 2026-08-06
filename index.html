@@ -173,7 +173,7 @@
     .sidebar-slider-container {
       opacity: 0;
       transform: translateX(-20px);
-      transition: opacity 0.4s cubic-bezier(0.32, 0.72, 0, 1), transform 0.4s cubic-bezier(0.32, 0.72, 0, 1), background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+      transition: opacity 0.4s cubic-bezier(0.32, 0.72, 0, 1), transform 0.4s cubic-bezier(0.32, 0.72, 0, 1), background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
     }
 
     .ios-sidebar.active .sidebar-header,
@@ -207,16 +207,22 @@
       overflow-y: auto;
     }
 
+    /* 侧边栏内部的三个框：赋予精致的立体感（高光与阴影） */
     .sidebar-content-item {
       width: 100%;
       height: 48px;
       background: var(--card-bg);
       border-radius: 12px;
       border: 0.5px solid var(--border-color);
-      box-shadow: var(--icon-shadow);
+      /* 核心立体感效果：顶部内高光 + 底部外阴影 */
+      box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.7), var(--icon-shadow);
       display: flex;
       align-items: center;
       padding: 0 16px;
+    }
+
+    [data-theme="dark"] .sidebar-content-item {
+      box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1), var(--icon-shadow);
     }
 
     .sidebar-slider-container {
@@ -508,7 +514,7 @@
   <!-- iOS 侧边栏及遮罩 -->
   <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
   <aside class="ios-sidebar" id="iosSidebar">
-    <div class="sidebar-header">侧边栏</div>
+    <div class="sidebar-header"> </div>
     <div class="sidebar-body">
       <div class="sidebar-content-item"></div>
       <div class="sidebar-content-item"></div>
@@ -555,7 +561,7 @@
   </div>
 
   <div class="container">
-    <h1 class="main-title">主页</h1>
+    <h1 class="main-title"></h1>
 
     <div class="carousel-container" id="carouselContainer">
       <div class="carousel-track" id="carouselTrack">
@@ -607,6 +613,7 @@
     const gradientSlider = document.getElementById("gradientSlider");
     const sidebarElement = document.getElementById("iosSidebar");
     const headerBar = document.getElementById("headerBar");
+    const sidebarItems = document.querySelectorAll(".sidebar-content-item");
 
     const startPreview = () => {
       sidebarElement.classList.add("previewing");
@@ -632,6 +639,12 @@
       if (val == 0) {
         document.body.style.background = "";
         headerBar.style.backgroundColor = "";
+        sidebarElement.style.backgroundColor = "";
+        sidebarItems.forEach(item => {
+          item.style.background = "";
+          item.style.borderColor = "";
+          item.style.boxShadow = "";
+        });
         return;
       }
 
@@ -641,8 +654,17 @@
 
       document.body.style.background = `linear-gradient(135deg, ${color1} 0%, ${color2} 100%)`;
       
-      // 同步顶部栏颜色，确保与主体背景同频变色
-      headerBar.style.backgroundColor = `hsla(${hue}, 90%, 90%, 0.85)`;
+      // 同步顶部栏和侧边栏颜色，确保同频变色
+      const syncColor = `hsla(${hue}, 90%, 90%, 0.85)`;
+      headerBar.style.backgroundColor = syncColor;
+      sidebarElement.style.backgroundColor = syncColor;
+
+      // 让内部那三个框的颜色跟随侧边栏变化，并保持强大的立体感（内高光 + 阴影）
+      sidebarItems.forEach(item => {
+        item.style.background = `linear-gradient(135deg, hsla(${hue}, 95%, 98%, 0.95) 0%, hsla(${hue}, 80%, 86%, 0.95) 100%)`;
+        item.style.borderColor = `hsla(${hue}, 80%, 70%, 0.6)`;
+        item.style.boxShadow = `inset 0 1px 2px rgba(255, 255, 255, 0.9), 0 6px 16px hsla(${hue}, 60%, 40%, 0.2)`;
+      });
     });
 
     const usFlagUrl = "https://a1.boltp.com/2026/08/06/6a740f673073b.jpg";
@@ -804,6 +826,7 @@
 
     let savedBodyBg = "";
     let savedHeaderBg = "";
+    let savedSidebarBg = "";
     let savedSliderVal = "0";
 
     const themeToggle = document.getElementById("themeToggle");
@@ -812,21 +835,42 @@
         if (!document.documentElement.hasAttribute("data-theme")) {
           savedBodyBg = document.body.style.background;
           savedHeaderBg = headerBar.style.backgroundColor;
+          savedSidebarBg = sidebarElement.style.backgroundColor;
           savedSliderVal = gradientSlider.value;
         }
         document.documentElement.setAttribute("data-theme", "dark");
         document.body.style.background = ""; 
         headerBar.style.backgroundColor = ""; 
+        sidebarElement.style.backgroundColor = ""; 
+        sidebarItems.forEach(item => {
+          item.style.background = "";
+          item.style.borderColor = "";
+          item.style.boxShadow = "";
+        });
       } else {
         document.documentElement.removeAttribute("data-theme");
         if (savedSliderVal !== "0" && savedBodyBg) {
           document.body.style.background = savedBodyBg;
           headerBar.style.backgroundColor = savedHeaderBg;
+          sidebarElement.style.backgroundColor = savedSidebarBg;
           gradientSlider.value = savedSliderVal;
+          const val = savedSliderVal;
+          const hue = ((val - 1) / 99) * 360;
+          sidebarItems.forEach(item => {
+            item.style.background = `linear-gradient(135deg, hsla(${hue}, 95%, 98%, 0.95) 0%, hsla(${hue}, 80%, 86%, 0.95) 100%)`;
+            item.style.borderColor = `hsla(${hue}, 80%, 70%, 0.6)`;
+            item.style.boxShadow = `inset 0 1px 2px rgba(255, 255, 255, 0.9), 0 6px 16px hsla(${hue}, 60%, 40%, 0.2)`;
+          });
         } else {
           document.body.style.background = "";
           headerBar.style.backgroundColor = "";
+          sidebarElement.style.backgroundColor = "";
           gradientSlider.value = "0";
+          sidebarItems.forEach(item => {
+            item.style.background = "";
+            item.style.borderColor = "";
+            item.style.boxShadow = "";
+          });
         }
       }
     });
