@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>2050主页</title>
+  <title>>_<</title>
   <style>
     /* ==========================================
-       
+       全局变量与主题设置
        ========================================== */
     :root {
       --bg-color: #f2f2f7;
@@ -20,6 +20,7 @@
       --shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
       --icon-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
       --blur-val: blur(25px) saturate(180%);
+      --sidebar-bg: rgba(255, 255, 255, 0.75);
     }
 
     [data-theme="dark"] {
@@ -33,6 +34,7 @@
       --border-color: rgba(84, 84, 88, 0.35);
       --shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
       --icon-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+      --sidebar-bg: rgba(28, 28, 30, 0.75);
     }
 
     * {
@@ -52,354 +54,396 @@
     }
 
     /* ==========================================
-       顶部导航栏 & 日夜插画风切换开关
+       顶部导航栏 & 日夜切换开关
        ========================================== */
     .header-bar {
       position: sticky;
       top: 0;
       z-index: 100;
       display: flex;
-      justify-content: flex-end;
+      justify-content: space-between;
       align-items: center;
       padding: 12px 24px;
       backdrop-filter: var(--blur-val);
       -webkit-backdrop-filter: var(--blur-val);
       background-color: var(--card-bg);
       border-bottom: 0.5px solid var(--border-color);
+      height: 60px;
     }
 
-    /* 开关基础控件 */
-    .theme-switch {
-      position: relative;
-      display: inline-block;
-      width: 68px;
-      height: 34px;
+    /* 三道杠按钮风格 */
+    .sidebar-toggle-btn {
+      background: transparent;
+      border: none;
       cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      width: 24px;
+      height: 18px;
+      padding: 0;
+      z-index: 101;
+    }
+    .sidebar-toggle-btn span {
+      display: block;
+      width: 100%;
+      height: 2.5px;
+      background-color: var(--text-main);
+      border-radius: 2px;
+      transition: background-color 0.3s ease, transform 0.3s ease;
+    }
+    .sidebar-toggle-btn:active {
+      opacity: 0.6;
     }
 
-    .theme-switch input {
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
-
-    /* 轨道背景 - 默认白天 */
-    .switch-track {
-      position: absolute;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: linear-gradient(180deg, #70a1ff 0%, #a8c0ff 100%);
-      border-radius: 30px;
-      transition: background 0.4s ease;
-      overflow: hidden;
-      box-shadow: inset 0 2px 4px rgba(0,0,0,0.2), 0 2px 6px rgba(0,0,0,0.1);
-      border: 1.5px solid rgba(255, 255, 255, 0.6);
-    }
-
-    /* 滑块基础 - 默认太阳 */
-    .switch-thumb {
-      position: absolute;
-      top: 3px;
-      left: 3px;
-      width: 25px;
-      height: 25px;
-      border-radius: 50%;
-      background: #eccc68;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.2), 0 0 8px #ffa502;
-      transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55), background 0.4s ease, box-shadow 0.4s ease;
-      z-index: 2;
-    }
-
-    /* 月亮陨石坑 */
-    .crater {
-      position: absolute;
-      background: #a4b0be;
-      border-radius: 50%;
-      opacity: 0;
-      transition: opacity 0.3s ease;
-    }
-
+    .theme-switch { position: relative; display: inline-block; width: 68px; height: 34px; cursor: pointer; }
+    .theme-switch input { opacity: 0; width: 0; height: 0; }
+    .switch-track { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(180deg, #70a1ff 0%, #a8c0ff 100%); border-radius: 30px; transition: background 0.4s ease; overflow: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.2), 0 2px 6px rgba(0,0,0,0.1); border: 1.5px solid rgba(255, 255, 255, 0.6); }
+    .switch-thumb { position: absolute; top: 3px; left: 3px; width: 25px; height: 25px; border-radius: 50%; background: #eccc68; box-shadow: 0 2px 5px rgba(0,0,0,0.2), 0 0 8px #ffa502; transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55), background 0.4s ease, box-shadow 0.4s ease; z-index: 2; }
+    .crater { position: absolute; background: #a4b0be; border-radius: 50%; opacity: 0; transition: opacity 0.3s ease; }
     .crater-1 { top: 5px; left: 11px; width: 6px; height: 6px; }
     .crater-2 { top: 13px; left: 5px; width: 7px; height: 7px; }
     .crater-3 { top: 14px; left: 14px; width: 4px; height: 4px; }
-
-    /* 背景元素：云朵与星星 */
-    .cloud {
-      position: absolute;
-      background: #ffffff;
-      border-radius: 10px;
-      opacity: 0.9;
-      transition: transform 0.4s ease, opacity 0.4s ease;
-    }
-
+    .cloud { position: absolute; background: #ffffff; border-radius: 10px; opacity: 0.9; transition: transform 0.4s ease, opacity 0.4s ease; }
     .cloud-1 { right: 6px; top: 15px; width: 24px; height: 12px; border-radius: 8px; }
     .cloud-2 { right: 18px; top: 8px; width: 16px; height: 10px; border-radius: 8px; }
-
-    .star {
-      position: absolute;
-      background: #ffffff;
-      border-radius: 50%;
-      opacity: 0;
-      transform: translateY(-6px);
-      transition: opacity 0.4s ease, transform 0.4s ease;
-    }
-
+    .star { position: absolute; background: #ffffff; border-radius: 50%; opacity: 0; transform: translateY(-6px); transition: opacity 0.4s ease, transform 0.4s ease; }
     .star-1 { left: 10px; top: 8px; width: 3px; height: 3px; box-shadow: 0 0 3px #fff; }
     .star-2 { left: 22px; top: 18px; width: 2px; height: 2px; }
     .star-3 { left: 32px; top: 7px; width: 3px; height: 3px; box-shadow: 0 0 3px #fff; }
+    [data-theme="dark"] .switch-track { background: linear-gradient(180deg, #1e272e 0%, #2f3542 100%); border-color: rgba(255, 255, 255, 0.15); }
+    [data-theme="dark"] .switch-thumb { transform: translateX(33px); background: #dcdde1; box-shadow: 0 2px 5px rgba(0,0,0,0.4), inset -2px -1px 2px rgba(0,0,0,0.2); }
+    [data-theme="dark"] .crater { opacity: 1; }
+    [data-theme="dark"] .cloud { opacity: 0; transform: translateY(10px); }
+    [data-theme="dark"] .star { opacity: 1; transform: translateY(0); }
 
-    /* 暗黑模式切换触发样式 */
-    [data-theme="dark"] .switch-track {
-      background: linear-gradient(180deg, #1e272e 0%, #2f3542 100%);
-      border-color: rgba(255, 255, 255, 0.15);
-    }
-
-    [data-theme="dark"] .switch-thumb {
-      transform: translateX(33px);
-      background: #dcdde1;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.4), inset -2px -1px 2px rgba(0,0,0,0.2);
-    }
-
-    [data-theme="dark"] .crater {
-      opacity: 1;
-    }
-
-    [data-theme="dark"] .cloud {
+    /* ==========================================
+       iOS 侧边栏及遮罩样式
+       ========================================== */
+    .sidebar-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: var(--modal-overlay);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      z-index: 1500;
       opacity: 0;
-      transform: translateY(10px);
+      visibility: hidden;
+      transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.4s;
+    }
+    .sidebar-overlay.active {
+      opacity: 1;
+      visibility: visible;
     }
 
-    [data-theme="dark"] .star {
+    .ios-sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 280px;
+      height: 100%;
+      background: var(--sidebar-bg);
+      backdrop-filter: var(--blur-val);
+      -webkit-backdrop-filter: var(--blur-val);
+      border-right: 0.5px solid var(--border-color);
+      z-index: 1501;
+      transform: translateX(-100%);
+      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 5px 0 25px rgba(0, 0, 0, 0.15);
+      display: flex;
+      flex-direction: column;
+      padding: env(safe-area-inset-top, 24px) 20px 20px 20px;
+    }
+    .ios-sidebar.active {
+      transform: translateX(0);
+    }
+
+    /* 逐层显示效果 */
+    .sidebar-header,
+    .sidebar-content-item {
+      opacity: 0;
+      transform: translateX(-20px);
+      transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .sidebar-header { transition-delay: 0.0s; }
+    .sidebar-content-item:nth-child(1) { transition-delay: 0.03s; }
+    .sidebar-content-item:nth-child(2) { transition-delay: 0.06s; }
+    .sidebar-content-item:nth-child(3) { transition-delay: 0.09s; }
+
+    .ios-sidebar.active .sidebar-header {
       opacity: 1;
-      transform: translateY(0);
+      transform: translateX(0);
+      transition-delay: 0.15s;
+    }
+    .ios-sidebar.active .sidebar-content-item:nth-child(1) {
+      opacity: 1;
+      transform: translateX(0);
+      transition-delay: 0.22s;
+    }
+    .ios-sidebar.active .sidebar-content-item:nth-child(2) {
+      opacity: 1;
+      transform: translateX(0);
+      transition-delay: 0.28s;
+    }
+    .ios-sidebar.active .sidebar-content-item:nth-child(3) {
+      opacity: 1;
+      transform: translateX(0);
+      transition-delay: 0.34s;
+    }
+
+    .sidebar-header {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--text-main);
+      padding: 24px 0 16px 0;
+      border-bottom: 0.5px solid var(--border-color);
+      margin-bottom: 20px;
+      letter-spacing: -0.5px;
+    }
+
+    .sidebar-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow-y: auto;
+    }
+
+    .sidebar-content-item {
+      width: 100%;
+      height: 48px;
+      background: var(--card-bg);
+      border-radius: 12px;
+      border: 0.5px solid var(--border-color);
+      box-shadow: var(--icon-shadow);
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+    }
+
+    /* ==========================================
+       灵动岛 (Dynamic Island) 音乐播放器
+       ========================================== */
+    .dynamic-island {
+      position: fixed;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #000000;
+      color: #ffffff;
+      border-radius: 30px;
+      z-index: 1000;
+      cursor: pointer;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      width: 140px;
+      height: 36px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 8px;
+    }
+
+    .dynamic-island.expanded {
+      width: 340px;
+      height: 180px;
+      border-radius: 40px;
+      cursor: default;
+      padding: 20px;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: stretch;
+    }
+
+    .island-collapsed-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      transition: opacity 0.3s ease;
+    }
+    .dynamic-island.expanded .island-collapsed-content { display: none; }
+
+    .island-mini-cover {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      object-fit: cover;
+      animation: spin 6s linear infinite;
+      animation-play-state: paused;
+    }
+    .island-mini-cover.playing { animation-play-state: running; }
+
+    .island-waveform {
+      display: flex;
+      gap: 2px;
+      align-items: center;
+      height: 12px;
+    }
+    .island-waveform span {
+      display: block;
+      width: 3px;
+      background-color: #ff2d55;
+      border-radius: 2px;
+      height: 4px;
+      transition: height 0.1s ease;
+    }
+    .island-waveform.playing span { animation: wave 1s ease-in-out infinite; }
+    .island-waveform.playing span:nth-child(2) { animation-delay: 0.2s; }
+    .island-waveform.playing span:nth-child(3) { animation-delay: 0.4s; }
+
+    .island-expanded-content {
+      display: none;
+      flex-direction: column;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      transition: opacity 0.3s ease 0.2s;
+    }
+    .dynamic-island.expanded .island-expanded-content {
+      display: flex;
+      opacity: 1;
+    }
+
+    .island-top-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .island-large-cover {
+      width: 60px;
+      height: 60px;
+      border-radius: 14px;
+      object-fit: cover;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    }
+    .island-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      overflow: hidden;
+    }
+    .island-title {
+      font-size: 16px;
+      font-weight: 600;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      color: #ffffff;
+    }
+    .island-artist {
+      font-size: 14px;
+      color: rgba(255,255,255,0.6);
+    }
+    
+    .island-controls {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 30px;
+    }
+    .control-btn {
+      background: transparent;
+      border: none;
+      color: white;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: opacity 0.2s;
+    }
+    .control-btn:active { opacity: 0.6; }
+    .control-btn svg { fill: currentColor; width: 32px; height: 32px; }
+    .play-btn svg { width: 42px; height: 42px; }
+
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+    @keyframes wave {
+      0%, 100% { height: 4px; }
+      50% { height: 12px; }
     }
 
     /* ==========================================
        主内容区域
        ========================================== */
-    .container {
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 0 20px;
-    }
-
-    .main-title {
-      font-size: 34px;
-      font-weight: 700;
-      letter-spacing: -0.5px;
-      margin: 24px 0 16px 0;
-    }
-
-    /* ==========================================
-       轮播图样式
-       ========================================== */
-    .carousel-container {
-      position: relative;
-      width: 100%;
-      height: 220px;
-      border-radius: 20px;
-      overflow: hidden;
-      box-shadow: var(--shadow);
+    .container { max-width: 800px; margin: 0 auto; padding: 0 20px; }
+    .main-title { font-size: 34px; font-weight: 700; letter-spacing: -0.5px; margin: 24px 0 16px 0; }
+    
+    .carousel-container { 
+      position: relative; 
+      width: 100%; 
+      height: clamp(220px, 35vw, 360px); 
+      border-radius: 20px; 
+      overflow: hidden; 
+      box-shadow: var(--shadow); 
       margin-bottom: 32px;
+      cursor: grab;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: pan-y;
+    }
+    .carousel-container:active { cursor: grabbing; }
+
+    .carousel-track { display: flex; width: 300%; height: 100%; transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1); }
+    .slide { width: 33.333%; height: 100%; display: block; position: relative; text-decoration: none; }
+    
+    .slide img { 
+      width: 100%; 
+      height: 100%; 
+      object-fit: cover; 
+      object-position: center top; 
+      -webkit-user-drag: none; 
+      pointer-events: none; 
     }
 
-    .carousel-track {
-      display: flex;
-      width: 300%;
-      height: 100%;
-      transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
-    }
+    .slide-caption { position: absolute; bottom: 0; left: 0; right: 0; padding: 16px; background: linear-gradient(transparent, rgba(0,0,0,0.6)); color: #ffffff; font-size: 16px; font-weight: 600; pointer-events: none; }
+    .carousel-dots { position: absolute; bottom: 12px; right: 16px; display: flex; gap: 6px; z-index: 10; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255, 255, 255, 0.4); transition: all 0.3s ease; cursor: pointer; }
+    .dot.active { background: #ffffff; width: 20px; border-radius: 4px; }
 
-    .slide {
-      width: 33.333%;
-      height: 100%;
-      display: block;
-      position: relative;
-      text-decoration: none;
-    }
+    .nav-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); gap: 20px 16px; justify-items: center; }
+    .nav-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; width: 72px; transition: transform 0.2s ease; }
+    .nav-item:active { transform: scale(0.88); }
+    .icon-box { width: 60px; height: 60px; border-radius: 14px; background: var(--card-bg); display: flex; justify-content: center; align-items: center; font-size: 28px; box-shadow: var(--icon-shadow); margin-bottom: 8px; border: 0.5px solid var(--border-color); overflow: hidden; position: relative; }
+    .icon-box img { width: 100%; height: 100%; object-fit: cover; }
+    .icon-title { font-size: 12px; color: var(--text-main); text-align: center; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 400; }
 
-    .slide img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .slide-caption {
-      position: absolute;
-      bottom: 0; left: 0; right: 0;
-      padding: 16px;
-      background: linear-gradient(transparent, rgba(0,0,0,0.6));
-      color: #ffffff;
-      font-size: 16px;
-      font-weight: 600;
-    }
-
-    .carousel-dots {
-      position: absolute;
-      bottom: 12px;
-      right: 16px;
-      display: flex;
-      gap: 6px;
-      z-index: 10;
-    }
-
-    .dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.4);
-      transition: all 0.3s ease;
-    }
-
-    .dot.active {
-      background: #ffffff;
-      width: 20px;
-      border-radius: 4px;
-    }
-
-    /* ==========================================
-       iOS App 图标网格
-       ========================================== */
-    .nav-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
-      gap: 20px 16px;
-      justify-items: center;
-    }
-
-    .nav-item {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-decoration: none;
-      width: 72px;
-      transition: transform 0.2s ease;
-    }
-
-    .nav-item:active {
-      transform: scale(0.88);
-    }
-
-    .icon-box {
-      width: 60px;
-      height: 60px;
-      border-radius: 14px;
-      background: var(--card-bg);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-size: 28px;
-      box-shadow: var(--icon-shadow);
-      margin-bottom: 8px;
-      border: 0.5px solid var(--border-color);
-      overflow: hidden;
-      position: relative;
-    }
-
-    .icon-title {
-      font-size: 12px;
-      color: var(--text-main);
-      text-align: center;
-      width: 100%;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      font-weight: 400;
-    }
-
-    /* ==========================================
-       iOS 风格 Alert 弹窗
-       ========================================== */
-    .ios-modal-overlay {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background-color: var(--modal-overlay);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.25s ease;
-    }
-
-    .ios-modal-overlay.active {
-      opacity: 1;
-      pointer-events: auto;
-    }
-
-    .ios-modal {
-      width: 270px;
-      background: var(--modal-bg);
-      backdrop-filter: var(--blur-val);
-      -webkit-backdrop-filter: var(--blur-val);
-      border-radius: 14px;
-      text-align: center;
-      overflow: hidden;
-      transform: scale(1.15);
-      transition: transform 0.25s cubic-bezier(0.1, 0.9, 0.2, 1);
-      box-shadow: var(--shadow);
-      border: 0.5px solid var(--border-color);
-    }
-
-    .ios-modal-overlay.active .ios-modal {
-      transform: scale(1);
-    }
-
-    .ios-modal-content {
-      padding: 20px 16px 16px 16px;
-    }
-
-    .ios-modal-title {
-      font-size: 17px;
-      font-weight: 600;
-      color: var(--text-main);
-      margin-bottom: 6px;
-    }
-
-    .ios-modal-body {
-      font-size: 13px;
-      color: var(--text-main);
-      line-height: 1.4;
-    }
-
-    .ios-modal-actions {
-      border-top: 0.5px solid var(--border-color);
-      display: flex;
-    }
-
-    .ios-modal-btn {
-      flex: 1;
-      background: transparent;
-      border: none;
-      padding: 12px 0;
-      font-size: 17px;
-      color: var(--accent-color);
-      font-weight: 600;
-      cursor: pointer;
-    }
-
-    .ios-modal-btn:active {
-      background-color: rgba(120, 120, 128, 0.1);
-    }
+    .ios-modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--modal-overlay); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); display: flex; justify-content: center; align-items: center; z-index: 2000; opacity: 0; pointer-events: none; transition: opacity 0.25s ease; }
+    .ios-modal-overlay.active { opacity: 1; pointer-events: auto; }
+    .ios-modal { width: 270px; background: var(--modal-bg); backdrop-filter: var(--blur-val); -webkit-backdrop-filter: var(--blur-val); border-radius: 14px; text-align: center; overflow: hidden; transform: scale(1.15); transition: transform 0.25s cubic-bezier(0.1, 0.9, 0.2, 1); box-shadow: var(--shadow); border: 0.5px solid var(--border-color); }
+    .ios-modal-overlay.active .ios-modal { transform: scale(1); }
+    .ios-modal-content { padding: 20px 16px 16px 16px; }
+    .ios-modal-title { font-size: 17px; font-weight: 600; color: var(--text-main); margin-bottom: 6px; }
+    .ios-modal-body { font-size: 13px; color: var(--text-main); line-height: 1.4; }
+    .ios-modal-actions { border-top: 0.5px solid var(--border-color); display: flex; }
+    .ios-modal-btn { flex: 1; background: transparent; border: none; padding: 12px 0; font-size: 17px; color: var(--accent-color); font-weight: 600; cursor: pointer; }
+    .ios-modal-btn:active { background-color: rgba(120, 120, 128, 0.1); }
   </style>
 </head>
 <body>
 
   <!-- 顶部栏 -->
   <header class="header-bar">
-    <!-- 日夜模式动画切换开关 -->
+    <button class="sidebar-toggle-btn" onclick="toggleSidebar()" aria-label="打开侧边栏">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+
     <label class="theme-switch" for="themeToggle">
       <input type="checkbox" id="themeToggle">
       <div class="switch-track">
-        <!-- 太阳 / 月亮 -->
         <div class="switch-thumb">
           <span class="crater crater-1"></span>
           <span class="crater crater-2"></span>
           <span class="crater crater-3"></span>
         </div>
-        <!-- 装饰背景（星星与云朵） -->
         <span class="star star-1"></span>
         <span class="star star-2"></span>
         <span class="star star-3"></span>
@@ -409,23 +453,68 @@
     </label>
   </header>
 
-  <div class="container">
-    <h1 class="main-title">应用导航</h1>
+  <!-- iOS 侧边栏及遮罩 -->
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+  <aside class="ios-sidebar" id="iosSidebar">
+    <div class="sidebar-header">侧边栏</div>
+    <div class="sidebar-body">
+      <div class="sidebar-content-item"></div>
+      <div class="sidebar-content-item"></div>
+      <div class="sidebar-content-item"></div>
+    </div>
+  </aside>
 
-    <!-- 三张图轮播 -->
-    <div class="carousel-container">
+  <!-- 灵动岛音乐播放器 -->
+  <div class="dynamic-island" id="dynamicIsland" onclick="toggleIsland(event)">
+    <audio id="audioPlayer" autoplay preload="auto"></audio>
+
+    <div class="island-collapsed-content">
+      <img src="" id="miniCover" class="island-mini-cover" alt="美国国旗">
+      <div class="island-waveform" id="miniWaveform">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+
+    <div class="island-expanded-content">
+      <div class="island-top-row">
+        <img src="" id="largeCover" class="island-large-cover" alt="美国国旗">
+        <div class="island-info">
+          <!-- 已将 a 标签改为 span 标签，去掉了超链接跳转 -->
+          <div class="island-title" id="musicTitle">加载中...</div>
+          <div class="island-artist" id="musicArtist">...</div>
+        </div>
+      </div>
+      <div class="island-controls">
+        <button class="control-btn" onclick="prevSong(event)">
+          <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+        </button>
+        <button class="control-btn play-btn" id="playPauseBtn" onclick="togglePlay(event)">
+          <svg id="playIcon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          <svg id="pauseIcon" viewBox="0 0 24 24" style="display:none;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+        </button>
+        <button class="control-btn" onclick="nextSong(event)">
+          <svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <h1 class="main-title">主页</h1>
+
+    <div class="carousel-container" id="carouselContainer">
       <div class="carousel-track" id="carouselTrack">
-        <a href="https://www.apple.com" target="_blank" class="slide">
-          <img src="https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=800&q=80" alt="Slide 1">
-          <div class="slide-caption">探索苹果新品与极致设计</div>
+        <a href="https://tool.gljlw.com/qq/?qq=1431365085" target="_blank" class="slide">
+          <img src="https://a1.boltp.com/2026/08/06/6a7410fae4d72.jpg" alt="Slide 1">
+          <div class="slide-caption">为中国人民谋幸福，为中华民族谋复兴</div>
         </a>
-        <a href="https://unsplash.com" target="_blank" class="slide">
-          <img src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80" alt="Slide 2">
-          <div class="slide-caption">寻找高质量超清壁纸灵感</div>
+        <a href="https://2050.cn.lu/ntest.html" target="_blank" class="slide">
+          <img src="https://a1.boltp.com/2026/08/06/6a74182732a33.jpg" alt="Slide 2">
+          <div class="slide-caption">普京邀请你测试意识形态，点击即可测试</div>
         </a>
-        <a href="https://github.com" target="_blank" class="slide">
-          <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80" alt="Slide 3">
-          <div class="slide-caption">极简IOS风格组件开发</div>
+        <a href=" " target="_blank" class="slide">
+          <img src="https://a1.boltp.com/2026/08/06/6a74132eabc0a.png" alt="Slide 3">
+          <div class="slide-caption">巴兰尼科夫同志强调：我们一定要把自由的旗帜插到美国去！</div>
         </a>
       </div>
       <div class="carousel-dots" id="carouselDots">
@@ -435,17 +524,15 @@
       </div>
     </div>
 
-    <!-- 图标网格区域 -->
     <div class="nav-grid" id="navGrid"></div>
   </div>
 
-  <!-- iOS 原生风格 Alert 弹窗 -->
   <div class="ios-modal-overlay" id="iosModalOverlay">
     <div class="ios-modal">
       <div class="ios-modal-content">
         <div class="ios-modal-title">德意志万岁</div>
         <div class="ios-modal-body">
-          这是一个X2050.top网站的预置页面，版本0.1.1,作者Gator
+          这是一个X2050.top网站的工程页面，网站还未正式上线，版本0.1.3,作者Gator
         </div>
       </div>
       <div class="ios-modal-actions">
@@ -455,103 +542,277 @@
   </div>
 
   <script>
-    /* ==========================================================================
-       20个图标小方块控制配置 (visible: true 开启 / false 隐藏)
-       ========================================================================== */
+    /* 侧边栏开关逻辑 */
+    function toggleSidebar() {
+      const sidebar = document.getElementById("iosSidebar");
+      const overlay = document.getElementById("sidebarOverlay");
+      sidebar.classList.toggle("active");
+      overlay.classList.toggle("active");
+    }
+
+    /* 美国国旗图片链接 */
+    const usFlagUrl = "https://a1.boltp.com/2026/08/06/6a740f673073b.jpg";
+
+    /* 音乐播放配置 */
+    const musicPlaylist = [
+      {
+        title: "あの夏へ",
+        artist: "Music",
+        cover: usFlagUrl, 
+        url: "https://antiserver.kuwo.cn/anti.s?usar=1&format=mp3&rid=MUSIC_4298543&response=res&type=convert_url" 
+      }
+    ];
+
+    let currentSongIndex = 0;
+    const audioPlayer = document.getElementById("audioPlayer");
+    
+    function loadSong(index) {
+      const song = musicPlaylist[index];
+      document.getElementById("musicTitle").textContent = song.title;
+      document.getElementById("musicArtist").textContent = song.artist;
+      document.getElementById("miniCover").src = song.cover;
+      document.getElementById("largeCover").src = song.cover;
+      audioPlayer.src = song.url;
+    }
+
+    function startAutoPlay() {
+      const playPromise = audioPlayer.play();
+      if (playPromise !== undefined) {
+        playPromise.then(() => {
+          updatePlayState(true);
+        }).catch(error => {
+          console.log("浏览器拦截了无交互自动播放，将在用户点击页面时自动播放");
+          const triggerOnUserAction = () => {
+            audioPlayer.play().then(() => {
+              updatePlayState(true);
+              window.removeEventListener("click", triggerOnUserAction);
+              window.removeEventListener("touchstart", triggerOnUserAction);
+            });
+          };
+          window.addEventListener("click", triggerOnUserAction);
+          window.addEventListener("touchstart", triggerOnUserAction);
+        });
+      }
+    }
+
+    function togglePlay(event) {
+      if(event) event.stopPropagation();
+      if (audioPlayer.paused) {
+        audioPlayer.play();
+        updatePlayState(true);
+      } else {
+        audioPlayer.pause();
+        updatePlayState(false);
+      }
+    }
+
+    function prevSong(event) {
+      if(event) event.stopPropagation();
+      currentSongIndex = (currentSongIndex - 1 + musicPlaylist.length) % musicPlaylist.length;
+      loadSong(currentSongIndex);
+      audioPlayer.play();
+      updatePlayState(true);
+    }
+
+    function nextSong(event) {
+      if(event) event.stopPropagation();
+      currentSongIndex = (currentSongIndex + 1) % musicPlaylist.length;
+      loadSong(currentSongIndex);
+      audioPlayer.play();
+      updatePlayState(true);
+    }
+
+    audioPlayer.addEventListener("ended", () => { nextSong(); });
+
+    function updatePlayState(isPlaying) {
+      const playIcon = document.getElementById("playIcon");
+      const pauseIcon = document.getElementById("pauseIcon");
+      const miniCover = document.getElementById("miniCover");
+      const miniWaveform = document.getElementById("miniWaveform");
+
+      if (isPlaying) {
+        playIcon.style.display = "none";
+        pauseIcon.style.display = "block";
+        miniCover.classList.add("playing");
+        miniWaveform.classList.add("playing");
+      } else {
+        playIcon.style.display = "block";
+        pauseIcon.style.display = "none";
+        miniCover.classList.remove("playing");
+        miniWaveform.classList.remove("playing");
+      }
+    }
+
+    const dynamicIsland = document.getElementById("dynamicIsland");
+    
+    function toggleIsland(event) {
+      if (!dynamicIsland.classList.contains("expanded")) {
+        dynamicIsland.classList.add("expanded");
+      }
+    }
+
+    document.addEventListener("click", function(event) {
+      const isClickInside = dynamicIsland.contains(event.target);
+      if (!isClickInside && dynamicIsland.classList.contains("expanded")) {
+        dynamicIsland.classList.remove("expanded");
+      }
+    });
+
+    /* 20个导航图标控制列表 */
     const navItemsConfig = [
-      { id: 1,  title: "Safari",    icon: "🧭", url: "https://www.apple.com/safari/", visible: true },
-      { id: 2,  title: "相册",      icon: "🖼️", url: "#", visible: true },
-      { id: 3,  title: "音乐",      icon: "🎵", url: "#", visible: true },
-      { id: 4,  title: "天气",      icon: "☀️", url: "#", visible: true },
-      { id: 5,  title: "设置",      icon: "⚙️", url: "#", visible: true },
-      { id: 6,  title: "邮件",      icon: "✉️", url: "#", visible: true },
-      { id: 7,  title: "地图",      icon: "🗺️", url: "#", visible: true },
-      { id: 8,  title: "日历",      icon: "📅", url: "#", visible: true },
-      { id: 9,  title: "备忘录",    icon: "📝", url: "#", visible: true },
-      { id: 10, title: "提醒事项",  icon: "☑️", url: "#", visible: true },
-      { id: 11, title: "股市",      icon: "📈", url: "#", visible: true },
-      { id: 12, title: "图书",      icon: "📚", url: "#", visible: true },
-      { id: 13, title: "播客",      icon: "🎙️", url: "#", visible: false },
-      { id: 14, title: "钱包",      icon: "👛", url: "#", visible: true },
-      { id: 15, title: "健康",      icon: "❤️", url: "#", visible: true },
-      { id: 16, title: "快捷指令",  icon: "⚡", url: "#", visible: true },
-      { id: 17, title: "文件",      icon: "📁", url: "#", visible: false },
-      { id: 18, title: "翻译",      icon: "🌐", url: "#", visible: true },
-      { id: 19, title: "计算器",    icon: "🔢", url: "#", visible: true },
-      { id: 20, title: "App Store", icon: "🅰️", url: "#", visible: true }
+      { id: 1,  title: "意识形态",    icon: "🌐", isImg: false, url: "https://2050.cn.lu/ntest.html", visible: true },
+      { id: 2,  title: "苏联",      icon: "https://a1.boltp.com/2026/08/06/6a741d9d311dd.png", isImg: true, url: "https://2050.cn.lu/", visible: true },
+      { id: 3,  title: "中国",  icon: "https://a1.boltp.com/2026/08/06/6a7418b0a51d4.png", isImg: true, url:"https://www.gov.cn/index.html", visible: true }, 
+      { id: 4,  title: "太阳",      icon: "☀️", isImg: false, url: "http://www.kcna.kp/cn", visible: true },
+      { id: 5,  title: "设置",      icon: "⚙️", isImg: false, url: "#", visible: false },
+      { id: 6,  title: "邮件",      icon: "✉️", isImg: false, url: "#", visible: false },
+      { id: 7,  title: "地图",      icon: "🗺️", isImg: false, url: "#", visible: false },
+      { id: 8,  title: "日历",      icon: "📅", isImg: false, url: "#", visible: false },
+      { id: 9,  title: "备忘录",    icon: "📝", isImg: false, url: "#", visible: false },
+      { id: 10, title: "提醒事项",  icon: "☑️", isImg: false, url: "#", visible: false },
+      { id: 11, title: "股市",      icon: "📈", isImg: false, url: "#", visible: false },
+      { id: 12, title: "图书",      icon: "📚", isImg: false, url: "#", visible: false },
+      { id: 13, title: "播客",      icon: "🎙️", isImg: false, url: "#", visible: false },
+      { id: 14, title: "钱包",      icon: "👛", isImg: false, url: "#", visible: false },
+      { id: 15, title: "健康",      icon: "❤️", isImg: false, url: "#", visible: false },
+      { id: 16, title: "快捷指令",  icon: "⚡", isImg: false, url: "#", visible: false },
+      { id: 17, title: "文件",      icon: "📁", isImg: false, url: "#", visible: false },
+      { id: 18, title: "翻译",      icon: "🌐", isImg: false, url: "#", visible: false },
+      { id: 19, title: "计算器",    icon: "🔢", isImg: false, url: "#", visible: false },
+      { id: 20, title: "", icon: "🅰️", isImg: false, url: "#", visible: false }
     ];
 
     function renderNavGrid() {
       const gridContainer = document.getElementById("navGrid");
       gridContainer.innerHTML = "";
-
       navItemsConfig.forEach(item => {
         if (item.visible) {
           const a = document.createElement("a");
           a.href = item.url;
           a.className = "nav-item";
           a.target = "_blank";
-          a.innerHTML = `
-            <div class="icon-box">${item.icon}</div>
-            <div class="icon-title">${item.title}</div>
-          `;
+          
+          const iconContent = item.isImg 
+            ? `<img src="${item.icon}" alt="${item.title}">`
+            : item.icon;
+
+          a.innerHTML = `<div class="icon-box">${iconContent}</div><div class="icon-title">${item.title}</div>`;
           gridContainer.appendChild(a);
         }
       });
     }
 
-    /* ==========================================================================
-       页面初始化与 iOS 弹窗控制
-       ========================================================================== */
+    // 页面完全加载后初始化
     window.addEventListener("DOMContentLoaded", () => {
-      setTimeout(() => {
-        document.getElementById("iosModalOverlay").classList.add("active");
-      }, 300);
-
+      loadSong(0);
+      startAutoPlay();
+      setTimeout(() => { document.getElementById("iosModalOverlay").classList.add("active"); }, 300);
       renderNavGrid();
+      initCarousel();
     });
 
-    function closeIosModal() {
-      document.getElementById("iosModalOverlay").classList.remove("active");
-    }
+    function closeIosModal() { document.getElementById("iosModalOverlay").classList.remove("active"); }
 
-    /* ==========================================================================
-       日夜模式切换开关逻辑
-       ========================================================================== */
     const themeToggle = document.getElementById("themeToggle");
-
     themeToggle.addEventListener("change", (e) => {
-      if (e.target.checked) {
-        document.documentElement.setAttribute("data-theme", "dark");
-      } else {
-        document.documentElement.removeAttribute("data-theme");
-      }
+      if (e.target.checked) document.documentElement.setAttribute("data-theme", "dark");
+      else document.documentElement.removeAttribute("data-theme");
     });
 
-    /* ==========================================================================
-       轮播图自动播放逻辑
-       ========================================================================== */
+    /* ==========================================
+       轮播图控制逻辑（支持自动轮播 + 触摸/鼠标滑动）
+       ========================================== */
     let currentSlide = 0;
-    const track = document.getElementById("carouselTrack");
-    const dots = document.querySelectorAll(".dot");
     const totalSlides = 3;
+    const track = document.getElementById("carouselTrack");
+    const container = document.getElementById("carouselContainer");
+    const dots = document.querySelectorAll(".dot");
+    let autoPlayTimer = null;
 
     function goToSlide(index) {
       currentSlide = index;
+      track.style.transition = "transform 0.5s cubic-bezier(0.25, 1, 0.5, 1)";
       track.style.transform = `translateX(-${(100 / totalSlides) * currentSlide}%)`;
-      dots.forEach((dot, i) => {
-        dot.classList.toggle("active", i === currentSlide);
-      });
+      dots.forEach((dot, i) => { dot.classList.toggle("active", i === currentSlide); });
     }
 
-    setInterval(() => {
-      currentSlide = (currentSlide + 1) % totalSlides;
-      goToSlide(currentSlide);
-    }, 3500);
+    function startCarouselAutoPlay() {
+      stopCarouselAutoPlay();
+      autoPlayTimer = setInterval(() => {
+        currentSlide = (currentSlide + 1) % totalSlides;
+        goToSlide(currentSlide);
+      }, 3500);
+    }
 
-    dots.forEach((dot, index) => {
-      dot.addEventListener("click", () => goToSlide(index));
-    });
+    function stopCarouselAutoPlay() {
+      if (autoPlayTimer) clearInterval(autoPlayTimer);
+    }
+
+    function initCarousel() {
+      let isDragging = false;
+      let startX = 0;
+      let movedDistance = 0;
+
+      const getClientX = (e) => e.touches ? e.touches[0].clientX : e.clientX;
+
+      const dragStart = (e) => {
+        isDragging = true;
+        startX = getClientX(e);
+        movedDistance = 0;
+        track.style.transition = "none";
+        stopCarouselAutoPlay();
+      };
+
+      const dragMove = (e) => {
+        if (!isDragging) return;
+        const currentX = getClientX(e);
+        movedDistance = currentX - startX;
+        
+        const containerWidth = container.offsetWidth;
+        const basePx = -currentSlide * containerWidth;
+        const totalPx = basePx + movedDistance;
+        
+        track.style.transform = `translateX(${totalPx}px)`;
+      };
+
+      const dragEnd = () => {
+        if (!isDragging) return;
+        isDragging = false;
+        
+        const threshold = 50;
+        if (movedDistance < -threshold && currentSlide < totalSlides - 1) {
+          currentSlide++;
+        } else if (movedDistance > threshold && currentSlide > 0) {
+          currentSlide--;
+        }
+
+        goToSlide(currentSlide);
+        startCarouselAutoPlay();
+      };
+
+      container.addEventListener("touchstart", dragStart, { passive: true });
+      container.addEventListener("touchmove", dragMove, { passive: true });
+      container.addEventListener("touchend", dragEnd);
+
+      container.addEventListener("mousedown", dragStart);
+      window.addEventListener("mousemove", dragMove);
+      window.addEventListener("mouseup", dragEnd);
+
+      container.addEventListener("click", (e) => {
+        if (Math.abs(movedDistance) > 10) {
+          e.preventDefault();
+        }
+      }, true);
+
+      dots.forEach((dot, index) => { 
+        dot.addEventListener("click", () => {
+          goToSlide(index);
+          startCarouselAutoPlay();
+        }); 
+      });
+
+      startCarouselAutoPlay();
+    }
   </script>
 </body>
 </html>
