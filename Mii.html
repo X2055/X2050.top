@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>文件 ↔ 图片 隐写工具</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-font, "Segoe UI", "PingFang SC", sans-serif;
+            max-width: 960px;
+            margin: 24px auto;
+            padding: 0 16px;
+            color: #222;
+        }
+        h1 {
+            font-size: 22px;
+            margin-bottom: 6px;
+        }
+        h2 {
+            font-size: 16px;
+            margin-top: 22px;
+            border-left: 4px solid #4a90d9;
+            padding-left: 8px;
+        }
+        .card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 14px 16px;
+            margin-top: 10px;
+            background: #fafbfc;
+        }
+        input[type=file] {
+            margin: 6px 0;
+        }
+        button {
+            background: #4a90d9;
+            color: #fff;
+            border: 0;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 6px;
+        }
+        button:hover {
+            background: #3a7bc8;
+        }
+        button:disabled {
+            background: #aaa;
+            cursor: not-allowed;
+        }
+        .row {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .info {
+            font-size: 13px;
+            color: #555;
+            line-height: 1.7;
+        }
+        .ok {
+            color: #1a7f37;
+        }
+        .err {
+            color: #c0392b;
+        }
+        .key-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 8px 0 4px 0;
+            padding: 8px 12px;
+            background: #f0f4fa;
+            border-radius: 6px;
+            border: 1px solid #dce3ed;
+        }
+        .key-row label {
+            font-weight: 500;
+            font-size: 14px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .key-row input[type="text"] {
+            flex: 1;
+            min-width: 160px;
+            padding: 6px 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            font-family: ui-monospace, Menlo, monospace;
+            background: #fff;
+            transition: border-color 0.2s;
+        }
+        .key-row input[type="text"]:focus {
+            border-color: #4a90d9;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(74, 144, 217, 0.15);
+        }
+        .key-hint {
+            font-size: 12px;
+            color: #888;
+            margin-left: 2px;
+        }
+
+        /* 进度条 */
+        .progress-wrap {
+            margin: 10px 0 4px 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .progress-wrap progress {
+            flex: 1;
+            min-width: 120px;
+            height: 20px;
+            border-radius: 10px;
+            border: none;
+            background: #e9ecef;
+            appearance: none;
+            -webkit-appearance: none;
+        }
+        .progress-wrap progress::-webkit-progress-bar {
+            background: #e9ecef;
+            border-radius: 10px;
+        }
+        .progress-wrap progress::-webkit-progress-value {
+            background: #4a90d9;
+            border-radius: 10px;
+            transition: width 0.2s;
+        }
+        .progress-wrap progress::-moz-progress-bar {
+            background: #4a90d9;
+            border-radius: 10px;
+        }
+        .progress-label {
+            font-size: 13px;
+            color: #555;
+            white-space: nowrap;
+            min-width: 56px;
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+        }
+        .progress-status {
+            font-size: 12px;
+            color: #777;
+            flex: 1;
+            min-width: 100px;
+        }
+
+        .download-link {
+            display: inline-block;
+            margin-top: 8px;
+            background: #e8f0fe;
+            padding: 6px 14px;
+            border-radius: 4px;
+            color: #1a5ba8;
+            text-decoration: none;
+            font-size: 13px;
+            border: 1px solid #c5d8ed;
+            transition: background 0.15s;
+        }
+        .download-link:hover {
+            background: #d4e3fa;
+        }
+
+        /* ===== 弹窗 ===== */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.45);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            backdrop-filter: blur(2px);
+            animation: fadeIn 0.25s ease;
+        }
+        .modal-overlay.active {
+            display: flex;
+        }
+        .modal-box {
+            background: #ffffff;
+            border-radius: 16px;
+            max-width: 480px;
+            width: 90%;
+            padding: 28px 24px 20px;
+            box-shadow: 0 20px 48px rgba(0, 0, 0, 0.25);
+            animation: slideUp 0.3s ease;
+            border: 1px solid #e4e8f0;
+        }
+        .modal-box h3 {
+            margin: 0 0 8px 0;
+            font-size: 20px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .modal-box h3 .icon {
+            font-size: 24px;
+        }
+        .modal-box p {
+            margin: 10px 0 6px 0;
+            font-size: 14px;
+            color: #333;
+            line-height: 1.6;
+        }
+        .modal-box .file-name-highlight {
+            background: #f0f4fa;
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-family: ui-monospace, Menlo, monospace;
+            font-size: 14px;
+            color: #1a5ba8;
+            word-break: break-all;
+            margin: 8px 0 12px 0;
+            border: 1px solid #dce3ed;
+        }
+        .modal-box .btn-close-modal {
+            background: #4a90d9;
+            color: #fff;
+            border: none;
+            padding: 8px 24px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            margin-top: 8px;
+            float: right;
+        }
+        .modal-box .btn-close-modal:hover {
+            background: #3a7bc8;
+        }
+        .modal-box .warning-icon {
+            color: #d97706;
+        }
+        .modal-box .info-icon {
+            color: #4a90d9;
+        }
+        .clearfix::after {
+            content: "";
+            display: table;
+            clear: both;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+        @keyframes slideUp {
+            from {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .sep {
+            border-top: 1px dashed #ddd;
+            margin: 18px 0 8px 0;
+        }
+        .mt-1 {
+            margin-top: 4px;
+        }
+        .flex {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>📦 文件 ↔ 图片 隐写工具</h1>
+    <p class="info">将任意文件编码为 PNG 图片（每 3 字节 → 1 个 RGB 像素），或从其生成的图片中还原原文件。</p>
+
+    <!-- 密钥输入 -->
+    <div class="key-row">
+        <label for="keyInput">🔑 密钥 <span class="key-hint">(可选)</span></label>
+        <input type="text" id="keyInput" placeholder="留空则不加密 / 解密" value="">
+        <span class="key-hint">编码与解码需使用相同密钥</span>
+    </div>
+
+    <!-- 编码区 -->
+    <div class="card">
+        <h2>① 文件 → 图片（编码）</h2>
+        <div class="flex">
+            <input type="file" id="encFile">
+            <button id="btnEncode">生成图片</button>
+        </div>
+
+        <div class="progress-wrap" id="encProgressWrap" style="display:none;">
+            <progress id="encProgress" value="0" max="100"></progress>
+            <span class="progress-label" id="encProgressLabel">0%</span>
+            <span class="progress-status" id="encProgressStatus">准备中…</span>
+        </div>
+
+        <div class="info" id="encInfo"></div>
+        <div id="encDownload"></div>
+    </div>
+
+    <!-- 解码区 -->
+    <div class="card">
+        <h2>② 图片 → 文件（解码）</h2>
+        <div class="flex">
+            <input type="file" id="decFile" accept="image/png,image/bmp">
+            <button id="btnDecode">还原文件</button>
+        </div>
+
+        <div class="progress-wrap" id="decProgressWrap" style="display:none;">
+            <progress id="decProgress" value="0" max="100"></progress>
+            <span class="progress-label" id="decProgressLabel">0%</span>
+            <span class="progress-status" id="decProgressStatus">准备中…</span>
+        </div>
+
+        <div class="info" id="decInfo"></div>
+        <div id="decDownload"></div>
+    </div>
+
+    <!-- ===== 弹窗结构 ===== -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-box">
+            <h3>
+                <span class="icon" id="modalIcon">📄</span>
+                <span id="modalTitle">下载提示</span>
+            </h3>
+            <p id="modalMessage">您的文件已准备就绪。</p>
+            <div class="file-name-highlight" id="modalFileName">文件名示例</div>
+            <p style="font-size:13px; color:#666; margin-bottom:6px;" id="modalExtra">请注意浏览器下载时可能自动更改扩展名，请手动修正。</p>
+            <div class="clearfix">
+                <button class="btn-close-modal" id="modalCloseBtn">我知道了</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* ============================================================
+           编码规则（与 rules.txt 保持一致，扩展版）
+           ------------------------------------------------------------
+           1) 图片宽度固定 W=256；高度 H = ceil((payloadLen + META_BYTES) / 3 / W)
+              META_BYTES = 24（8 个元数据像素）
+           2) 像素按 行优先 (x 从 0..W-1, y 从 0..H-1) 写入。
+           3) 元数据像素（前 8 个像素，即位置 0..7）：
+                pix0 = (0x4D,0x70,0x78)            magic "Mpx"
+                pix1 = payloadLen 低 24 位          (len)&255, (len>>8)&255, (len>>16)&255
+                pix2 = payloadLen 高 24 位          (len>>24)&255, (len>>32)&255, (len>>40)&255
+                pix3 = (extLen|encFlag, ext0, ext1) 扩展名长度(低7位)+加密标志(最高位) + 扩展名前2字符
+                pix4 = (ext2, ext3, ext4)           扩展名 第3~5 字符
+                pix5 = (ext5, ext6, ext7)           扩展名 第6~8 字符
+                pix6 = (ext8, ext9, ext10)          扩展名 第9~11 字符
+                pix7 = (ext11, ext12, ext13)        扩展名 第12~14 字符
+              扩展名最大 14 字节（包含点号，如 ".tar.gz"）
+              encFlag = 1 表示使用了密钥加密，0 表示未加密
+           4) 其后像素：依次写入文件字节，每 3 字节 -> (R,G,B) 一像素。
+              若使用密钥，文件字节先经过 XOR 加密再写入。
+              文件字节数不足 3 的倍数时，最后一像素缺额的通道填 0。
+           5) payload 写完后，剩余像素填 (0,0,0)。
+           ============================================================ */
+
+        const W = 256;
+        const META_PIXELS = 8;
+        const META_BYTES = META_PIXELS * 3; // 24
+        const MAGIC = [0x4D, 0x70, 0x78]; // 'M','p','x'
+        const EXT_MAX = 14;
+
+        // 敏感扩展名列表（可能被浏览器误判为zip等）
+        const SENSITIVE_EXTS = ['.apk', '.ipa', '.jar', '.dex', '.xapk', '.aab', '.abb', '.apks'];
+
+        function uiSet(id, html) { document.getElementById(id).innerHTML = html; }
+
+        function getKeyBytes() {
+            const raw = document.getElementById('keyInput').value;
+            if (!raw) return null;
+            return new TextEncoder().encode(raw);
+        }
+
+        function xorBuffer(buf, keyBytes) {
+            if (!keyBytes || keyBytes.length === 0) return;
+            const klen = keyBytes.length;
+            for (let i = 0; i < buf.length; i++) {
+                buf[i] ^= keyBytes[i % klen];
+            }
+        }
+
+        function getFileExt(name) {
+            if (!name) return '';
+            const i = name.lastIndexOf('.');
+            if (i < 0) return '';
+            return name.slice(i);
+        }
+
+        function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+        // ===== 弹窗控制 =====
+        function showModal(title, message, fileName, isWarning) {
+            const overlay = document.getElementById('modalOverlay');
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalMessage').textContent = message;
+            document.getElementById('modalFileName').textContent = fileName;
+            const icon = document.getElementById('modalIcon');
+            const extra = document.getElementById('modalExtra');
+            if (isWarning) {
+                icon.textContent = '⚠️';
+                icon.className = 'icon warning-icon';
+                extra.textContent = '⚠️ 此类型文件在浏览器下载时可能被自动更改扩展名（如 .apk → .zip），请务必在下载后手动修正为正确的扩展名。';
+            } else {
+                icon.textContent = '📄';
+                icon.className = 'icon info-icon';
+                extra.textContent = '如果浏览器下载时扩展名不正确，请手动重命名文件。';
+            }
+            overlay.classList.add('active');
+        }
+
+        document.getElementById('modalCloseBtn').addEventListener('click', function() {
+            document.getElementById('modalOverlay').classList.remove('active');
+        });
+        // 点击外部关闭
+        document.getElementById('modalOverlay').addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.classList.remove('active');
+            }
+        });
+
+        // ============================================================
+        //  编码
+        // ============================================================
+        document.getElementById('btnEncode').addEventListener('click', async () => {
+            const f = document.getElementById('encFile').files[0];
+            if (!f) {
+                uiSet('encInfo', '<span class="err">请先选择要编码的文件。</span>');
+                return;
+            }
+
+            const keyBytes = getKeyBytes();
+            const useKey = (keyBytes !== null && keyBytes.length > 0);
+
+            const fileBuf = new Uint8Array(await f.arrayBuffer());
+            const len = fileBuf.length;
+            if (len === 0) {
+                uiSet('encInfo', '<span class="err">文件为空，无法编码。</span>');
+                return;
+            }
+
+            const ext = getFileExt(f.name);
+            let extBytes = new TextEncoder().encode(ext);
+            if (extBytes.length > EXT_MAX) {
+                extBytes = extBytes.slice(0, EXT_MAX);
+                console.warn('扩展名过长，已截断至', EXT_MAX, '字节');
+            }
+            const extLen = extBytes.length;
+            const encFlag = useKey ? 1 : 0;
+            const extLenEnc = (encFlag << 7) | (extLen & 0x7F);
+
+            const payload = new Uint8Array(fileBuf);
+            if (useKey) {
+                xorBuffer(payload, keyBytes);
+            }
+
+            const dataBytes = META_BYTES + payload.length;
+            const dataPixels = Math.ceil(dataBytes / 3);
+            const H = Math.ceil(dataPixels / W);
+            const totalPixels = W * H;
+
+            const img = new Uint8ClampedArray(totalPixels * 4);
+
+            // ---- 元数据 ----
+            const meta = new Uint8Array(META_BYTES);
+            meta[0] = MAGIC[0];
+            meta[1] = MAGIC[1];
+            meta[2] = MAGIC[2];
+            meta[3] = len & 0xFF;
+            meta[4] = (len >> 8) & 0xFF;
+            meta[5] = (len >> 16) & 0xFF;
+            meta[6] = (len >> 24) & 0xFF;
+            meta[7] = (len >> 32) & 0xFF;
+            meta[8] = (len >> 40) & 0xFF;
+            meta[9] = extLenEnc;
+            for (let i = 0; i < extLen && i < EXT_MAX; i++) {
+                meta[10 + i] = extBytes[i];
+            }
+            for (let i = 10 + extLen; i < META_BYTES; i++) {
+                meta[i] = 0;
+            }
+
+            for (let i = 0; i < META_BYTES; i++) {
+                const px = (i / 3) | 0;
+                const ch = i % 3;
+                const idx = px * 4 + ch;
+                img[idx] = meta[i];
+            }
+
+            // ---- 写入 payload (分块更新进度) ----
+            const pw = document.getElementById('encProgressWrap');
+            const pb = document.getElementById('encProgress');
+            const pl = document.getElementById('encProgressLabel');
+            const ps = document.getElementById('encProgressStatus');
+            pw.style.display = 'flex';
+            pb.value = 0;
+            pl.textContent = '0%';
+            ps.textContent = '编码中… 0 / ' + payload.length + ' 字节';
+
+            const payloadStartPx = META_PIXELS;
+            const total = payload.length;
+            const blockSize = 1024;
+            let processed = 0;
+
+            for (let i = 0; i < total; i++) {
+                const px = payloadStartPx + ((i / 3) | 0);
+                const ch = i % 3;
+                const idx = px * 4 + ch;
+                img[idx] = payload[i];
+                processed++;
+                if (processed % blockSize === 0 || processed === total) {
+                    const pct = Math.min(100, Math.round((processed / total) * 100));
+                    pb.value = pct;
+                    pl.textContent = pct + '%';
+                    ps.textContent = '编码中… ' + processed + ' / ' + total + ' 字节';
+                    await sleep(0);
+                }
+            }
+
+            // 设置 Alpha
+            for (let px = 0; px < totalPixels; px++) {
+                img[px * 4 + 3] = 255;
+            }
+
+            // ---- 导出图片 ----
+            const cv = document.createElement('canvas');
+            cv.width = W;
+            cv.height = H;
+            const ctx = cv.getContext('2d');
+            const imd = ctx.createImageData(W, H);
+            imd.data.set(img);
+            ctx.putImageData(imd, 0, 0);
+
+            await sleep(20);
+            cv.toBlob(blob => {
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = (f.name || 'file') + '.encoded.png';
+                a.className = 'download-link';
+                a.textContent = '⬇ 下载编码图片 (' + W + '×' + H + ', ' + blob.size + ' bytes)';
+                const container = document.getElementById('encDownload');
+                container.innerHTML = '';
+                container.appendChild(a);
+
+                pb.value = 100;
+                pl.textContent = '100%';
+                ps.textContent = '✅ 编码完成！';
+            }, 'image/png');
+
+            const extShow = ext || '(无)';
+            const keyStatus = useKey ? '已加密 (密钥: ' + document.getElementById('keyInput').value + ')' : '未加密';
+            uiSet('encInfo', '<span class="ok">✅ 编码完成。</span> 原文件 <b>' + f.name + '</b> (' + len +
+                ' bytes) → ' + W + '×' + H + ' 像素图，共 ' + totalPixels + ' 像素。' +
+                '<br>扩展名: <code>' + extShow + '</code> ｜ ' + keyStatus);
+        });
+
+        // ============================================================
+        //  解码
+        // ============================================================
+        document.getElementById('btnDecode').addEventListener('click', async () => {
+            const f = document.getElementById('decFile').files[0];
+            if (!f) {
+                uiSet('decInfo', '<span class="err">请先选择编码后的 PNG 图片。</span>');
+                return;
+            }
+
+            const pw = document.getElementById('decProgressWrap');
+            const pb = document.getElementById('decProgress');
+            const pl = document.getElementById('decProgressLabel');
+            const ps = document.getElementById('decProgressStatus');
+            pw.style.display = 'flex';
+            pb.value = 0;
+            pl.textContent = '0%';
+            ps.textContent = '读取图片…';
+
+            let bmp;
+            try {
+                bmp = await createImageBitmap(f);
+            } catch (e) {
+                uiSet('decInfo', '<span class="err">无法解码图片：' + e.message + '</span>');
+                pw.style.display = 'none';
+                return;
+            }
+
+            const cv = document.createElement('canvas');
+            cv.width = bmp.width;
+            cv.height = bmp.height;
+            const ctx = cv.getContext('2d');
+            ctx.drawImage(bmp, 0, 0);
+            const imgData = ctx.getImageData(0, 0, bmp.width, bmp.height);
+            const { data, width: iW, height: iH } = imgData;
+            const totalPx = iW * iH;
+
+            if (totalPx < META_PIXELS) {
+                uiSet('decInfo', '<span class="err">图片太小，至少需要 ' + META_PIXELS + ' 个像素。</span>');
+                pw.style.display = 'none';
+                return;
+            }
+
+            const px2rgb = (px) => [data[px * 4], data[px * 4 + 1], data[px * 4 + 2]];
+            const p0 = px2rgb(0);
+            if (p0[0] !== MAGIC[0] || p0[1] !== MAGIC[1] || p0[2] !== MAGIC[2]) {
+                uiSet('decInfo', '<span class="err">❌ magic 校验失败：这不是本工具编码的图片 (首像素=' +
+                    p0.map(x => '0x' + x.toString(16).padStart(2, '0')).join(',') + ')。</span>');
+                pw.style.display = 'none';
+                return;
+            }
+
+            const p1 = px2rgb(1),
+                p2 = px2rgb(2);
+            const len = p1[0] | (p1[1] << 8) | (p1[2] << 16) |
+                (p2[0] << 24) | (p2[1] << 32) | (p2[2] << 40);
+            if (!Number.isFinite(len) || len <= 0 || len > totalPx * 3) {
+                uiSet('decInfo', '<span class="err">声明文件长度异常 (len=' + len +
+                    ')，可能非本工具编码或图片损坏。</span>');
+                pw.style.display = 'none';
+                return;
+            }
+
+            const p3 = px2rgb(3);
+            const extLenEnc = p3[0];
+            const encFlag = (extLenEnc >> 7) & 0x1;
+            const extLen = extLenEnc & 0x7F;
+            const useKey = (encFlag === 1);
+
+            let extBytes = [];
+            if (extLen > 0 && extLen <= EXT_MAX) {
+                let idx = 0;
+                if (idx < extLen) extBytes.push(p3[1]);
+                idx++;
+                if (idx < extLen) extBytes.push(p3[2]);
+                idx++;
+                for (let pi = 4; pi < META_PIXELS && idx < extLen; pi++) {
+                    const rgb = px2rgb(pi);
+                    for (let ci = 0; ci < 3 && idx < extLen; ci++) {
+                        extBytes.push(rgb[ci]);
+                        idx++;
+                    }
+                }
+            }
+            let extName = '';
+            if (extBytes.length > 0) {
+                try {
+                    extName = new TextDecoder().decode(new Uint8Array(extBytes));
+                } catch (_) { extName = ''; }
+            }
+
+            const keyBytes = getKeyBytes();
+            if (useKey && (!keyBytes || keyBytes.length === 0)) {
+                uiSet('decInfo', '<span class="err">⚠️ 此图片使用了密钥加密，请在顶部输入正确的密钥后重试。</span>');
+                pw.style.display = 'none';
+                return;
+            }
+
+            const out = new Uint8Array(len);
+            let written = 0;
+            const payloadStartPx = META_PIXELS;
+            const totalSteps = Math.min(len, totalPx * 3);
+            const updateInterval = Math.max(1, Math.floor(totalSteps / 200));
+
+            ps.textContent = '解码中… 0 / ' + len + ' 字节';
+
+            for (let px = payloadStartPx; px < totalPx && written < len; px++) {
+                const base = px * 4;
+                const r = data[base],
+                    g = data[base + 1],
+                    b = data[base + 2];
+                out[written++] = r;
+                if (written >= len) break;
+                out[written++] = g;
+                if (written >= len) break;
+                out[written++] = b;
+                if (written >= len) break;
+
+                if (written % updateInterval === 0 || written === len) {
+                    const pct = Math.min(100, Math.round((written / len) * 100));
+                    pb.value = pct;
+                    pl.textContent = pct + '%';
+                    ps.textContent = '解码中… ' + written + ' / ' + len + ' 字节';
+                    await sleep(0);
+                }
+            }
+
+            if (written !== len) {
+                uiSet('decInfo', '<span class="err">数据不足：读出 ' + written + '/' + len + ' 字节。</span>');
+                pw.style.display = 'none';
+                return;
+            }
+
+            if (useKey && keyBytes && keyBytes.length > 0) {
+                xorBuffer(out, keyBytes);
+                ps.textContent = '解密中… 完成';
+                await sleep(20);
+            }
+
+            // ---- 构建下载文件名 ----
+            let base = f.name.replace(/\.encoded\.png$/i, '').replace(/\.png$/i, '');
+            const lastDot = base.lastIndexOf('.');
+            if (lastDot > 0) {
+                base = base.substring(0, lastDot);
+            }
+            const finalName = base + extName;
+
+            const blob = new Blob([out], { type: 'application/octet-stream' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = finalName;
+            a.className = 'download-link';
+            a.textContent = '⬇ 下载还原文件 (' + len + ' bytes)  →  ' + finalName;
+            const container = document.getElementById('decDownload');
+            container.innerHTML = '';
+            container.appendChild(a);
+
+            pb.value = 100;
+            pl.textContent = '100%';
+            ps.textContent = '✅ 解码完成！';
+
+            const extShow = extName || '(无扩展名)';
+            const keyStatus = useKey ? '已加密 (密钥验证通过)' : '未加密';
+            uiSet('decInfo', '<span class="ok">✅ 解码成功。</span> 图片 ' + iW + '×' + iH +
+                '，声明长度 ' + len + ' bytes，扩展名 <code>' + extShow + '</code> ｜ ' + keyStatus);
+
+            // ---- 弹出提示（如果扩展名敏感） ----
+            const lowerExt = extName.toLowerCase();
+            const isSensitive = SENSITIVE_EXTS.some(se => lowerExt.endsWith(se));
+            if (isSensitive) {
+                showModal(
+                    '⚠️ 注意文件扩展名',
+                    '检测到文件类型可能被浏览器自动更改扩展名（例如 .apk → .zip）。',
+                    '正确文件名：' + finalName,
+                    true
+                );
+            } else {
+                // 也可以显示一般提示，但为了不打扰用户，可选择不显示；或者简单显示一个温和提示
+                // 我们在这里也显示一个一般性提示，但非警告样式
+                showModal(
+                    '下载提示',
+                    '文件已准备就绪，请检查浏览器下载的文件名是否与预期一致。',
+                    '文件名：' + finalName,
+                    false
+                );
+            }
+        });
+
+        // 切换文件时重置进度条和下载链接
+        document.getElementById('encFile').addEventListener('change', () => {
+            document.getElementById('encProgressWrap').style.display = 'none';
+            document.getElementById('encDownload').innerHTML = '';
+            document.getElementById('encInfo').innerHTML = '';
+        });
+        document.getElementById('decFile').addEventListener('change', () => {
+            document.getElementById('decProgressWrap').style.display = 'none';
+            document.getElementById('decDownload').innerHTML = '';
+            document.getElementById('decInfo').innerHTML = '';
+        });
+    </script>
+</body>
+</html>
