@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>文件 ↔ 图片 隐写工具</title>
+    <title>请确保周围环境安全</title>
     <style>
         * { box-sizing: border-box; }
         body {
@@ -13,6 +13,17 @@
             color: #222;
         }
         h1 { font-size: 22px; margin-bottom: 6px; }
+        .slogan {
+            font-size: 15px;
+            color: #4a90d9;
+            margin: 8px 0 16px 0;
+            padding: 8px 16px;
+            background: linear-gradient(135deg, #f0f4fa 0%, #e8f0fe 100%);
+            border-radius: 8px;
+            border-left: 4px solid #4a90d9;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
         h2 { font-size: 16px; margin-top: 22px; border-left: 4px solid #4a90d9; padding-left: 8px; }
         .card {
             border: 1px solid #ddd; border-radius: 8px; padding: 14px 16px;
@@ -22,6 +33,7 @@
         button {
             background: #4a90d9; color: #fff; border: 0; padding: 8px 16px;
             border-radius: 6px; cursor: pointer; font-size: 14px; margin-top: 6px;
+            transition: background 0.15s;
         }
         button:hover { background: #3a7bc8; }
         button:disabled { background: #aaa; cursor: not-allowed; }
@@ -44,6 +56,21 @@
         }
         .key-row input[type="text"]:focus { border-color: #4a90d9; outline: none; box-shadow: 0 0 0 3px rgba(74,144,217,0.15); }
         .key-hint { font-size: 12px; color: #888; margin-left: 2px; }
+        .key-strength { font-size: 12px; margin-left: 8px; font-weight: 600; }
+        .strength-weak { color: #c0392b; }
+        .strength-medium { color: #d97706; }
+        .strength-strong { color: #1a7f37; }
+
+        /* 密钥操作按钮 */
+        .key-actions {
+            display: flex; gap: 6px; align-items: center; flex-shrink: 0;
+        }
+        .key-actions button {
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 6px 12px; font-size: 13px; margin-top: 0;
+            white-space: nowrap;
+        }
+        .key-actions button .ico { width: 0.9em; height: 0.9em; }
 
         /* 进度条 */
         .progress-wrap { margin: 10px 0 4px 0; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
@@ -90,7 +117,7 @@
         .mt-1 { margin-top: 4px; }
         .flex { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 
-        /* SVG 图标：单色、继承 currentColor、随字号缩放 */
+        /* SVG 图标 */
         .ico { display: inline-flex; align-items: center; justify-content: center; vertical-align: -0.15em; width: 1em; height: 1em; flex: none; }
         .ico svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
         .ico svg .fill { fill: currentColor; stroke: none; }
@@ -143,12 +170,10 @@
         .preview-body { padding: 14px; }
         .preview-body .pv-placeholder { color: #999; font-size: 13px; text-align: center; padding: 30px 10px; }
 
-        /* 图片预览 */
         .pv-image { text-align: center; }
         .pv-image img { max-width: 100%; max-height: 420px; border-radius: 6px; box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
         .pv-image .pv-info { font-size: 12px; color: #888; margin-top: 6px; }
 
-        /* 文本/代码 预览 */
         .pv-text pre {
             margin: 0; max-height: 420px; overflow: auto; background: #0f1729; color: #e6edf3;
             padding: 14px 16px; border-radius: 8px; font-size: 13px; line-height: 1.6;
@@ -159,7 +184,6 @@
             background: #4a90d9; color: #fff; margin-bottom: 8px; font-weight: 600;
         }
 
-        /* 音频预览 */
         .pv-audio { text-align: center; padding: 10px 6px; }
         .pv-audio .audio-cover {
             width: 110px; height: 110px; border-radius: 50%; margin: 0 auto 14px;
@@ -169,20 +193,17 @@
         .pv-audio .audio-title { font-size: 14px; font-weight: 600; color: #333; margin-bottom: 4px; word-break: break-all; }
         .pv-audio audio { width: 100%; max-width: 460px; margin-top: 6px; }
 
-        /* 视频预览 —— 美化播放器 */
         .pv-video { text-align: center; }
         .pv-video .video-frame {
             position: relative; max-width: 640px; margin: 0 auto; border-radius: 12px;
             overflow: hidden; background: #000; box-shadow: 0 8px 30px rgba(0,0,0,0.25);
         }
         .pv-video video { width: 100%; display: block; border-radius: 12px; }
-        /* 自定义控制 Bar —— 用伪元素叠加层模拟美化（实际控件通过 controlslist 配合原生） */
         .pv-video .video-frame::after {
             content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 44px;
             background: linear-gradient(to top, rgba(0,0,0,0.55), rgba(0,0,0,0)); border-radius: 0 0 12px 12px; pointer-events: none;
         }
 
-        /* ZIP / APK 结构预览 */
         .pv-archive .arch-summary { font-size: 13px; color: #555; margin-bottom: 8px; }
         .pv-archive .arch-list { max-height: 340px; overflow: auto; border: 1px solid #e5e9f0; border-radius: 8px; }
         .pv-archive .arch-row {
@@ -196,30 +217,52 @@
         .pv-archive .arch-size { color: #999; white-space: nowrap; font-size: 11.5px; }
         .pv-archive .arch-empty { padding: 18px; text-align: center; color: #999; font-size: 13px; }
 
-        /* 通用/未知 预览 */
         .pv-generic { text-align: center; padding: 20px 10px; }
         .pv-generic .generic-icon { font-size: 56px; margin-bottom: 10px; }
         .pv-generic .generic-name { font-size: 14px; font-weight: 600; color: #333; word-break: break-all; }
         .pv-generic .generic-meta { font-size: 12px; color: #999; margin-top: 4px; }
 
-        /* 十六进制预览 */
         .pv-hex pre {
             margin: 0; max-height: 320px; overflow: auto; background: #0f1729; color: #c9d3df;
             padding: 12px 14px; border-radius: 8px; font-size: 12px; line-height: 1.55;
             font-family: ui-monospace, Menlo, monospace;
         }
+
+        /* 加密标识徽章 */
+        .enc-badge {
+            display: inline-flex; align-items: center; gap: 4px;
+            background: #1a7f37; color: #fff; font-size: 11px; font-weight: 600;
+            padding: 2px 8px; border-radius: 10px; margin-left: 8px;
+        }
+        .enc-badge svg { width: 12px; height: 12px; }
     </style>
 </head>
 <body>
 
-    <h1><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M12 3v18M3 12h18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span> 文件 ↔ 图片 隐写工具</h1>
-    <p class="info">将任意文件（或文字内容）编码为 PNG 图片（每 3 字节 → 1 个 RGB 像素），或从其生成的图片中还原原文件并即时预览。</p>
+    <h1><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M12 3v18M3 12h18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span> 隐写工具 <span class="enc-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L4 6v6c0 5 3.5 9 8 10 4.5-1 8-5 8-10V6z"/><path d="M9 12l2 2 4-4"/></svg> AES-256-GCM</span></h1>
+    <p class="slogan">守护不被看见的权利</p>
+    <p class="info">将任意文件（或文字内容）编码为 PNG 图片（每 3 字节 → 1 个 RGB 像素），或从其生成的图片中还原原文件并即时预览。<strong>使用 AES-256-GCM + PBKDF2 加密，防篡改、抗审查</strong></p>
 
     <!-- 密钥输入 -->
     <div class="key-row">
-        <label for="keyInput"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="8" cy="15" r="4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M11 12l9-9M16 7h4v4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span> 密钥 <span class="key-hint">(可选)</span></label>
-        <input type="text" id="keyInput" placeholder="留空则不加密 / 解密" value="">
-        <span class="key-hint">编码与解码需使用相同密钥</span>
+        <label for="keyInput"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="8" cy="15" r="4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M11 12l9-9M16 7h4v4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span> 密码 <span class="key-hint">(AES-256-GCM 加密，PBKDF2 600k 轮)</span></label>
+        <input type="text" id="keyInput" placeholder="输入强密码（留空则不加密）" value="">
+        <div class="key-actions">
+            <button type="button" id="btnGenKey" class="secondary" title="生成 256 位随机密钥">
+                <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg></span>
+                生成
+            </button>
+            <button type="button" id="btnCopyKey" class="secondary" title="复制密钥到剪贴板">
+                <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></span>
+                复制
+            </button>
+            <button type="button" id="btnToggleKey" class="secondary" title="显示/隐藏密码">
+                <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span>
+                显示
+            </button>
+        </div>
+        <span class="key-strength" id="keyStrength"></span>
+        <span class="key-hint">编码与解码需使用相同密码</span>
     </div>
 
     <!-- 编码区 -->
@@ -228,7 +271,7 @@
         <div class="mode-row" id="modeRow">
             <span class="mode-label"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span> 隐写模式</span>
             <div class="seg" role="tablist">
-                <button id="modePixel" class="active" type="button">像素图（默认）</button>
+                <button id="modePixel" class="active" type="button">像素图</button>
                 <button id="modeLSB" type="button">LSB 隐写进照片</button>
             </div>
             <span class="mode-hint" id="modeHint">每 3 字节 → 1 个 RGB 像素，生成独立编码图</span>
@@ -237,7 +280,7 @@
             <button id="tabFile" class="active"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M14 3v5h5M12 14v4M10 16h4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span> 文件编码</button>
             <button id="tabText"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span> 文字编码</button>
         </div>
-        <!-- LSB 载体图片选择（仅 LSB 模式显示） -->
+        <!-- LSB 载体图片选择 -->
         <div class="carrier-row" id="carrierRow" style="display:none;">
             <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="1.5"/><path d="M21 15l-5-5L5 21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
             <span class="carrier-label">载体图片</span>
@@ -258,7 +301,7 @@
                 <div class="flex" style="margin-top:8px;">
                     <button id="btnEncodeText">生成图片</button>
                 </div>
-                <div class="info" style="margin-top:6px;font-size:12px;color:#888;">文字将按 UTF-8 编码为字节后写入图片（默认以 .txt 存入，文件名自动生成为圆周率乱数）；可配合上方密钥进行 XOR 加密。</div>
+                <div class="info" style="margin-top:6px;font-size:12px;color:#888;">文字将按 UTF-8 编码为字节后写入图片（默认以 .txt 存入，文件名自动生成为圆周率乱数）；AES-256-GCM 加密保护。</div>
             </div>
         </div>
 
@@ -314,10 +357,97 @@
 
     <script>
         /* ============================================================
+           AES-256-GCM + PBKDF2 加密核心
+           ============================================================ */
+        const PBKDF2_ITERATIONS = 600000; // 2026 年推荐轮数
+
+        // 密码强度检测
+        function checkPasswordStrength(pwd) {
+            if (!pwd) return { level: '', text: '' };
+            let score = 0;
+            if (pwd.length >= 8) score++;
+            if (pwd.length >= 12) score++;
+            if (pwd.length >= 16) score++;
+            if (/[a-z]/.test(pwd)) score++;
+            if (/[A-Z]/.test(pwd)) score++;
+            if (/[0-9]/.test(pwd)) score++;
+            if (/[^a-zA-Z0-9]/.test(pwd)) score++;
+            if (score <= 2) return { level: 'strength-weak', text: '弱' };
+            if (score <= 4) return { level: 'strength-medium', text: '中' };
+            return { level: 'strength-strong', text: '强' };
+        }
+
+        document.getElementById('keyInput').addEventListener('input', function() {
+            const strength = checkPasswordStrength(this.value);
+            const indicator = document.getElementById('keyStrength');
+            if (strength.text) {
+                indicator.className = 'key-strength ' + strength.level;
+                indicator.textContent = strength.text;
+            } else {
+                indicator.textContent = '';
+            }
+        });
+
+        // PBKDF2 派生 AES-256 密钥
+        async function deriveKey(password, salt) {
+            const enc = new TextEncoder();
+            const keyMaterial = await crypto.subtle.importKey(
+                'raw', enc.encode(password), 'PBKDF2', false, ['deriveKey']
+            );
+            return await crypto.subtle.deriveKey(
+                { name: 'PBKDF2', salt: salt, iterations: PBKDF2_ITERATIONS, hash: 'SHA-256' },
+                keyMaterial,
+                { name: 'AES-GCM', length: 256 },
+                false,
+                ['encrypt', 'decrypt']
+            );
+        }
+
+        // AES-256-GCM 加密：返回 { salt, iv, ciphertext, authTag }
+        async function aesGcmEncrypt(plaintextBytes, password) {
+            const salt = crypto.getRandomValues(new Uint8Array(16));
+            const iv = crypto.getRandomValues(new Uint8Array(12));
+            const key = await deriveKey(password, salt);
+            const ciphertext = await crypto.subtle.encrypt(
+                { name: 'AES-GCM', iv: iv },
+                key,
+                plaintextBytes
+            );
+            // GCM authTag 附加在密文末尾
+            const ctWithTag = new Uint8Array(ciphertext);
+            const ctLen = ctWithTag.length - 16;
+            return {
+                salt: salt,
+                iv: iv,
+                ciphertext: ctWithTag.slice(0, ctLen),
+                authTag: ctWithTag.slice(ctLen)
+            };
+        }
+
+        // AES-256-GCM 解密：输入 salt, iv, ciphertext, authTag，返回明文
+        async function aesGcmDecrypt(encryptedData, password) {
+            const key = await deriveKey(password, encryptedData.salt);
+            // 合并密文和 authTag
+            const ctWithTag = new Uint8Array(encryptedData.ciphertext.length + 16);
+            ctWithTag.set(encryptedData.ciphertext, 0);
+            ctWithTag.set(encryptedData.authTag, encryptedData.ciphertext.length);
+            try {
+                const plaintext = await crypto.subtle.decrypt(
+                    { name: 'AES-GCM', iv: encryptedData.iv },
+                    key,
+                    ctWithTag
+                );
+                return new Uint8Array(plaintext);
+            } catch (e) {
+                throw new Error('解密失败：密码错误或文件已被篡改');
+            }
+        }
+
+        /* ============================================================
            编码规则（与 rules.txt 保持一致，扩展版）
            1) W=256; H = ceil((payloadLen + META_BYTES) / 3 / W), META_BYTES=24
            2) 前 8 个像素为元数据: magic + len(48bit) + ext(len|encFlag)+extBytes
-           3) 其后每 3 字节 -> 1 RGB 像素; 使用密钥则先 XOR
+           3) 其后每 3 字节 -> 1 RGB 像素; 使用 AES-256-GCM 加密
            ============================================================ */
         const W = 256;
         const META_PIXELS = 8;
@@ -327,11 +457,9 @@
         const SENSITIVE_EXTS = ['.apk','.ipa','.jar','.dex','.xapk','.aab','.abb','.apks'];
 
         // ---------- LSB 隐写核心（方案2：藏进正常照片的 RGB 最低位）----------
-        // 每像素 RGB 三通道各 1 bit -> 3 bit/像素；头部 48bit(6字节) 存 payload 长度(小端)
         const LSB_HEAD = 6;
         function lsbCapacity(px){ return Math.floor(px*3/8) - LSB_HEAD; }
         function setBit1(b,n,v){ return v ? (b|(1<<n)) : (b&(~(1<<n))); }
-        // 编码：carrierRGBA(Uint8ClampedArray) + w,h + payload -> 新 RGBA
         function lsbEncode(carr, cw, ch, payload){
             const totalPx = cw*ch, max = lsbCapacity(totalPx);
             if (!payload.length) throw new Error('payload 为空');
@@ -339,7 +467,6 @@
             const out = new Uint8ClampedArray(carr);
             const len = payload.length;
             const data = new Uint8Array(LSB_HEAD + len);
-            // 无符号48位小端写长度头（避免 JS 32位符号问题）
             const _dvH = new DataView(data.buffer); _dvH.setUint32(0, len>>>0, true); _dvH.setUint16(4, Math.floor(len/0x100000000), true);
             data.set(payload, LSB_HEAD);
             let bitIdx = 0; const totalBits = data.length*8;
@@ -354,7 +481,6 @@
             for (let px=0;px<totalPx;px++){ if(out[px*4+3]===0) out[px*4+3]=255; }
             return out;
         }
-        // 解码：stegoRGBA + w,h -> { payload:Uint8Array, length }
         function lsbDecode(pix, w, h){
             const totalPx = w*h;
             const headBits = LSB_HEAD*8; let bitIdx=0;
@@ -385,14 +511,12 @@
         // ---------- 工具 ----------
         const uiSet = (id, html) => { document.getElementById(id).innerHTML = html; };
         const sleep = ms => new Promise(r => setTimeout(r, ms));
-        const getKeyBytes = () => { const r = document.getElementById('keyInput').value; return r ? new TextEncoder().encode(r) : null; };
-        const xorBuffer = (buf, key) => { if (!key || !key.length) return; const k=key.length; for (let i=0;i<buf.length;i++) buf[i]^=key[i%k]; };
+        const getPassword = () => { return document.getElementById('keyInput').value; };
         const getFileExt = n => { if (!n) return ''; const i=n.lastIndexOf('.'); return i<0 ? '' : n.slice(i); };
         const fmtSize = b => b<1024?'':(b<1048576?(b/1024).toFixed(1)+' KB':(b/1048576).toFixed(2)+' MB');
         const escapeHtml = s => s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
         // ---------- SVG 图标工厂 ----------
-        // 所有图标为单色描边风格，使用 currentColor 继承文字颜色，尺寸由外层 .ico 控制为 1em。
         const SVG_PATHS = {
             package: '<rect x="3" y="3" width="18" height="18" rx="3"/><path d="M12 3v18M3 12h18"/>',
             key: '<circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M16 7h4v4"/>',
@@ -416,11 +540,9 @@
             return '<span class="ico'+(extraClass?' '+extraClass:'')+'" aria-hidden="true"><svg viewBox="0 0 24 24">'+p+'</svg></span>';
         }
 
-        // 基于圆周率（π）小数点后随机一段数字的乱数文件名生成器
-        // π = 3. 后接以下 1000 位小数（足够随机采样）
+        // 基于圆周率乱数文件名
         const PI_DIGITS = '141592653589793238462643383279502884197169399375105820974944592307816406286208998628034825342117067982148086513282306647093844609550582231725359408128481117450284102701938521105559644622948954930381964428810975665933446128475648233786783165271201909145648566923460348610454326648213393607260249141273724587006606315588174881520920962829254091715364367892590360011330530548820466521384146951941511609433057270365759591953092186117381932611793105118548074462379962749567351885752724891227938183011949129833673362440656643086021394946395224737190702179860943702770539217176293176752384674818467669405132000568127145263560827785771342757789609173637178721468440901224953430146549585371050792279689258923542019956112129021960864034418159813629774771309960518707211349999998372978049951059731732816096318595024459455346908302642522308253344685035261931188171010003137838752886587533208381420617177669147303598253490428755468731159562863882353787593751957781857780532171226806613001927876611195909216420198938095257201065485863278965931493644395259570115156844117486994415886480';
-        const PI_LEN = PI_DIGITS.length; // 1000
-        // 用密码学安全随机取起始偏移，截取一段连续数字作为乱数主体
+        const PI_LEN = PI_DIGITS.length;
         function randPiDigits(length){
             const len = (length && length>0) ? length : 12;
             const maxStart = PI_LEN - len;
@@ -433,12 +555,71 @@
             }
             return PI_DIGITS.slice(start, start + len);
         }
-        // 生成乱数文件名：主体取 π 随机段（默认 12 位，可指定），并保留原扩展名
         function randPiName(ext, digitLen){
             const dlen = (digitLen && digitLen>0) ? digitLen : 12;
             const safeExt = (ext && typeof ext==='string') ? ext : '';
             return randPiDigits(dlen) + safeExt;
         }
+
+        // ---------- 密钥操作功能 ----------
+        // 生成 256 位（32 字节）随机密钥，字符集包含大小写字母、数字、特殊字符
+        function generateSecureKey() {
+            const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=[]{}|;:,.<>?';
+            const keyLength = 43; // Base64 编码后 32 字节 ≈ 256 位
+            const randomValues = new Uint8Array(32);
+            crypto.getRandomValues(randomValues);
+            let key = '';
+            for (let i = 0; i < randomValues.length; i++) {
+                key += charset[randomValues[i] % charset.length];
+            }
+            return key;
+        }
+
+        document.getElementById('btnGenKey').addEventListener('click', () => {
+            const newKey = generateSecureKey();
+            const keyInput = document.getElementById('keyInput');
+            keyInput.value = newKey;
+            keyInput.type = 'text'; // 生成后显示
+            document.getElementById('btnToggleKey').innerHTML = '<span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span> 隐藏';
+            // 触发强度检测
+            keyInput.dispatchEvent(new Event('input'));
+        });
+
+        document.getElementById('btnCopyKey').addEventListener('click', async () => {
+            const keyInput = document.getElementById('keyInput');
+            if (!keyInput.value) {
+                alert('没有可复制的密钥');
+                return;
+            }
+            try {
+                await navigator.clipboard.writeText(keyInput.value);
+                const btn = document.getElementById('btnCopyKey');
+                const originalHtml = btn.innerHTML;
+                btn.innerHTML = '<span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path class="fill" d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/><path d="M9 12l2 2 4-4"/></svg></span> 已复制';
+                setTimeout(() => {
+                    btn.innerHTML = originalHtml;
+                }, 2000);
+            } catch (e) {
+                // 降级方案
+                keyInput.select();
+                document.execCommand('copy');
+                alert('密钥已复制到剪贴板');
+            }
+        });
+
+        let keyVisible = false;
+        document.getElementById('btnToggleKey').addEventListener('click', () => {
+            const keyInput = document.getElementById('keyInput');
+            const btn = document.getElementById('btnToggleKey');
+            keyVisible = !keyVisible;
+            if (keyVisible) {
+                keyInput.type = 'text';
+                btn.innerHTML = '<span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span> 显示';
+            } else {
+                keyInput.type = 'password';
+                btn.innerHTML = '<span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span> 显示';
+            }
+        });
 
         // ---------- 弹窗 ----------
         const showModal = (title, msg, fname, warn) => {
@@ -454,22 +635,17 @@
         document.getElementById('modalCloseBtn').addEventListener('click', ()=>document.getElementById('modalOverlay').classList.remove('active'));
         document.getElementById('modalOverlay').addEventListener('click', e => { if(e.target===this)this.classList.remove('active'); });
 
-        // 将任意格式图片（JPG/WebP/BMP/GIF/TIFF…）统一转为 PNG 无损载体：
-        // createImageBitmap 解码任意图片 → 绘制 canvas → getImageData 得 RGBA 像素 →
-        // toBlob('image/png') 固化为 PNG 无损像素数据 → 读回为 ImageBitmap 供 LSB 使用。
-        // 这样 JPG 等的有损像素在改写 LSB 前已"冻结"为无损载体，LSB 操作不受影响。
         async function loadCarrierAsPNG(file){
             const raw = await createImageBitmap(file);
             const cv=document.createElement('canvas'); cv.width=raw.width; cv.height=raw.height;
             const ctx=cv.getContext('2d'); ctx.drawImage(raw,0,0);
-            // 强制 Alpha=255（JPG 无 Alpha；透明 PNG 载体置为不透明，避免 LSB 读取受透明像素干扰）
             const id=ctx.getImageData(0,0,raw.width,raw.height); const d=id.data; for(let i=3;i<d.length;i+=4) d[i]=255; ctx.putImageData(id,0,0);
             const pngBlob = await new Promise(res=>cv.toBlob(res,'image/png'));
             if (!pngBlob) throw new Error('载体转为 PNG 失败');
             return await createImageBitmap(pngBlob);
         }
 
-        // ---------- 隐写模式切换（像素图 / LSB 隐写进照片）----------
+        // ---------- 隐写模式切换 ----------
         function setMode(mode){
             const pixelBtn=document.getElementById('modePixel'), lsbBtn=document.getElementById('modeLSB');
             const carrierRow=document.getElementById('carrierRow'), hint=document.getElementById('modeHint');
@@ -478,7 +654,6 @@
         }
         document.getElementById('modePixel').addEventListener('click', ()=>setMode('pixel'));
         document.getElementById('modeLSB').addEventListener('click', ()=>setMode('lsb'));
-        // 载体图片选择后估算容量（任意格式先转 PNG 无损再估算）
         document.getElementById('carrierFile').addEventListener('change', async ()=>{
             const cf=document.getElementById('carrierFile').files[0]; const info=document.getElementById('carrierInfo');
             if (!cf){ info.textContent='支持 JPG/PNG/WebP/BMP/GIF/TIFF 等任意图片，将自动转为 PNG 无损载体后再隐写'; return; }
@@ -505,32 +680,48 @@
         // ============================================================
         //  编码（文件）
         // ============================================================
-        // 构建"像素图模式"用的 payload 字节流：META_BYTES 元数据 + 文件字节(XOR)
-        function buildPayload(payloadBuf, srcName){
-            const keyBytes = getKeyBytes(); const useKey = !!(keyBytes && keyBytes.length);
+        // 构建 payload 字节流：META_BYTES 元数据 + AES加密后的文件字节
+        async function buildPayload(payloadBuf, srcName) {
+            const password = getPassword();
+            const useEnc = !!(password && password.length > 0);
             const len = payloadBuf.length;
             const ext = getFileExt(srcName);
             let extBytes = new TextEncoder().encode(ext); if (extBytes.length>EXT_MAX) extBytes=extBytes.slice(0,EXT_MAX);
-            const extLen = extBytes.length; const encFlag = useKey?1:0; const extLenEnc = (encFlag<<7)|(extLen&0x7F);
-            const payload = new Uint8Array(payloadBuf); if (useKey) xorBuffer(payload, keyBytes);
-            const out = new Uint8Array(META_BYTES + payload.length);
+            const extLen = extBytes.length; const encFlag = useEnc?1:0; const extLenEnc = (encFlag<<7)|(extLen&0x7F);
+
+            let dataToStore;
+            if (useEnc) {
+                // AES-256-GCM 加密
+                const encrypted = await aesGcmEncrypt(payloadBuf, password);
+                // 序列化：salt(16) + iv(12) + ciphertext + authTag(16)
+                const totalLen = 16 + 12 + encrypted.ciphertext.length + 16;
+                dataToStore = new Uint8Array(totalLen);
+                dataToStore.set(encrypted.salt, 0);
+                dataToStore.set(encrypted.iv, 16);
+                dataToStore.set(encrypted.ciphertext, 28);
+                dataToStore.set(encrypted.authTag, 28 + encrypted.ciphertext.length);
+            } else {
+                dataToStore = new Uint8Array(payloadBuf);
+            }
+
+            const out = new Uint8Array(META_BYTES + dataToStore.length);
             out[0]=MAGIC[0];out[1]=MAGIC[1];out[2]=MAGIC[2];
-            out[3]=len&0xFF;out[4]=(len>>8)&0xFF;out[5]=(len>>16)&0xFF;
-            out[6]=(len>>24)&0xFF;out[7]=(len>>32)&0xFF;out[8]=(len>>40)&0xFF;
+            const dataLen = dataToStore.length;
+            out[3]=dataLen&0xFF;out[4]=(dataLen>>8)&0xFF;out[5]=(dataLen>>16)&0xFF;
+            out[6]=(dataLen>>24)&0xFF;out[7]=(dataLen>>32)&0xFF;out[8]=(dataLen>>40)&0xFF;
             out[9]=extLenEnc;
             for (let i=0;i<extLen&&i<EXT_MAX;i++) out[10+i]=extBytes[i];
-            out.set(payload, META_BYTES);
-            return { stream: out, len, ext, useKey, encFlag };
+            out.set(dataToStore, META_BYTES);
+            return { stream: out, len: dataLen, ext, useEnc, encFlag };
         }
 
         const doEncode = async (payloadBuf, srcName) => {
-            const info = buildPayload(payloadBuf, srcName);
-            const { stream: dataStream, len, ext, useKey } = info;
+            const info = await buildPayload(payloadBuf, srcName);
+            const { stream: dataStream, len, ext, useEnc } = info;
             if (!len) { uiSet('encInfo','<span class="err">数据为空，无法编码。</span>'); return; }
             const mode = (document.getElementById('modeLSB').classList.contains('active')) ? 'lsb' : 'pixel';
 
             if (mode === 'pixel') {
-                // ---- 像素图模式（原逻辑）----
                 const encOutName = randPiName('.encoded.png');
                 const dataPixels = Math.ceil(dataStream.length/3);
                 const H = Math.ceil(dataPixels/W); const totalPixels = W*H;
@@ -550,28 +741,24 @@
                     const c=document.getElementById('encDownload'); c.innerHTML=''; c.appendChild(a);
                     pb.value=100; pl.textContent='100%'; ps.textContent='编码完成！';
                 },'image/png');
-                uiSet('encInfo','<span class="ok">'+svgIcon('check')+' 编码完成（像素图）。</span> 源 <b>'+escapeHtml(srcName)+'</b> ('+len+' bytes) → '+W+'×'+H+' 图。扩展名: <code>'+(ext||'(无)')+'</code> ｜ '+(useKey?'已加密':'未加密')+' ｜ 下载: <code>'+escapeHtml(encOutName)+'</code>');
+                uiSet('encInfo','<span class="ok">'+svgIcon('check')+' 编码完成（像素图）。</span> 源 <b>'+escapeHtml(srcName)+'</b> ('+len+' bytes) → '+W+'×'+H+' 图。扩展名: <code>'+(ext||'(无)')+'</code> ｜ '+(useEnc?'<span class="enc-badge">AES-256-GCM 加密</span>':'未加密')+' ｜ 下载: <code>'+escapeHtml(encOutName)+'</code>');
                 return;
             }
 
-            // ---- LSB 隐写进照片模式（任意格式载体自动转 PNG 无损）----
+            // LSB 模式
             const cf = document.getElementById('carrierFile').files[0];
-            if (!cf){ uiSet('encInfo','<span class="err">LSB 模式需先选择一张载体图片（JPG/PNG/WebP/BMP/GIF 等均可，将自动转 PNG 无损）。</span>'); return; }
+            if (!cf){ uiSet('encInfo','<span class="err">LSB 模式需先选择一张载体图片。</span>'); return; }
             const pw=document.getElementById('encProgressWrap'),pb=document.getElementById('encProgress'),pl=document.getElementById('encProgressLabel'),ps=document.getElementById('encProgressStatus');
             pw.style.display='flex'; pb.value=0; pl.textContent='0%'; ps.textContent='读取并转换载体为 PNG 无损…';
             let bmp; try { bmp = await loadCarrierAsPNG(cf); } catch(e){ uiSet('encInfo','<span class="err">无法读取/转换载体图片：'+e.message+'</span>'); pw.style.display='none'; return; }
             const cv=document.createElement('canvas'); cv.width=bmp.width; cv.height=bmp.height; const ctx=cv.getContext('2d'); ctx.drawImage(bmp,0,0);
             const {data: carr, width: cw, height: ch} = ctx.getImageData(0,0,bmp.width,bmp.height);
             const totalPx = cw*ch; const max = lsbCapacity(totalPx);
-            if (dataStream.length > max){ uiSet('encInfo','<span class="err">载体容量不足：需藏 '+dataStream.length+' 字节，'+cw+'×'+ch+' 最多可藏 '+max+' 字节。请换更大/更高分辨率的载体图。</span>'); pw.style.display='none'; return; }
+            if (dataStream.length > max){ uiSet('encInfo','<span class="err">载体容量不足：需藏 '+dataStream.length+' 字节，'+cw+'×'+ch+' 最多可藏 '+max+' 字节。</span>'); pw.style.display='none'; return; }
             ps.textContent='LSB 隐写中… 0 / '+dataStream.length+' 字节';
-            // 分块进度（LSB 为同步 CPU 操作，按 block 让出）
-            const blockSize=1024; let processed=0;
-            // 实际编码（同步）；用循环分片模拟进度
             let stego;
             try { stego = lsbEncode(carr, cw, ch, dataStream); }
             catch(e){ uiSet('encInfo','<span class="err">LSB 编码失败：'+e.message+'</span>'); pw.style.display='none'; return; }
-            for (let i=0;i<dataStream.length;i++){ processed++; if(processed%blockSize===0||processed===dataStream.length){ pb.value=Math.min(100,Math.round(processed/dataStream.length*100)); pl.textContent=pb.value+'%'; ps.textContent='LSB 隐写中… '+processed+' / '+dataStream.length+' 字节'; await sleep(0); } }
             const simg = new Uint8ClampedArray(stego);
             const ocv=document.createElement('canvas'); ocv.width=cw; ocv.height=ch; const octx=ocv.getContext('2d'); const oimd=octx.createImageData(cw,ch); oimd.data.set(simg); octx.putImageData(oimd,0,0);
             const lsbOutName = randPiName('.lsb.png');
@@ -582,7 +769,7 @@
                 const c=document.getElementById('encDownload'); c.innerHTML=''; c.appendChild(a);
                 pb.value=100; pl.textContent='100%'; ps.textContent='隐写完成！';
             },'image/png');
-            uiSet('encInfo','<span class="ok">'+svgIcon('check')+' 编码完成（LSB 隐写进照片）。</span> 源 <b>'+escapeHtml(srcName)+'</b> ('+len+' bytes) 已藏入载体 <b>'+escapeHtml(cf.name)+'</b> ('+cw+'×'+ch+')。扩展名: <code>'+(ext||'(无)')+'</code> ｜ '+(useKey?'已加密':'未加密')+' ｜ 下载: <code>'+escapeHtml(lsbOutName)+'</code>');
+            uiSet('encInfo','<span class="ok">'+svgIcon('check')+' 编码完成（LSB 隐写进照片）。</span> 源 <b>'+escapeHtml(srcName)+'</b> ('+len+' bytes) 已藏入载体 <b>'+escapeHtml(cf.name)+'</b> ('+cw+'×'+ch+')。扩展名: <code>'+(ext||'(无)')+'</code> ｜ '+(useEnc?'<span class="enc-badge">AES-256-GCM 加密</span>':'未加密')+' ｜ 下载: <code>'+escapeHtml(lsbOutName)+'</code>');
         };
 
         document.getElementById('btnEncode').addEventListener('click', async ()=>{
@@ -607,45 +794,65 @@
             const {data,width:iW,height:iH}=ctx.getImageData(0,0,bmp.width,bmp.height); const totalPx=iW*iH;
             if (totalPx<META_PIXELS){uiSet('decInfo','<span class="err">图片太小，至少需要 '+META_PIXELS+' 个像素。</span>');pw.style.display='none';return;}
 
-            // ---- 自动检测：先试像素图 magic，失败则试 LSB ----
+            // 自动检测模式
             let decodeMode = 'pixel';
             const px2rgb=px=>[data[px*4],data[px*4+1],data[px*4+2]]; const p0=px2rgb(0);
             if (p0[0]===MAGIC[0]&&p0[1]===MAGIC[1]&&p0[2]===MAGIC[2]) decodeMode='pixel';
-            else { // 非像素图 magic -> 尝试 LSB 提取
+            else {
                 try { const r = lsbDecode(data, iW, iH);
-                    // 重建"像素图视角的 data"：把 LSB 提取出的 payload（即原像素图编码字节流）
-                    // 按"每 3 字节 → 1 像素的 RGB"规则展开到 data，供下方统一解析器读取 magic/len/ext。
                     const stream = r.payload; const slen = Math.min(stream.length, totalPx*3);
                     for (let i=0;i<slen;i++){ const px=(i/3)|0; data[px*4+(i%3)]=stream[i]; }
-                    // 标记模式
                     decodeMode='lsb'; ps.textContent='LSB 提取成功，正在解析…';
-                } catch(e){ uiSet('decInfo','<span class="err">无法识别：既不是像素图编码（magic 校验失败），也不是本工具 LSB 编码的载体（'+e.message+'）。</span>'); pw.style.display='none'; return; }
+                } catch(e){ uiSet('decInfo','<span class="err">无法识别：既不是像素图编码，也不是本工具 LSB 编码的载体。</span>'); pw.style.display='none'; return; }
             }
 
-            // ---- 以下为统一的"像素图字节流"解析（像素图模式直读，LSB 模式已展开 payload）----
+            // 解析元数据
             const p1=px2rgb(1),p2=px2rgb(2); const len=(p1[0]|(p1[1]<<8)|(p1[2]<<16)|(p2[0]<<24)|(p2[1]<<32)|(p2[2]<<40));
             if (!Number.isFinite(len)||len<=0||len>totalPx*3){uiSet('decInfo','<span class="err">声明文件长度异常 (len='+len+')。</span>');pw.style.display='none';return;}
-            const p3=px2rgb(3); const extLenEnc=p3[0]; const useKey=((extLenEnc>>7)&0x1)===1; const extLen=extLenEnc&0x7F;
+            const p3=px2rgb(3); const extLenEnc=p3[0]; const useEnc=((extLenEnc>>7)&0x1)===1; const extLen=extLenEnc&0x7F;
             let extBytes=[]; if (extLen>0&&extLen<=EXT_MAX){let idx=0; if(idx<extLen)extBytes.push(p3[1]);idx++; if(idx<extLen)extBytes.push(p3[2]);idx++; for(let pi=4;pi<META_PIXELS&&idx<extLen;pi++){const rgb=px2rgb(pi);for(let ci=0;ci<3&&idx<extLen;ci++){extBytes.push(rgb[ci]);idx++;}}}
             let extName=''; if(extBytes.length) try{extName=new TextDecoder().decode(new Uint8Array(extBytes));}catch(_){extName='';}
-            const keyBytes=getKeyBytes(); if(useKey&&(!keyBytes||!keyBytes.length)){uiSet('decInfo','<span class="err">此图片使用了密钥加密，请在顶部输入正确的密钥后重试。</span>');pw.style.display='none';return;}
-            const out=new Uint8Array(len); let written=0; const updateInterval=Math.max(1,Math.floor(Math.min(len,totalPx*3)/200));
-            ps.textContent='解码中… 0 / '+len+' 字节';
-            const startPx = decodeMode==='pixel' ? META_PIXELS : META_PIXELS;
-            for (let px=startPx;px<totalPx&&written<len;px++){const b=px*4;out[written++]=data[b];if(written>=len)break;out[written++]=data[b+1];if(written>=len)break;out[written++]=data[b+2];if(written>=len)break;
-                if(written%updateInterval===0||written===len){pb.value=Math.min(100,Math.round(written/len*100));pl.textContent=pb.value+'%';ps.textContent='解码中… '+written+' / '+len+' 字节';await sleep(0);}}
-            if(written!==len){uiSet('decInfo','<span class="err">数据不足：'+written+'/'+len+' 字节。</span>');pw.style.display='none';return;}
-            if(useKey&&keyBytes&&keyBytes.length){xorBuffer(out,keyBytes);ps.textContent='解密中… 完成';await sleep(20);}
+
+            const password = getPassword();
+            if(useEnc && (!password || !password.length)){uiSet('decInfo','<span class="err">此图片使用了 AES-256-GCM 加密，请在顶部输入正确的密码后重试。</span>');pw.style.display='none';return;}
+
+            // 读取加密后的数据
+            const encData = new Uint8Array(len); let written=0;
+            const updateInterval=Math.max(1,Math.floor(Math.min(len,totalPx*3)/200));
+            ps.textContent='读取数据… 0 / '+len+' 字节';
+            for (let px=META_PIXELS;px<totalPx&&written<len;px++){const b=px*4;encData[written++]=data[b];if(written>=len)break;encData[written++]=data[b+1];if(written>=len)break;encData[written++]=data[b+2];if(written>=len)break;
+                if(written%updateInterval===0||written===len){pb.value=Math.min(100,Math.round(written/len*100));pl.textContent=pb.value+'%';ps.textContent='读取数据… '+written+' / '+len+' 字节';await sleep(0);}}
+
+            let out;
+            if (useEnc) {
+                // 解析 AES-GCM 数据：salt(16) + iv(12) + ciphertext + authTag(16)
+                if (len < 44) { uiSet('decInfo','<span class="err">加密数据格式错误：长度不足。</span>'); pw.style.display='none'; return; }
+                const salt = encData.slice(0, 16);
+                const iv = encData.slice(16, 28);
+                const ciphertext = encData.slice(28, len - 16);
+                const authTag = encData.slice(len - 16);
+                try {
+                    ps.textContent='AES-256-GCM 解密中…';
+                    out = await aesGcmDecrypt({ salt, iv, ciphertext, authTag }, password);
+                } catch(e) {
+                    uiSet('decInfo','<span class="err">'+e.message+'</span>');
+                    pw.style.display='none'; return;
+                }
+            } else {
+                out = encData;
+            }
+
+            const finalLen = out.length;
             const finalName=randPiName(extName);
             const blob=new Blob([out],{type:'application/octet-stream'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=finalName; a.className='download-link';
-            a.textContent='下载还原文件 ('+len+' bytes)  →  '+finalName; const c=document.getElementById('decDownload'); c.innerHTML=''; c.appendChild(a);
+            a.textContent='下载还原文件 ('+finalLen+' bytes)  →  '+finalName; const c=document.getElementById('decDownload'); c.innerHTML=''; c.appendChild(a);
             pb.value=100;pl.textContent='100%';ps.textContent='解码完成！';
-            const extShow=extName||'(无扩展名)'; const keyStatus=useKey?'已加密 (密钥验证通过)':'未加密';
+            const extShow=extName||'(无扩展名)'; const keyStatus=useEnc?'<span class="enc-badge">AES-256-GCM 加密验证通过</span>':'未加密';
             const modeTag = decodeMode==='lsb' ? 'LSB 隐写进照片' : '像素图';
-            uiSet('decInfo','<span class="ok">'+svgIcon('check')+' 解码成功（'+modeTag+'）。</span> 图 '+iW+'×'+iH+'，长度 '+len+' bytes，扩展名 <code>'+extShow+'</code> ｜ '+keyStatus+' ｜ 还原文件名: <code>'+escapeHtml(finalName)+'</code>');
+            uiSet('decInfo','<span class="ok">'+svgIcon('check')+' 解码成功（'+modeTag+'）。</span> 图 '+iW+'×'+iH+'，长度 '+finalLen+' bytes，扩展名 <code>'+extShow+'</code> ｜ '+keyStatus+' ｜ 还原文件名: <code>'+escapeHtml(finalName)+'</code>');
             const low=extName.toLowerCase(),isSens=SENSITIVE_EXTS.some(s=>low.endsWith(s));
             showModal(isSens?'注意文件扩展名':'下载提示', isSens?'检测到文件类型可能被浏览器自动更改扩展名。':'文件已准备就绪，请检查下载文件名是否与预期一致。','正确文件名：'+finalName,isSens);
-            renderPreview(out, finalName, len);
+            renderPreview(out, finalName, finalLen);
         });
 
         // ============================================================
@@ -663,20 +870,18 @@
                 if (isTextExt(ext))         return pvText(body, buf, name, ext);
                 if (ext==='.pdf')           return pvPdf(body, buf, name);
                 if (isArchiveExt(ext))      return pvArchive(body, buf, name, ext);
-                // 尝试按内容嗅探
                 if (looksLikeText(buf))     return pvText(body, buf, name, ext||'.txt');
                 return pvGeneric(body, buf, name, ext);
             } catch(e){ body.innerHTML='<div class="pv-placeholder">预览失败：'+escapeHtml(e.message)+'</div>'; }
         }
 
-        // ---------- 各预览器 ----------
         function pvImage(body, buf){
             const url=URL.createObjectURL(new Blob([buf])); const img=new Image(); img.onload=()=>{body.innerHTML=
                 '<div class="pv-image"><img src="'+url+'" alt=""><div class="pv-info">'+img.naturalWidth+' × '+img.naturalHeight+'</div></div>';}; img.onerror=()=>{body.innerHTML='<div class="pv-placeholder">图片解码失败</div>';}; img.src=url;
         }
         function pvVideo(body, buf, name, mime){
             const url=URL.createObjectURL(new Blob([buf],{type:mime||'video/mp4'}));
-            body.innerHTML='<div class="pv-video"><div class="video-frame"><video controls preload="metadata" controlslist="nodownload" style="border-radius:12px;" src="'+url+'"></video></div><div class="info" style="margin-top:8px;font-size:12px;color:#888;">提示：此为自定义美化播放器外壳，使用浏览器原生控件以保证兼容性。</div></div>';
+            body.innerHTML='<div class="pv-video"><div class="video-frame"><video controls preload="metadata" controlslist="nodownload" style="border-radius:12px;" src="'+url+'"></video></div></div>';
         }
         function pvAudio(body, buf, name, mime){
             const url=URL.createObjectURL(new Blob([buf],{type:mime||'audio/mpeg'}));
@@ -689,64 +894,56 @@
         }
         function pvPdf(body, buf, name){
             const url=URL.createObjectURL(new Blob([buf],{type:'application/pdf'}));
-            body.innerHTML='<div class="pv-generic"><iframe src="'+url+'" style="width:100%;height:460px;border:1px solid #ddd;border-radius:8px;"></iframe><div class="generic-meta" style="margin-top:6px;">PDF 文档 · <a class="download-link" href="'+url+'" download="'+escapeHtml(name)+'">下载 PDF</a></div></div>';
+            body.innerHTML='<div class="pv-generic"><iframe src="'+url+'" style="width:100%;height:460px;border:1px solid #ddd;border-radius:8px;"></iframe></div>';
         }
         async function pvArchive(body, buf, name, ext){
-            body.innerHTML='<div class="pv-archive"><div class="arch-summary">'+svgIcon('archive')+' 正在解析 '+escapeHtml(ext.toUpperCase().replace('.',''))+' 结构…</div><div class="arch-list" id="archList"><div class="arch-empty">解析中…</div></div></div>';
+            body.innerHTML='<div class="pv-archive"><div class="arch-summary">'+svgIcon('archive')+' 正在解析结构…</div><div class="arch-list" id="archList"><div class="arch-empty">解析中…</div></div></div>';
             try {
-                const { unzip, listZip } = await getZipLib();
-                let entries; try { entries = listZip(buf); } catch(e){ throw new Error('不是有效的 ZIP/APK 容器：'+e.message); }
-                const list=body.querySelector('.arch-list'); const isApk=ext==='.apk';
-                let html=''; const iconOf=(n)=>{const e=(n.includes('.')?n.slice(n.lastIndexOf('.')).toLowerCase():'');if(['.png','.jpg','.jpeg','.gif','.webp','.bmp'].some(x=>e===x))return svgIcon('image');if(['.dex','.odex'].some(x=>e===x))return svgIcon('android');if(['.xml','.json','.txt'].some(x=>e===x))return svgIcon('file-text');if(['.so'].some(x=>e===x))return svgIcon('gear');if(n.endsWith('.arsc'))return svgIcon('box');return svgIcon('file-text');};
-                for (const e of entries){ html+='<div class="arch-row"><span class="arch-icon">'+iconOf(e.name)+'</span><span class="arch-name">'+escapeHtml(e.name)+'</span><span class="arch-size">'+(e.size?fmtSize(e.size):'')+'</span></div>'; }
+                const { listZip } = await getZipLib();
+                let entries; try { entries = listZip(buf); } catch(e){ throw new Error('不是有效的归档：'+e.message); }
+                const list=body.querySelector('.arch-list');
+                let html='';
+                for (const e of entries){ html+='<div class="arch-row"><span class="arch-name">'+escapeHtml(e.name)+'</span><span class="arch-size">'+(e.size?fmtSize(e.size):'')+'</span></div>'; }
                 list.innerHTML=html||'<div class="arch-empty">（空归档）</div>';
-                body.querySelector('.arch-summary').innerHTML=svgIcon('archive')+' '+escapeHtml(name)+' · 共 <b>'+entries.length+'</b> 个条目'+(isApk?' <span class="pv-lang-badge" style="margin-left:6px;">APK</span>':'');
             } catch(e){ body.querySelector('.arch-list').innerHTML='<div class="arch-empty">解析失败：'+escapeHtml(e.message)+'</div>'; }
         }
         function pvGeneric(body, buf, name, ext){
-            // 十六进制预览（截取前 4KB）
             const slice=buf.slice(0,4096); let hex=''; for (let i=0;i<slice.length;i+=16){ const off=i.toString(16).padStart(8,'0'); let hs='',acs=''; for(let j=0;j<16;j++){if(i+j<slice.length){const b=slice[i+j];hs+=(b<16?'0':'')+b.toString(16)+' ';acs+=b>=32&&b<127?String.fromCharCode(b):'.';}else{hs+='   ';}} hex+=off+'  '+hs.padEnd(16*3+2,'')+' '+acs+'\n'; }
             body.innerHTML='<div class="pv-generic"><div class="generic-icon">'+svgIcon('file-text')+'</div><div class="generic-name">'+escapeHtml(name)+'</div><div class="generic-meta">'+escapeHtml(ext||'未知类型')+' · '+buf.length+' bytes</div><details style="margin-top:12px;text-align:left;"><summary style="cursor:pointer;font-size:12px;color:#4a90d9;">查看十六进制 (前 4KB)</summary><div class="pv-hex" style="margin-top:8px;"><pre>'+escapeHtml(hex)+'</pre></div></details></div>';
         }
 
-        // ---------- 辅助判断 ----------
         const isImageExt=e=>['.png','.jpg','.jpeg','.gif','.webp','.bmp','.svg','.ico'].includes(e);
         const isVideoExt=e=>['.mp4','.webm','.ogg','.ogv','.mov','.m4v','.avi'].includes(e);
         const isAudioExt=e=>['.mp3','.wav','.ogg','.oga','.flac','.m4a','.aac','.opus'].includes(e);
-        const isTextExt=e=>['.txt','.md','.json','.xml','.html','.htm','.css','.js','.ts','.py','.lua','.c','.h','.cpp','.cs','.java','.go','.rs','.rb','.php','.sh','.yml','.yaml','.toml','.ini','.cfg','.log','.csv','.tsv','.sql','.r','.swift','.kt','.scala','.dart','.vue','.svelte','.jsx','.tsx','.dockerfile','.gitignore','.env'].includes(e);
-        const isArchiveExt=e=>['.zip','.apk','.jar','.xapk','.aab','.apks','.ipa','.docx','.xlsx','.pptx','.odt','.ods','.odp','.epub'].includes(e);
-        function getMime(e){return ({'.mp4':'video/mp4','.webm':'video/webm','.ogg':'video/ogg','.ogv':'video/ogg','.mov':'video/quicktime','.m4v':'video/mp4','.avi':'video/x-msvideo','.mp3':'audio/mpeg','.wav':'audio/wav','.oga':'audio/ogg','.ogg':'audio/ogg','.flac':'audio/flac','.m4a':'audio/mp4','.aac':'audio/aac','.opus':'audio/opus'}[e]||'');}
-        function badgeFor(e){return ({'.py':'Python','.lua':'Lua','.c':'C','.h':'C Header','.cpp':'C++','.cs':'C#','.java':'Java','.js':'JavaScript','.ts':'TypeScript','.go':'Go','.rs':'Rust','.rb':'Ruby','.php':'PHP','.sh':'Shell','.json':'JSON','.xml':'XML','.html':'HTML','.css':'CSS','.md':'Markdown','.sql':'SQL','.yml':'YAML','.yaml':'YAML','.toml':'TOML','.csv':'CSV','.txt':'Text','.log':'Log'}[e.replace('.','')]||'Text');}
+        const isTextExt=e=>['.txt','.md','.json','.xml','.html','.htm','.css','.js','.ts','.py','.lua','.c','.h','.cpp','.cs','.java','.go','.rs','.rb','.php','.sh','.yml','.yaml','.toml','.ini','.cfg','.log','.csv','.sql'].includes(e);
+        const isArchiveExt=e=>['.zip','.apk','.jar','.xapk','.aab','.apks','.ipa','.docx','.xlsx','.pptx'].includes(e);
+        function getMime(e){return ({'.mp4':'video/mp4','.webm':'video/webm','.mp3':'audio/mpeg','.wav':'audio/wav','.ogg':'audio/ogg','.flac':'audio/flac'}[e]||'');}
+        function badgeFor(e){return ({'.py':'Python','.js':'JavaScript','.ts':'TypeScript','.json':'JSON','.html':'HTML','.css':'CSS','.md':'Markdown','.txt':'Text'}[e.replace('.','')]||'Text');}
         function looksLikeText(buf){ if(!buf.length) return false; const len=Math.min(buf.length,512); let ok=0; for(let i=0;i<len;i++){const b=buf[i];if(b===0)return false;if((b>=32&&b<127)||b===9||b===10||b===13)ok++;} return ok/len>0.9; }
 
-        // ---------- 轻量 ZIP 解析（支持 APK/JAR/DOCX 等，列出中央目录）----------
         let _zipLibPromise=null;
         function getZipLib(){
             if (_zipLibPromise) return _zipLibPromise;
             _zipLibPromise = new Promise(resolve=>{
-                // 内嵌极简 ZIP 中央目录解析器（无需外部依赖）
                 const lib = {
                     listZip(buf){
                         const dv=new DataView(buf.buffer,buf.byteOffset,buf.byteLength); const entries=[];
-                        // 定位 EOCD
                         let eocd=-1; for(let i=buf.length-22;i>=0&&i>buf.length-66000;i--){if(dv.getUint32(i,true)===0x06054b50){eocd=i;break;}}
                         if(eocd<0) throw new Error('未找到 EOCD 记录');
                         const cdSize=dv.getUint32(eocd+12,true), cdOff=dv.getUint32(eocd+16,true), num=dv.getUint16(eocd+10,true);
                         let p=cdOff; for(let i=0;i<num;i++){ if(p+46>buf.length) break; const sig=dv.getUint32(p,true); if(sig!==0x02014b50) break;
-                            const method=dv.getUint16(p+10,true), compSize=dv.getUint32(p+20,true), uncSize=dv.getUint32(p+24,true), nameLen=dv.getUint16(p+28,true), extraLen=dv.getUint16(p+30,true), commLen=dv.getUint16(p+32,true);
+                            const compSize=dv.getUint32(p+20,true), uncSize=dv.getUint32(p+24,true), nameLen=dv.getUint16(p+28,true), extraLen=dv.getUint16(p+30,true), commLen=dv.getUint16(p+32,true);
                             const nameBytes=buf.slice(p+46,p+46+nameLen); let name=''; try{name=new TextDecoder().decode(nameBytes);}catch(_){}
-                            entries.push({name,size:uncSize,compressedSize:compSize,method}); p+=46+nameLen+extraLen+commLen;
+                            entries.push({name,size:uncSize}); p+=46+nameLen+extraLen+commLen;
                         }
                         return entries;
-                    },
-                    unzip(buf, entryName){ /* 可选：解压单个条目（暂未使用，预留） */ throw new Error('unzip not implemented'); }
+                    }
                 };
                 resolve(lib);
             });
             return _zipLibPromise;
         }
 
-        // 切换文件时重置
         document.getElementById('encFile').addEventListener('change',()=>{document.getElementById('encProgressWrap').style.display='none';document.getElementById('encDownload').innerHTML='';document.getElementById('encInfo').innerHTML='';});
         document.getElementById('decFile').addEventListener('change',()=>{document.getElementById('decProgressWrap').style.display='none';document.getElementById('decDownload').innerHTML='';document.getElementById('decInfo').innerHTML='';document.getElementById('previewWrap').style.display='none';});
     </script>
