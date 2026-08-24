@@ -13,656 +13,201 @@
       --text-main: #0f172a;
       --text-sub: #64748b;
       --accent-color: #007aff;
-      
-      /* 液态玻璃核心视觉参数 */
       --glass-bg: rgba(255, 255, 255, 0.42);
       --glass-border: rgba(255, 255, 255, 0.65);
       --glass-shadow: 0 10px 30px 0 rgba(31, 38, 135, 0.12), inset 0 1px 2px 0 rgba(255, 255, 255, 0.9);
       --glass-blur: blur(20px) saturate(190%);
-      
       --header-bg: rgba(255, 255, 255, 0.5);
       --sidebar-bg: rgba(255, 255, 255, 0.6);
       --modal-bg: rgba(255, 255, 255, 0.75);
       --modal-overlay: rgba(15, 23, 42, 0.35);
     }
-
     [data-theme="dark"] {
       --bg-gradient: radial-gradient(circle at 10% 20%, #0f172a 0%, #020617 90%);
       --text-main: #f8fafc;
       --text-sub: #94a3b8;
       --accent-color: #0a84ff;
-      
-      /* 暗黑液态玻璃核心视觉参数 */
       --glass-bg: rgba(30, 41, 59, 0.45);
       --glass-border: rgba(255, 255, 255, 0.15);
       --glass-shadow: 0 10px 30px 0 rgba(0, 0, 0, 0.45), inset 0 1px 1px 0 rgba(255, 255, 255, 0.2);
       --glass-blur: blur(20px) saturate(190%);
-      
       --header-bg: rgba(15, 23, 42, 0.6);
       --sidebar-bg: rgba(15, 23, 42, 0.7);
       --modal-bg: rgba(30, 41, 59, 0.85);
       --modal-overlay: rgba(0, 0, 0, 0.65);
     }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif; }
+    body { background: var(--bg-gradient); color: var(--text-main); transition: color 0.3s ease, background 0.3s ease; min-height: 100vh; padding-bottom: 50px; }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      -webkit-tap-highlight-color: transparent;
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
-    }
-
-    body {
-      background: var(--bg-gradient);
-      color: var(--text-main);
-      transition: color 0.3s ease, background 0.3s ease;
-      min-height: 100vh;
-      padding-bottom: 50px;
-    }
-
-    /* ==========================================
-       顶部玻璃导航栏
-       ========================================== */
-    .header-bar {
-      position: sticky;
-      top: 0;
-      z-index: 1600;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 12px 24px;
-      background: var(--header-bg);
-      backdrop-filter: var(--glass-blur);
-      -webkit-backdrop-filter: var(--glass-blur);
-      border-bottom: 1px solid var(--glass-border);
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-      height: 60px;
-      transition: all 0.3s ease;
-    }
-
-    .header-left {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-    }
-
-    .sidebar-toggle-btn {
-      background: transparent;
-      border: none;
-      cursor: pointer;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      width: 24px;
-      height: 18px;
-      padding: 0;
-      z-index: 1601;
-    }
-    .sidebar-toggle-btn span {
-      display: block;
-      width: 100%;
-      height: 2.5px;
-      background-color: var(--text-main);
-      border-radius: 2px;
-      transition: background-color 0.3s ease, transform 0.3s ease;
-    }
+    .header-bar { position: sticky; top: 0; z-index: 1600; display: flex; justify-content: space-between; align-items: center; padding: 12px 24px; background: var(--header-bg); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); border-bottom: 1px solid var(--glass-border); box-shadow: 0 4px 20px rgba(0,0,0,0.05); height: 60px; transition: all 0.3s ease; }
+    .header-left { display: flex; align-items: center; gap: 16px; }
+    .sidebar-toggle-btn { background: transparent; border: none; cursor: pointer; display: flex; flex-direction: column; justify-content: space-between; width: 24px; height: 18px; padding: 0; z-index: 1601; }
+    .sidebar-toggle-btn span { display: block; width: 100%; height: 2.5px; background-color: var(--text-main); border-radius: 2px; transition: background-color 0.3s ease, transform 0.3s ease; }
     .sidebar-toggle-btn:active { opacity: 0.6; }
-
-    .header-logo {
-      font-size: 18px;
-      font-weight: 700;
-      letter-spacing: -0.5px;
-      color: var(--text-main);
-    }
+    .header-logo { font-size: 18px; font-weight: 700; letter-spacing: -0.5px; color: var(--text-main); }
 
     .theme-switch { position: relative; display: inline-block; width: 68px; height: 34px; cursor: pointer; }
     .theme-switch input { opacity: 0; width: 0; height: 0; }
-    .switch-track { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(180deg, #70a1ff 0%, #a8c0ff 100%); border-radius: 30px; transition: background 0.4s ease; overflow: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.2), 0 2px 6px rgba(0,0,0,0.1); border: 1.5px solid rgba(255, 255, 255, 0.6); }
-    .switch-thumb { position: absolute; top: 3px; left: 3px; width: 25px; height: 25px; border-radius: 50%; background: #eccc68; box-shadow: 0 2px 5px rgba(0,0,0,0.2), 0 0 8px #ffa502; transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55), background 0.4s ease, box-shadow 0.4s ease; z-index: 2; }
+    .switch-track { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(180deg,#70a1ff 0%,#a8c0ff 100%); border-radius: 30px; transition: background 0.4s ease; overflow: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.2),0 2px 6px rgba(0,0,0,0.1); border: 1.5px solid rgba(255,255,255,0.6); }
+    .switch-thumb { position: absolute; top: 3px; left: 3px; width: 25px; height: 25px; border-radius: 50%; background: #eccc68; box-shadow: 0 2px 5px rgba(0,0,0,0.2),0 0 8px #ffa502; transition: transform 0.4s cubic-bezier(0.68,-0.55,0.27,1.55),background 0.4s ease,box-shadow 0.4s ease; z-index: 2; }
     .crater { position: absolute; background: #a4b0be; border-radius: 50%; opacity: 0; transition: opacity 0.3s ease; }
-    .crater-1 { top: 5px; left: 11px; width: 6px; height: 6px; }
-    .crater-2 { top: 13px; left: 5px; width: 7px; height: 7px; }
-    .crater-3 { top: 14px; left: 14px; width: 4px; height: 4px; }
-    .cloud { position: absolute; background: #ffffff; border-radius: 10px; opacity: 0.9; transition: transform 0.4s ease, opacity 0.4s ease; }
-    .cloud-1 { right: 6px; top: 15px; width: 24px; height: 12px; border-radius: 8px; }
-    .cloud-2 { right: 18px; top: 8px; width: 16px; height: 10px; border-radius: 8px; }
-    .star { position: absolute; background: #ffffff; border-radius: 50%; opacity: 0; transform: translateY(-6px); transition: opacity 0.4s ease, transform 0.4s ease; }
-    .star-1 { left: 10px; top: 8px; width: 3px; height: 3px; box-shadow: 0 0 3px #fff; }
-    .star-2 { left: 22px; top: 18px; width: 2px; height: 2px; }
-    .star-3 { left: 32px; top: 7px; width: 3px; height: 3px; box-shadow: 0 0 3px #fff; }
-    [data-theme="dark"] .switch-track { background: linear-gradient(180deg, #1e272e 0%, #2f3542 100%); border-color: rgba(255, 255, 255, 0.15); }
-    [data-theme="dark"] .switch-thumb { transform: translateX(33px); background: #dcdde1; box-shadow: 0 2px 5px rgba(0,0,0,0.4), inset -2px -1px 2px rgba(0,0,0,0.2); }
+    .crater-1 { top:5px; left:11px; width:6px; height:6px; }
+    .crater-2 { top:13px; left:5px; width:7px; height:7px; }
+    .crater-3 { top:14px; left:14px; width:4px; height:4px; }
+    .cloud { position: absolute; background: #fff; border-radius: 10px; opacity: 0.9; transition: transform 0.4s ease,opacity 0.4s ease; }
+    .cloud-1 { right:6px; top:15px; width:24px; height:12px; border-radius:8px; }
+    .cloud-2 { right:18px; top:8px; width:16px; height:10px; border-radius:8px; }
+    .star { position: absolute; background: #fff; border-radius: 50%; opacity: 0; transform: translateY(-6px); transition: opacity 0.4s ease,transform 0.4s ease; }
+    .star-1 { left:10px; top:8px; width:3px; height:3px; box-shadow:0 0 3px #fff; }
+    .star-2 { left:22px; top:18px; width:2px; height:2px; }
+    .star-3 { left:32px; top:7px; width:3px; height:3px; box-shadow:0 0 3px #fff; }
+    [data-theme="dark"] .switch-track { background: linear-gradient(180deg,#1e272e 0%,#2f3542 100%); border-color: rgba(255,255,255,0.15); }
+    [data-theme="dark"] .switch-thumb { transform: translateX(33px); background:#dcdde1; box-shadow:0 2px 5px rgba(0,0,0,0.4),inset -2px -1px 2px rgba(0,0,0,0.2); }
     [data-theme="dark"] .crater { opacity: 1; }
     [data-theme="dark"] .cloud { opacity: 0; transform: translateY(10px); }
     [data-theme="dark"] .star { opacity: 1; transform: translateY(0); }
 
-    /* ==========================================
-       液态玻璃侧边栏
-       ========================================== */
-    .sidebar-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: var(--modal-overlay);
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
-      z-index: 1500;
-      opacity: 0;
-      visibility: hidden;
-      transition: opacity 0.45s cubic-bezier(0.32, 0.72, 0, 1), visibility 0.45s;
-    }
+    .sidebar-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: var(--modal-overlay); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); z-index: 1500; opacity: 0; visibility: hidden; transition: opacity 0.45s cubic-bezier(0.32,0.72,0,1),visibility 0.45s; }
     .sidebar-overlay.active { opacity: 1; visibility: visible; }
-
-    .ios-sidebar {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 280px;
-      height: 100%;
-      background: var(--sidebar-bg);
-      backdrop-filter: var(--glass-blur);
-      -webkit-backdrop-filter: var(--glass-blur);
-      border-right: 1px solid var(--glass-border);
-      z-index: 1501;
-      transform: translateX(-100%);
-      transition: transform 0.45s cubic-bezier(0.32, 0.72, 0, 1), background-color 0.3s ease, border-color 0.3s ease;
-      box-shadow: 10px 0 30px rgba(0, 0, 0, 0.15);
-      display: flex;
-      flex-direction: column;
-      padding: env(safe-area-inset-top, 24px) 20px 20px 20px;
-    }
+    .ios-sidebar { position: fixed; top: 0; left: 0; width: 280px; height: 100%; background: var(--sidebar-bg); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); border-right: 1px solid var(--glass-border); z-index: 1501; transform: translateX(-100%); transition: transform 0.45s cubic-bezier(0.32,0.72,0,1),background-color 0.3s ease,border-color 0.3s ease; box-shadow: 10px 0 30px rgba(0,0,0,0.15); display: flex; flex-direction: column; padding: env(safe-area-inset-top,24px) 20px 20px 20px; }
     .ios-sidebar.active { transform: translateX(0); }
-
-    .ios-sidebar.previewing {
-      background: transparent !important;
-      border-color: transparent !important;
-      box-shadow: none !important;
-      backdrop-filter: none !important;
-      -webkit-backdrop-filter: none !important;
-    }
-    .ios-sidebar.previewing .sidebar-header,
-    .ios-sidebar.previewing .sidebar-content-item {
-      opacity: 0 !important;
-      visibility: hidden !important;
-      transition: opacity 0.2s ease, visibility 0.2s ease;
-    }
-
-    .sidebar-header,
-    .sidebar-content-item,
-    .sidebar-slider-container {
-      opacity: 0;
-      transform: translateX(-20px);
-      transition: opacity 0.4s cubic-bezier(0.32, 0.72, 0, 1), transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
-    }
-
-    .ios-sidebar.active .sidebar-header,
-    .ios-sidebar.active .sidebar-content-item,
-    .ios-sidebar.active .sidebar-slider-container {
-      opacity: 1;
-      transform: translateX(0);
-    }
-
+    .ios-sidebar.previewing { background: transparent!important; border-color: transparent!important; box-shadow: none!important; backdrop-filter: none!important; -webkit-backdrop-filter: none!important; }
+    .ios-sidebar.previewing .sidebar-header,.ios-sidebar.previewing .sidebar-content-item { opacity: 0!important; visibility: hidden!important; transition: opacity 0.2s ease,visibility 0.2s ease; }
+    .sidebar-header,.sidebar-content-item,.sidebar-slider-container { opacity: 0; transform: translateX(-20px); transition: opacity 0.4s cubic-bezier(0.32,0.72,0,1),transform 0.4s cubic-bezier(0.32,0.72,0,1); }
+    .ios-sidebar.active .sidebar-header,.ios-sidebar.active .sidebar-content-item,.ios-sidebar.active .sidebar-slider-container { opacity: 1; transform: translateX(0); }
     .ios-sidebar.active .sidebar-header { transition-delay: 0.12s; }
     .ios-sidebar.active .sidebar-content-item:nth-child(1) { transition-delay: 0.18s; }
     .ios-sidebar.active .sidebar-content-item:nth-child(2) { transition-delay: 0.24s; }
     .ios-sidebar.active .sidebar-content-item:nth-child(3) { transition-delay: 0.30s; }
     .ios-sidebar.active .sidebar-slider-container { transition-delay: 0.36s; }
+    .sidebar-header { font-size: 24px; font-weight: 700; color: var(--text-main); padding: 24px 0 16px 0; border-bottom: 1px solid var(--glass-border); margin-bottom: 20px; letter-spacing: -0.5px; }
+    .sidebar-body { flex: 1; display: flex; flex-direction: column; gap: 16px; overflow-y: auto; }
+    .sidebar-content-item { width: 100%; height: 48px; background: var(--glass-bg); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); border-radius: 14px; border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow); display: flex; align-items: center; padding: 0 16px; color: var(--text-main); font-size: 14px; font-weight: 500; }
+    /* 侧边栏靠左文本 */
+    .sidebar-content-item .sb-text { text-align: left; width: 100%; }
+    .sidebar-slider-container { width: 100%; margin-top: auto; padding: 20px 0; display: flex; flex-direction: column; justify-content: center; }
+    .gradient-slider { width: 100%; -webkit-appearance: none; appearance: none; height: 38px; border-radius: 9999px; background: linear-gradient(90deg,#fff 0%,#ff3b30 16.6%,#ff9500 28%,#ffcc00 42%,#34c759 56%,#00c7be 70%,#007aff 85%,#af52de 100%); outline: none; cursor: pointer; border: 1px solid rgba(255,255,255,0.5); box-shadow: inset 0 2px 6px rgba(0,0,0,0.12),0 4px 15px rgba(0,0,0,0.05); padding: 0 5px; }
+    .gradient-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 30px; height: 30px; border-radius: 50%; background: rgba(255,255,255,0.72); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1.5px solid rgba(255,255,255,0.95); box-shadow: 0 8px 22px rgba(0,0,0,0.22),inset 0 1px 3px rgba(255,255,255,1); cursor: pointer; transition: transform 0.2s cubic-bezier(0.2,0.8,0.2,1),box-shadow 0.2s ease; }
+    .gradient-slider::-webkit-slider-thumb:active { transform: scale(1.2); }
 
-    .sidebar-header {
-      font-size: 24px;
-      font-weight: 700;
-      color: var(--text-main);
-      padding: 24px 0 16px 0;
-      border-bottom: 1px solid var(--glass-border);
-      margin-bottom: 20px;
-      letter-spacing: -0.5px;
-    }
-
-    .sidebar-body {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      overflow-y: auto;
-    }
-
-    .sidebar-content-item {
-      width: 100%;
-      height: 48px;
-      background: var(--glass-bg);
-      backdrop-filter: var(--glass-blur);
-      -webkit-backdrop-filter: var(--glass-blur);
-      border-radius: 14px;
-      border: 1px solid var(--glass-border);
-      box-shadow: var(--glass-shadow);
-      display: flex;
-      align-items: center;
-      padding: 0 16px;
-      color: var(--text-main);
-      font-size: 14px;
-      font-weight: 500;
-    }
-
-    .sidebar-slider-container {
-      width: 100%;
-      margin-top: auto;
-      padding: 20px 0;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-    }
-    
-    .gradient-slider {
-      width: 100%;
-      -webkit-appearance: none;
-      appearance: none;
-      height: 38px;
-      border-radius: 9999px;
-      background: linear-gradient(90deg, 
-        #ffffff 0%, 
-        #ff3b30 16.6%, 
-        #ff9500 28%, 
-        #ffcc00 42%, 
-        #34c759 56%, 
-        #00c7be 70%, 
-        #007aff 85%, 
-        #af52de 100%
-      );
-      outline: none;
-      cursor: pointer;
-      border: 1px solid rgba(255, 255, 255, 0.5);
-      box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.12), 0 4px 15px rgba(0, 0, 0, 0.05);
-      padding: 0 5px;
-    }
-
-    .gradient-slider::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      appearance: none;
-      width: 30px;
-      height: 30px;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.72);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1.5px solid rgba(255, 255, 255, 0.95);
-      box-shadow: 0 8px 22px rgba(0, 0, 0, 0.22), inset 0 1px 3px rgba(255, 255, 255, 1);
-      cursor: pointer;
-      transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.2s ease;
-    }
-    .gradient-slider::-webkit-slider-thumb:active {
-      transform: scale(1.2);
-    }
-
-    /* ==========================================
-       灵动岛玻璃音乐播放器
-       ========================================== */
-    .dynamic-island {
-      position: fixed;
-      top: 12px;
-      left: 50%;
-      transform: translateX(-50%);
-      background-color: rgba(15, 23, 42, 0.88);
-      backdrop-filter: blur(25px) saturate(200%);
-      -webkit-backdrop-filter: blur(25px) saturate(200%);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      color: #ffffff;
-      border-radius: 30px;
-      z-index: 2000;
-      cursor: pointer;
-      overflow: hidden;
-      box-shadow: 0 12px 35px rgba(0,0,0,0.35), inset 0 1px 1px rgba(255,255,255,0.2);
-      will-change: width, height, border-radius, padding;
-      transition: width 0.45s cubic-bezier(0.32, 0.72, 0, 1),
-                  height 0.45s cubic-bezier(0.32, 0.72, 0, 1),
-                  border-radius 0.45s cubic-bezier(0.32, 0.72, 0, 1),
-                  padding 0.45s cubic-bezier(0.32, 0.72, 0, 1);
-      width: 140px;
-      height: 36px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 0 8px;
-    }
-
-    .dynamic-island.expanded {
-      width: 340px;
-      height: 180px;
-      border-radius: 40px;
-      cursor: default;
-      padding: 20px;
-      flex-direction: column;
-      justify-content: flex-start;
-      align-items: stretch;
-    }
-
-    .island-collapsed-content {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      width: 100%;
-      transition: opacity 0.25s ease;
-    }
+    .dynamic-island { position: fixed; top: 12px; left: 50%; transform: translateX(-50%); background-color: rgba(15,23,42,0.88); backdrop-filter: blur(25px) saturate(200%); -webkit-backdrop-filter: blur(25px) saturate(200%); border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 30px; z-index: 2000; cursor: pointer; overflow: hidden; box-shadow: 0 12px 35px rgba(0,0,0,0.35),inset 0 1px 1px rgba(255,255,255,0.2); will-change: width,height,border-radius,padding; transition: width 0.45s cubic-bezier(0.32,0.72,0,1),height 0.45s cubic-bezier(0.32,0.72,0,1),border-radius 0.45s cubic-bezier(0.32,0.72,0,1),padding 0.45s cubic-bezier(0.32,0.72,0,1); width: 140px; height: 36px; display: flex; justify-content: space-between; align-items: center; padding: 0 8px; }
+    .dynamic-island.expanded { width: 340px; height: 180px; border-radius: 40px; cursor: default; padding: 20px; flex-direction: column; justify-content: flex-start; align-items: stretch; }
+    .island-collapsed-content { display: flex; justify-content: space-between; align-items: center; width: 100%; transition: opacity 0.25s ease; }
     .dynamic-island.expanded .island-collapsed-content { display: none; }
-
-    .island-mini-cover {
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      object-fit: cover;
-      animation: spin 6s linear infinite;
-      animation-play-state: paused;
-    }
+    .island-mini-cover { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; animation: spin 6s linear infinite; animation-play-state: paused; }
     .island-mini-cover.playing { animation-play-state: running; }
-
-    .island-waveform {
-      display: flex;
-      gap: 2px;
-      align-items: center;
-      height: 12px;
-    }
-    .island-waveform span {
-      display: block;
-      width: 3px;
-      background-color: #ff2d55;
-      border-radius: 2px;
-      height: 4px;
-      transition: height 0.1s ease;
-    }
+    .island-waveform { display: flex; gap: 2px; align-items: center; height: 12px; }
+    .island-waveform span { display: block; width: 3px; background-color: #ff2d55; border-radius: 2px; height: 4px; transition: height 0.1s ease; }
     .island-waveform.playing span { animation: wave 1s ease-in-out infinite; }
     .island-waveform.playing span:nth-child(2) { animation-delay: 0.2s; }
     .island-waveform.playing span:nth-child(3) { animation-delay: 0.4s; }
-
-    .island-expanded-content {
-      display: none;
-      flex-direction: column;
-      width: 100%;
-      height: 100%;
-      opacity: 0;
-      transition: opacity 0.3s ease 0.15s;
-    }
+    .island-expanded-content { display: none; flex-direction: column; width: 100%; height: 100%; opacity: 0; transition: opacity 0.3s ease 0.15s; }
     .dynamic-island.expanded .island-expanded-content { display: flex; opacity: 1; }
-
-    .island-top-row {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      margin-bottom: 24px;
-    }
-    .island-large-cover {
-      width: 60px;
-      height: 60px;
-      border-radius: 14px;
-      object-fit: cover;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-    }
-    .island-info {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      overflow: hidden;
-    }
-    .island-title {
-      font-size: 16px;
-      font-weight: 600;
-      white-space: nowrap;
-      text-overflow: ellipsis;
-      overflow: hidden;
-      color: #ffffff;
-    }
-    .island-artist {
-      font-size: 14px;
-      color: rgba(255,255,255,0.6);
-    }
-    
-    .island-controls {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 30px;
-    }
-    .control-btn {
-      background: transparent;
-      border: none;
-      color: white;
-      cursor: pointer;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      transition: opacity 0.2s;
-    }
+    .island-top-row { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
+    .island-large-cover { width: 60px; height: 60px; border-radius: 14px; object-fit: cover; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+    .island-info { flex: 1; display: flex; flex-direction: column; gap: 4px; overflow: hidden; }
+    .island-title { font-size: 16px; font-weight: 600; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; color: #fff; }
+    .island-artist { font-size: 14px; color: rgba(255,255,255,0.6); }
+    .island-controls { display: flex; justify-content: center; align-items: center; gap: 30px; }
+    .control-btn { background: transparent; border: none; color: white; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: opacity 0.2s; }
     .control-btn:active { opacity: 0.6; }
     .control-btn svg { fill: currentColor; width: 32px; height: 32px; }
     .play-btn svg { width: 42px; height: 42px; }
-
     @keyframes spin { 100% { transform: rotate(360deg); } }
-    @keyframes wave {
-      0%, 100% { height: 4px; }
-      50% { height: 12px; }
-    }
+    @keyframes wave { 0%,100% { height: 4px; } 50% { height: 12px; } }
 
-    /* ==========================================
-       主内容区域 & 液态玻璃搜索框
-       ========================================== */
     .container { max-width: 800px; margin: 0 auto; padding: 0 20px; }
     .main-title { font-size: 32px; font-weight: 700; letter-spacing: -0.5px; margin: 20px 0 12px 0; transition: color 0.3s ease; }
-    
-    /* 液态玻璃必应搜索框 */
-    .search-container {
-      margin-bottom: 24px;
-      display: flex;
-      justify-content: center;
-    }
-    .search-input {
-      width: 100%;
-      padding: 14px 20px;
-      border-radius: 18px;
-      border: 1px solid var(--glass-border);
-      background: var(--glass-bg);
-      backdrop-filter: var(--glass-blur);
-      -webkit-backdrop-filter: var(--glass-blur);
-      color: var(--text-main);
-      font-size: 15px;
-      outline: none;
-      box-shadow: var(--glass-shadow);
-      transition: all 0.3s ease;
-    }
-    .search-input:focus {
-      border-color: var(--accent-color);
-      box-shadow: 0 0 15px rgba(0, 122, 255, 0.3), var(--glass-shadow);
-    }
+    .search-container { margin-bottom: 24px; display: flex; justify-content: center; }
+    .search-input { width: 100%; padding: 14px 20px; border-radius: 18px; border: 1px solid var(--glass-border); background: var(--glass-bg); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); color: var(--text-main); font-size: 15px; outline: none; box-shadow: var(--glass-shadow); transition: all 0.3s ease; }
+    .search-input:focus { border-color: var(--accent-color); box-shadow: 0 0 15px rgba(0,122,255,0.3),var(--glass-shadow); }
 
-    /* 液态玻璃轮播图容器 */
-    .carousel-container { 
-      position: relative; 
-      width: 100%; 
-      height: clamp(220px, 35vw, 360px); 
-      border-radius: 24px; 
-      overflow: hidden; 
-      border: 1px solid var(--glass-border);
-      box-shadow: var(--glass-shadow); 
-      margin-bottom: 32px;
-      cursor: grab;
-      user-select: none;
-      -webkit-user-select: none;
-      touch-action: pan-y;
-    }
+    .carousel-container { position: relative; width: 100%; height: clamp(220px,35vw,360px); border-radius: 24px; overflow: hidden; border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow); margin-bottom: 32px; cursor: grab; user-select: none; -webkit-user-select: none; touch-action: pan-y; }
     .carousel-container:active { cursor: grabbing; }
-
-    .carousel-track { display: flex; width: 300%; height: 100%; transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1); }
+    .carousel-track { display: flex; width: 300%; height: 100%; transition: transform 0.5s cubic-bezier(0.25,1,0.5,1); }
     .slide { width: 33.333%; height: 100%; display: block; position: relative; text-decoration: none; }
-    
-    .slide img { 
-      width: 100%; 
-      height: 100%; 
-      object-fit: cover; 
-      object-position: center top; 
-      -webkit-user-drag: none; 
-      pointer-events: none; 
-    }
-
-    .slide-caption { 
-      position: absolute; 
-      bottom: 0; left: 0; right: 0; 
-      padding: 18px; 
-      background: linear-gradient(transparent, rgba(0,0,0,0.7)); 
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
-      color: #ffffff; 
-      font-size: 16px; 
-      font-weight: 600; 
-      pointer-events: none; 
-    }
+    .slide img { width: 100%; height: 100%; object-fit: cover; object-position: center top; -webkit-user-drag: none; pointer-events: none; }
+    .slide-caption { position: absolute; bottom: 0; left: 0; right: 0; padding: 18px; background: linear-gradient(transparent,rgba(0,0,0,0.7)); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); color: #fff; font-size: 16px; font-weight: 600; pointer-events: none; }
     .carousel-dots { position: absolute; bottom: 12px; right: 16px; display: flex; gap: 6px; z-index: 10; }
-    .dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255, 255, 255, 0.4); transition: all 0.3s ease; cursor: pointer; }
-    .dot.active { background: #ffffff; width: 20px; border-radius: 4px; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.4); transition: all 0.3s ease; cursor: pointer; }
+    .dot.active { background: #fff; width: 20px; border-radius: 4px; }
 
-    /* 液态玻璃导航网格 */
-    .nav-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); gap: 20px 16px; justify-items: center; }
+    .nav-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(72px,1fr)); gap: 20px 16px; justify-items: center; }
     .nav-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; width: 72px; transition: transform 0.2s ease; cursor: pointer; }
     .nav-item:active { transform: scale(0.88); }
-    
-    /* 液态玻璃统一外框 */
-    .icon-box { 
-      width: 60px; 
-      height: 60px; 
-      border-radius: 18px; 
-      background: var(--glass-bg); 
-      backdrop-filter: var(--glass-blur);
-      -webkit-backdrop-filter: var(--glass-blur);
-      border: 1px solid var(--glass-border);
-      box-shadow: var(--glass-shadow); 
-      display: flex; 
-      justify-content: center; 
-      align-items: center; 
-      margin-bottom: 8px; 
-      overflow: hidden; 
-      position: relative; 
-      transition: all 0.3s ease; 
-    }
-
-    /* 液态玻璃顶部高光反射层 */
-    .icon-box::before {
-      content: "";
-      position: absolute;
-      top: 0; left: 0; right: 0; height: 45%;
-      background: linear-gradient(180deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0) 100%);
-      pointer-events: none;
-      border-radius: 18px 18px 0 0;
-    }
-
-    /* 优化缩放图片图标（中国/苏联图标缩小适配周围SVG） */
-    .icon-box img { 
-      width: 62%; 
-      height: 62%; 
-      object-fit: contain; 
-      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15));
-    }
-    
-    .icon-box svg { 
-      width: 28px; 
-      height: 28px; 
-      display: block; 
-      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
-    }
-    
+    .icon-box { width: 60px; height: 60px; border-radius: 18px; background: var(--glass-bg); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow); display: flex; justify-content: center; align-items: center; margin-bottom: 8px; overflow: hidden; position: relative; transition: all 0.3s ease; }
+    .icon-box::before { content:""; position: absolute; top: 0; left: 0; right: 0; height: 45%; background: linear-gradient(180deg,rgba(255,255,255,0.4) 0%,rgba(255,255,255,0) 100%); pointer-events: none; border-radius: 18px 18px 0 0; }
+    .icon-box img { width: 62%; height: 62%; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15)); }
+    .icon-box svg { width: 28px; height: 28px; display: block; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); }
     .icon-title { font-size: 12px; color: var(--text-main); text-align: center; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 500; transition: color 0.3s ease; }
 
-    /* 液态玻璃弹窗 */
     .ios-modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--modal-overlay); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); display: flex; justify-content: center; align-items: center; z-index: 2500; opacity: 0; pointer-events: none; transition: opacity 0.25s ease; }
     .ios-modal-overlay.active { opacity: 1; pointer-events: auto; }
-    
-    .ios-modal { 
-      width: 280px; 
-      background: var(--modal-bg); 
-      backdrop-filter: var(--glass-blur);
-      -webkit-backdrop-filter: var(--glass-blur);
-      border-radius: 20px; 
-      text-align: center; 
-      overflow: hidden; 
-      transform: scale(1.15); 
-      transition: transform 0.25s cubic-bezier(0.1, 0.9, 0.2, 1); 
-      box-shadow: var(--glass-shadow); 
-      border: 1px solid var(--glass-border); 
-    }
+    .ios-modal { width: 280px; background: var(--modal-bg); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); border-radius: 20px; text-align: center; overflow: hidden; transform: scale(1.15); transition: transform 0.25s cubic-bezier(0.1,0.9,0.2,1); box-shadow: var(--glass-shadow); border: 1px solid var(--glass-border); }
     .ios-modal-overlay.active .ios-modal { transform: scale(1); }
     .ios-modal-content { padding: 22px 18px 18px 18px; }
     .ios-modal-title { font-size: 17px; font-weight: 600; color: var(--text-main); margin-bottom: 6px; }
-    .ios-modal-body { font-size: 13px; color: var(--text-main); line-height: 1.4; opacity: 0.85; }
+    .ios-modal-body { font-size: 13px; color: var(--text-main); line-height: 1.4; opacity: 0.85; white-space: pre-line; }
     .ios-modal-actions { border-top: 1px solid var(--glass-border); display: flex; }
     .ios-modal-btn { flex: 1; background: transparent; border: none; padding: 12px 0; font-size: 17px; color: var(--accent-color); font-weight: 600; cursor: pointer; transition: background-color 0.2s ease; }
-    .ios-modal-btn:active { background-color: rgba(120, 120, 128, 0.15); }
+    .ios-modal-btn:active { background-color: rgba(120,120,128,0.15); }
   </style>
 </head>
 <body>
 
-  <!-- 顶部栏 -->
   <header class="header-bar" id="headerBar">
     <div class="header-left">
       <button class="sidebar-toggle-btn" onclick="toggleSidebar()" aria-label="打开/收回侧边栏">
-        <span></span>
-        <span></span>
-        <span></span>
+        <span></span><span></span><span></span>
       </button>
       <div class="header-logo"> </div>
     </div>
-
     <label class="theme-switch" for="themeToggle">
       <input type="checkbox" id="themeToggle">
       <div class="switch-track">
         <div class="switch-thumb">
-          <span class="crater crater-1"></span>
-          <span class="crater crater-2"></span>
-          <span class="crater crater-3"></span>
+          <span class="crater crater-1"></span><span class="crater crater-2"></span><span class="crater crater-3"></span>
         </div>
-        <span class="star star-1"></span>
-        <span class="star star-2"></span>
-        <span class="star star-3"></span>
-        <span class="cloud cloud-1"></span>
-        <span class="cloud cloud-2"></span>
+        <span class="star star-1"></span><span class="star star-2"></span><span class="star star-3"></span>
+        <span class="cloud cloud-1"></span><span class="cloud cloud-2"></span>
       </div>
     </label>
   </header>
 
-  <!-- 液态玻璃侧边栏及遮罩 -->
   <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
   <aside class="ios-sidebar" id="iosSidebar">
     <div class="sidebar-header"></div>
     <div class="sidebar-body">
       <div class="sidebar-content-item" style="justify-content: space-between;">
         <span> (^▽^ )</span>
-        <span style="font-size: 12px; color: var(--text-sub);">v0.1.8 </span>
+        <span style="font-size:12px; color:var(--text-sub);">v0.1.8</span>
       </div>
       <div class="sidebar-content-item">
-        <a href="https://2050.cn.lu/ntest.html" target="_blank" style="text-decoration:none; color:inherit; font-size:14px; width:100%;">
-           意识形态测试入口
+        <a href="https://2050.cn.lu/ntest.html" target="_blank" style="text-decoration:none; color:inherit; font-size:14px; width:100%; display:block; text-align:left;">
+          意识形态测试入口
         </a>
       </div>
       <div class="sidebar-content-item">
-        <a href="mi.html" target="_blank" style="text-decoration:none; color:inherit; font-size:14px; width:100%;">
+        <a href="mi.html" target="_blank" style="text-decoration:none; color:inherit; font-size:14px; width:100%; display:block; text-align:left;">
           文件加密传输
         </a>
       </div>
-
+      <!-- 侧边栏：图片混淆，纯文字靠左，无图标 -->
+      <div class="sidebar-content-item" onclick="window.open('hx.html','_blank')" style="cursor:pointer;">
+        <span class="sb-text">图片混淆</span>
+      </div>
       <div class="sidebar-slider-container">
         <input type="range" id="gradientSlider" min="0" max="100" value="0" class="gradient-slider">
       </div>
     </div>
   </aside>
 
-  <!-- 灵动岛音乐播放器 -->
   <div class="dynamic-island" id="dynamicIsland" onclick="toggleIsland(event)">
     <audio id="audioPlayer" autoplay preload="auto"></audio>
-
     <div class="island-collapsed-content">
       <img src="" id="miniCover" class="island-mini-cover" alt="封面">
-      <div class="island-waveform" id="miniWaveform">
-        <span></span><span></span><span></span>
-      </div>
+      <div class="island-waveform" id="miniWaveform"><span></span><span></span><span></span></div>
     </div>
-
     <div class="island-expanded-content">
       <div class="island-top-row">
         <img src="" id="largeCover" class="island-large-cover" alt="封面">
@@ -672,34 +217,23 @@
         </div>
       </div>
       <div class="island-controls">
-        <button class="control-btn" onclick="prevSong(event)">
-          <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
-        </button>
+        <button class="control-btn" onclick="prevSong(event)"><svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg></button>
         <button class="control-btn play-btn" id="playPauseBtn" onclick="togglePlay(event)">
           <svg id="playIcon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
           <svg id="pauseIcon" viewBox="0 0 24 24" style="display:none;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
         </button>
-        <button class="control-btn" onclick="nextSong(event)">
-          <svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
-        </button>
+        <button class="control-btn" onclick="nextSong(event)"><svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg></button>
       </div>
     </div>
   </div>
 
   <div class="container">
     <h1 class="main-title"></h1>
-
-    <!-- 必应搜索框 -->
     <div class="search-container">
-      <input 
-        type="text" 
-        class="search-input" 
-        placeholder="🔍 在 Bing 中搜索..." 
-        onkeydown="if(event.key==='Enter') window.open('https://www.bing.com/search?q=' + encodeURIComponent(this.value), '_blank')"
-      >
+      <input type="text" class="search-input" placeholder="在 Bing 中搜索..."
+        onkeydown="if(event.key==='Enter') window.open('https://www.bing.com/search?q='+encodeURIComponent(this.value),'_blank')">
     </div>
 
-    <!-- 轮播图 -->
     <div class="carousel-container" id="carouselContainer">
       <div class="carousel-track" id="carouselTrack">
         <a href="http://x2050.top/" target="_blank" class="slide">
@@ -716,24 +250,18 @@
         </a>
       </div>
       <div class="carousel-dots" id="carouselDots">
-        <div class="dot active"></div>
-        <div class="dot"></div>
-        <div class="dot"></div>
+        <div class="dot active"></div><div class="dot"></div><div class="dot"></div>
       </div>
     </div>
 
-    <!-- 自绘矢量与缩小适配图标网格 -->
     <div class="nav-grid" id="navGrid"></div>
   </div>
 
-  <!-- 液态玻璃弹窗 -->
   <div class="ios-modal-overlay" id="iosModalOverlay">
     <div class="ios-modal">
       <div class="ios-modal-content">
         <div class="ios-modal-title" id="modalTitle">欢迎回家</div>
-        <div class="ios-modal-body" id="modalBody">
-          v0.1.8 , Gator, Building~
-        </div>
+        <div class="ios-modal-body" id="modalBody">v0.1.8 , Gator, Building~</div>
       </div>
       <div class="ios-modal-actions">
         <button class="ios-modal-btn" onclick="closeIosModal()">确定</button>
@@ -743,388 +271,112 @@
 
   <script>
     function toggleSidebar() {
-      const sidebar = document.getElementById("iosSidebar");
-      const overlay = document.getElementById("sidebarOverlay");
-      sidebar.classList.toggle("active");
-      overlay.classList.toggle("active");
+      document.getElementById("iosSidebar").classList.toggle("active");
+      document.getElementById("sidebarOverlay").classList.toggle("active");
     }
 
     const gradientSlider = document.getElementById("gradientSlider");
     const sidebarElement = document.getElementById("iosSidebar");
     const headerBar = document.getElementById("headerBar");
     const sidebarItems = document.querySelectorAll(".sidebar-content-item");
-
-    const startPreview = () => { sidebarElement.classList.add("previewing"); };
-    const endPreview = () => { sidebarElement.classList.remove("previewing"); };
-
+    const startPreview = () => sidebarElement.classList.add("previewing");
+    const endPreview = () => sidebarElement.classList.remove("previewing");
     gradientSlider.addEventListener("mousedown", startPreview);
-    gradientSlider.addEventListener("touchstart", startPreview, { passive: true });
+    gradientSlider.addEventListener("touchstart", startPreview, {passive:true});
     gradientSlider.addEventListener("mouseup", endPreview);
     gradientSlider.addEventListener("touchend", endPreview);
     gradientSlider.addEventListener("touchcancel", endPreview);
-
     gradientSlider.addEventListener("input", (e) => {
-      if (document.documentElement.hasAttribute("data-theme")) return;
+      if(document.documentElement.hasAttribute("data-theme")) return;
       const val = e.target.value;
-      if (val == 0) {
-        document.body.style.background = "";
-        headerBar.style.backgroundColor = "";
-        sidebarElement.style.backgroundColor = "";
-        sidebarItems.forEach(item => {
-          item.style.background = "";
-          item.style.borderColor = "";
-        });
-        return;
-      }
-
-      const hue = ((val - 1) / 99) * 360;
-      const color1 = `hsl(${hue}, 85%, 70%)`;
-      const color2 = `hsl(${(hue + 50) % 360}, 85%, 60%)`;
-
-      document.body.style.background = `radial-gradient(circle at 10% 20%, ${color1} 0%, ${color2} 100%)`;
-      
-      const syncColor = `hsla(${hue}, 85%, 85%, 0.55)`;
-      headerBar.style.backgroundColor = syncColor;
-      sidebarElement.style.backgroundColor = syncColor;
-
-      sidebarItems.forEach(item => {
-        item.style.background = `hsla(${hue}, 85%, 95%, 0.45)`;
-        item.style.borderColor = `hsla(${hue}, 80%, 75%, 0.6)`;
-      });
+      if(val == 0){ document.body.style.background=""; headerBar.style.backgroundColor=""; sidebarElement.style.backgroundColor=""; sidebarItems.forEach(i=>{i.style.background="";i.style.borderColor="";}); return; }
+      const hue = ((val-1)/99)*360;
+      const c1=`hsl(${hue},85%,70%)`, c2=`hsl(${(hue+50)%360},85%,60%)`;
+      document.body.style.background=`radial-gradient(circle at 10% 20%, ${c1} 0%, ${c2} 100%)`;
+      const sc=`hsla(${hue},85%,85%,0.55)`;
+      headerBar.style.backgroundColor=sc; sidebarElement.style.backgroundColor=sc;
+      sidebarItems.forEach(i=>{i.style.background=`hsla(${hue},85%,95%,0.45)`;i.style.borderColor=`hsla(${hue},80%,75%,0.6)`;});
     });
 
     const usFlagUrl = "https://a1.boltp.com/2026/08/06/6a740f673073b.jpg";
     const ussrLogoUrl = "https://a1.boltp.com/2026/08/06/6a741d9d311dd.png";
     const chinaLogoUrl = "https://a1.boltp.com/2026/08/06/6a7418b0a51d4.png";
 
-    // 恢复原有的单曲播放列表
-    const musicPlaylist = [
-      {
-        title: "あの夏へ",
-        artist: "Music",
-        cover: usFlagUrl, 
-        url: "https://antiserver.kuwo.cn/anti.s?usar=1&format=mp3&rid=MUSIC_4298543&response=res&type=convert_url" 
-      }
-    ];
-
+    const musicPlaylist = [{ title:"あの夏へ", artist:"Music", cover: usFlagUrl, url:"https://antiserver.kuwo.cn/anti.s?usar=1&format=mp3&rid=MUSIC_4298543&response=res&type=convert_url" }];
     let currentSongIndex = 0;
     const audioPlayer = document.getElementById("audioPlayer");
-    
-    function loadSong(index) {
-      const song = musicPlaylist[index];
-      document.getElementById("musicTitle").textContent = song.title;
-      document.getElementById("musicArtist").textContent = song.artist;
-      document.getElementById("miniCover").src = song.cover;
-      document.getElementById("largeCover").src = song.cover;
-      audioPlayer.src = song.url;
-    }
-
-    function startAutoPlay() {
-      const playPromise = audioPlayer.play();
-      if (playPromise !== undefined) {
-        playPromise.then(() => {
-          updatePlayState(true);
-        }).catch(() => {
-          const triggerOnUserAction = () => {
-            audioPlayer.play().then(() => {
-              updatePlayState(true);
-              window.removeEventListener("click", triggerOnUserAction);
-              window.removeEventListener("touchstart", triggerOnUserAction);
-            });
-          };
-          window.addEventListener("click", triggerOnUserAction);
-          window.addEventListener("touchstart", triggerOnUserAction);
-        });
-      }
-    }
-
-    function togglePlay(event) {
-      if(event) event.stopPropagation();
-      if (audioPlayer.paused) {
-        audioPlayer.play();
-        updatePlayState(true);
-      } else {
-        audioPlayer.pause();
-        updatePlayState(false);
-      }
-    }
-
-    function prevSong(event) {
-      if(event) event.stopPropagation();
-      currentSongIndex = (currentSongIndex - 1 + musicPlaylist.length) % musicPlaylist.length;
-      loadSong(currentSongIndex);
-      audioPlayer.play();
-      updatePlayState(true);
-    }
-
-    function nextSong(event) {
-      if(event) event.stopPropagation();
-      currentSongIndex = (currentSongIndex + 1) % musicPlaylist.length;
-      loadSong(currentSongIndex);
-      audioPlayer.play();
-      updatePlayState(true);
-    }
-
-    audioPlayer.addEventListener("ended", () => { nextSong(); });
-
-    function updatePlayState(isPlaying) {
-      const playIcon = document.getElementById("playIcon");
-      const pauseIcon = document.getElementById("pauseIcon");
-      const miniCover = document.getElementById("miniCover");
-      const miniWaveform = document.getElementById("miniWaveform");
-
-      if (isPlaying) {
-        playIcon.style.display = "none";
-        pauseIcon.style.display = "block";
-        miniCover.classList.add("playing");
-        miniWaveform.classList.add("playing");
-      } else {
-        playIcon.style.display = "block";
-        pauseIcon.style.display = "none";
-        miniCover.classList.remove("playing");
-        miniWaveform.classList.remove("playing");
-      }
-    }
-
+    function loadSong(i){const s=musicPlaylist[i];document.getElementById("musicTitle").textContent=s.title;document.getElementById("musicArtist").textContent=s.artist;document.getElementById("miniCover").src=s.cover;document.getElementById("largeCover").src=s.cover;audioPlayer.src=s.url;}
+    function startAutoPlay(){const p=audioPlayer.play();if(p!==undefined)p.then(()=>updatePlayState(true)).catch(()=>{const t=()=>audioPlayer.play().then(()=>{updatePlayState(true);window.removeEventListener("click",t);window.removeEventListener("touchstart",t);});window.addEventListener("click",t);window.addEventListener("touchstart",t);});}
+    function togglePlay(ev){if(ev)ev.stopPropagation();if(audioPlayer.paused){audioPlayer.play();updatePlayState(true);}else{audioPlayer.pause();updatePlayState(false);}}
+    function prevSong(ev){if(ev)ev.stopPropagation();currentSongIndex=(currentSongIndex-1+musicPlaylist.length)%musicPlaylist.length;loadSong(currentSongIndex);audioPlayer.play();updatePlayState(true);}
+    function nextSong(ev){if(ev)ev.stopPropagation();currentSongIndex=(currentSongIndex+1)%musicPlaylist.length;loadSong(currentSongIndex);audioPlayer.play();updatePlayState(true);}
+    audioPlayer.addEventListener("ended", ()=>nextSong());
+    function updatePlayState(p){document.getElementById("playIcon").style.display=p?"none":"block";document.getElementById("pauseIcon").style.display=p?"block":"none";document.getElementById("miniCover").classList.toggle("playing",p);document.getElementById("miniWaveform").classList.toggle("playing",p);}
     const dynamicIsland = document.getElementById("dynamicIsland");
-    
-    function toggleIsland(event) {
-      if (event) event.stopPropagation();
-      dynamicIsland.classList.toggle("expanded");
-    }
+    function toggleIsland(ev){if(ev)ev.stopPropagation();dynamicIsland.classList.toggle("expanded");}
+    document.addEventListener("click", e=>{if(!dynamicIsland.contains(e.target)&&dynamicIsland.classList.contains("expanded"))dynamicIsland.classList.remove("expanded");});
 
-    document.addEventListener("click", function(event) {
-      const isClickInside = dynamicIsland.contains(event.target);
-      if (!isClickInside && dynamicIsland.classList.contains("expanded")) {
-        dynamicIsland.classList.remove("expanded");
-      }
-    });
-
-    // 精美矢量 SVG 图标库
     const svgIcons = {
-      globe: `<svg viewBox="0 0 24 24" fill="none" stroke="#007aff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>`,
-      star: `<svg viewBox="0 0 24 24" fill="#ff3b30"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
-      book: `<svg viewBox="0 0 24 24" fill="none" stroke="#ff2d55" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>`,
-      search: `<svg viewBox="0 0 24 24" fill="none" stroke="#5856d6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>`,
-      news: `<svg viewBox="0 0 24 24" fill="none" stroke="#ff9500" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 20H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v1m2 13a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2m0 13-2-2m-8-5h6m-6 4h3"/></svg>`,
-      map: `<svg viewBox="0 0 24 24" fill="none" stroke="#34c759" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`,
-      history: `<svg viewBox="0 0 24 24" fill="none" stroke="#af52de" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/></svg>`,
-      code: `<svg viewBox="0 0 24 24" fill="none" stroke="#00c7be" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>`,
-      chat: `<svg viewBox="0 0 24 24" fill="none" stroke="#007aff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`,
-      video: `<svg viewBox="0 0 24 24" fill="none" stroke="#ff3b30" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>`,
-      edit: `<svg viewBox="0 0 24 24" fill="none" stroke="#ffcc00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`,
-      calendar: `<svg viewBox="0 0 24 24" fill="none" stroke="#ff9500" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`,
-      translate: `<svg viewBox="0 0 24 24" fill="none" stroke="#30b0c7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2 3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>`,
-      checklist: `<svg viewBox="0 0 24 24" fill="none" stroke="#34c759" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1 2-2V5a2 2 0 0 1 2-2h11"/></svg>`,
-      stock: `<svg viewBox="0 0 24 24" fill="none" stroke="#ff3b30" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>`,
-      music: `<svg viewBox="0 0 24 24" fill="none" stroke="#ff2d55" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>`,
-      gear: `<svg viewBox="0 0 24 24" fill="none" stroke="#8e8e93" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`,
-      info: `<svg viewBox="0 0 24 24" fill="none" stroke="#007aff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>`
+      globe:`<svg viewBox="0 0 24 24" fill="none" stroke="#007aff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>`,
+      star:`<svg viewBox="0 0 24 24" fill="#ff3b30"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
+      book:`<svg viewBox="0 0 24 24" fill="none" stroke="#ff2d55" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>`,
+      search:`<svg viewBox="0 0 24 24" fill="none" stroke="#5856d6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>`,
+      news:`<svg viewBox="0 0 24 24" fill="none" stroke="#ff9500" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 20H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v1m2 13a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2m0 13-2-2m-8-5h6m-6 4h3"/></svg>`,
+      map:`<svg viewBox="0 0 24 24" fill="none" stroke="#34c759" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`,
+      history:`<svg viewBox="0 0 24 24" fill="none" stroke="#af52de" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/></svg>`,
+      code:`<svg viewBox="0 0 24 24" fill="none" stroke="#00c7be" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>`,
+      chat:`<svg viewBox="0 0 24 24" fill="none" stroke="#007aff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`,
+      video:`<svg viewBox="0 0 24 24" fill="none" stroke="#ff3b30" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>`,
+      edit:`<svg viewBox="0 0 24 24" fill="none" stroke="#ffcc00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`,
+      calendar:`<svg viewBox="0 0 24 24" fill="none" stroke="#ff9500" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`,
+      translate:`<svg viewBox="0 0 24 24" fill="none" stroke="#30b0c7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2 3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>`,
+      checklist:`<svg viewBox="0 0 24 24" fill="none" stroke="#34c759" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1 2-2V5a2 2 0 0 1 2-2h11"/></svg>`,
+      stock:`<svg viewBox="0 0 24 24" fill="none" stroke="#ff3b30" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>`,
+      music:`<svg viewBox="0 0 24 24" fill="none" stroke="#ff2d55" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>`,
+      gear:`<svg viewBox="0 0 24 24" fill="none" stroke="#8e8e93" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`,
+      info:`<svg viewBox="0 0 24 24" fill="none" stroke="#007aff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>`,
+      // 新增：图片/相框图标（描边风格，与其他 SVG 统一）
+      image:`<svg viewBox="0 0 24 24" fill="none" stroke="#ff9500" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3" ry="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`
     };
 
     const navItemsConfig = [
-      { id: 1,  title: "意识形态", icon: svgIcons.globe, isImg: false, url: "https://2050.cn.lu/ntest.html", visible: true },
-      { id: 2,  title: "苏联",     icon: ussrLogoUrl, isImg: true, url: "https://2050.cn.lu/", visible: true },
-      { id: 3,  title: "中国",     icon: chinaLogoUrl, isImg: true, url:"https://www.gov.cn/index.html", visible: true }, 
-      { id: 4,  title: "朝鲜",     icon: svgIcons.star, isImg: false, url: "http://www.kcna.kp/cn", visible: true },
-      { id: 5,  title: "马克思主义", icon: svgIcons.book, isImg: false, url: "https://www.marxists.org/chinese/", visible: true },
-      { id: 6,  title: "学术搜索", icon: svgIcons.search, isImg: false, url: "https://scholar.google.com", visible: true },
-      { id: 7,  title: "时事快讯", icon: svgIcons.news, isImg: false, url: "http://www.news.cn/", visible: true },
-      { id: 8,  title: "地图探索", icon: svgIcons.map, isImg: false, url: "https://www.bing.com/maps", visible: true },
-      { id: 9,  title: "历史大观", icon: svgIcons.history, isImg: false, url: "https://baike.baidu.com", visible: true },
-      { id: 10, title: "加密传输", icon: svgIcons.code, isImg: false, url: "mi.html", visible: true },
-      { id: 11, title: "社区讨论", icon: svgIcons.chat, isImg: false, url: "https://www.zhihu.com", visible: true },
-      { id: 12, title: "视频学习", icon: svgIcons.video, isImg: false, url: "https://www.bilibili.com", visible: true },
-      { id: 13, title: "便签备忘", icon: svgIcons.edit, isImg: false, isModal: true, modalTitle: "便签", modalText: "功能开发中，可在侧边栏快捷访问主要链接。", visible: true },
-      { id: 14, title: "时间日历", icon: svgIcons.calendar, isImg: false, isModal: true, modalTitle: "日历", modalText: "今天是 " + new Date().toLocaleDateString('zh-CN'), visible: true },
-      { id: 15, title: "翻译工具", icon: svgIcons.translate, isImg: false, url: "https://www.bing.com/translator", visible: true },
-      { id: 16, title: "提醒事项", icon: svgIcons.checklist, isImg: false, isModal: true, modalTitle: "提醒事项", modalText: "无未完成的事项。", visible: true },
-      { id: 17, title: "股市行情", icon: svgIcons.stock, isImg: false, url: "https://finance.sina.com.cn", visible: true },
-      { id: 18, title: "云音乐",   icon: svgIcons.music, isImg: false, url: "https://music.163.com", visible: true },
-      { id: 19, title: "系统设置", icon: svgIcons.gear, isImg: false, isModal: true, modalTitle: "设置", modalText: "支持切换暗黑模式或拖动侧边栏彩虹滑钮变色。", visible: true },
-      { id: 20, title: "关于本站", icon: svgIcons.info, isImg: false, isModal: true, modalTitle: "关于本站", modalText: "Gator Portal v0.1.8\n全新液态玻璃（Liquid Glass）视觉架构\ 站长QQ：2307007253", visible: true }
+      { id: 1,  title: "意识形态", icon: svgIcons.globe,      isImg: false, url: "https://2050.cn.lu/ntest.html", visible: true },
+      { id: 2,  title: "苏联",     icon: ussrLogoUrl,         isImg: true,  url: "https://2050.cn.lu/", visible: true },
+      { id: 3,  title: "中国",     icon: chinaLogoUrl,         isImg: true,  url: "https://www.gov.cn/index.html", visible: true },
+      { id: 4,  title: "朝鲜",     icon: svgIcons.star,       isImg: false, url: "http://www.kcna.kp/cn", visible: true },
+      { id: 5,  title: "马克思主义", icon: svgIcons.book,       isImg: false, url: "https://www.marxists.org/chinese/", visible: true },
+      { id: 6,  title: "学术搜索", icon: svgIcons.search,     isImg: false, url: "https://scholar.google.com", visible: true },
+      { id: 7,  title: "时事快讯", icon: svgIcons.news,       isImg: false, url: "http://www.news.cn/", visible: true },
+      { id: 8,  title: "地图探索", icon: svgIcons.map,        isImg: false, url: "https://www.bing.com/maps", visible: true },
+      { id: 9,  title: "历史大观", icon: svgIcons.history,    isImg: false, url: "https://baike.baidu.com", visible: true },
+      { id: 10, title: "加密传输", icon: svgIcons.code,       isImg: false, url: "mi.html", visible: true },
+      { id: 11, title: "图片混淆", icon: svgIcons.image,      isImg: false, url: "hx.html", visible: true },
+      { id: 12, title: "视频学习", icon: svgIcons.video,      isImg: false, url: "https://www.bilibili.com", visible: true },
+      { id: 13, title: "社区讨论", icon: svgIcons.chat,       isImg: false, url: "https://www.zhihu.com", visible: true },
+      { id: 14, title: "翻译工具", icon: svgIcons.translate,  isImg: false, url: "https://www.bing.com/translator", visible: true },
+      { id: 15, title: "股市行情", icon: svgIcons.stock,      isImg: false, url: "https://finance.sina.com.cn", visible: true },
+      { id: 16, title: "云音乐",   icon: svgIcons.music,      isImg: false, url: "https://music.163.com", visible: true },
+      { id: 17, title: "便签备忘", icon: svgIcons.edit,       isImg: false, isModal: true, modalTitle: "便签", modalText: "功能开发中，可在侧边栏快捷访问主要链接。", visible: true },
+      { id: 18, title: "时间日历", icon: svgIcons.calendar,   isImg: false, isModal: true, modalTitle: "日历", modalText: "今天是 " + new Date().toLocaleDateString('zh-CN'), visible: true },
+      { id: 19, title: "提醒事项", icon: svgIcons.checklist,  isImg: false, isModal: true, modalTitle: "提醒事项", modalText: "无未完成的事项。", visible: true },
+      { id: 20, title: "系统设置", icon: svgIcons.gear,       isImg: false, isModal: true, modalTitle: "设置", modalText: "支持切换暗黑模式或拖动侧边栏彩虹滑钮变色。", visible: true },
+      { id: 21, title: "关于本站", icon: svgIcons.info,       isImg: false, isModal: true, modalTitle: "关于本站", modalText: "Gator Portal v0.1.8\n全新液态玻璃（Liquid Glass）视觉架构\n站长QQ：2307007253", visible: true }
     ];
 
-    function openCustomModal(title, text) {
-      document.getElementById("modalTitle").innerText = title;
-      document.getElementById("modalBody").innerText = text;
-      document.getElementById("iosModalOverlay").classList.add("active");
-    }
+    function openCustomModal(title, text){document.getElementById("modalTitle").innerText=title;document.getElementById("modalBody").innerText=text;document.getElementById("iosModalOverlay").classList.add("active");}
+    function renderNavGrid(){const g=document.getElementById("navGrid");g.innerHTML="";navItemsConfig.forEach(item=>{if(!item.visible)return;const a=document.createElement("a");a.className="nav-item";if(item.isModal)a.onclick=()=>openCustomModal(item.modalTitle,item.modalText);else{a.href=item.url;a.target="_blank";}const ic=item.isImg?`<img src="${item.icon}" alt="${item.title}">`:item.icon;a.innerHTML=`<div class="icon-box">${ic}</div><div class="icon-title">${item.title}</div>`;g.appendChild(a);});}
 
-    function renderNavGrid() {
-      const gridContainer = document.getElementById("navGrid");
-      gridContainer.innerHTML = "";
-      navItemsConfig.forEach(item => {
-        if (item.visible) {
-          const a = document.createElement("a");
-          a.className = "nav-item";
-          
-          if (item.isModal) {
-            a.onclick = () => openCustomModal(item.modalTitle, item.modalText);
-          } else {
-            a.href = item.url;
-            a.target = "_blank";
-          }
-          
-          const iconContent = item.isImg 
-            ? `<img src="${item.icon}" alt="${item.title}">`
-            : item.icon;
+    window.addEventListener("DOMContentLoaded", ()=>{loadSong(0);startAutoPlay();setTimeout(()=>document.getElementById("iosModalOverlay").classList.add("active"),300);renderNavGrid();initCarousel();});
+    function closeIosModal(){document.getElementById("iosModalOverlay").classList.remove("active");}
 
-          a.innerHTML = `<div class="icon-box">${iconContent}</div><div class="icon-title">${item.title}</div>`;
-          gridContainer.appendChild(a);
-        }
-      });
-    }
+    let sb="",sh="",ssb="",slv="0";
+    document.getElementById("themeToggle").addEventListener("change", e=>{if(e.target.checked){if(!document.documentElement.hasAttribute("data-theme")){sb=document.body.style.background;sh=headerBar.style.backgroundColor;ssb=sidebarElement.style.backgroundColor;slv=gradientSlider.value;}document.documentElement.setAttribute("data-theme","dark");document.body.style.background="";headerBar.style.backgroundColor="";sidebarElement.style.backgroundColor="";sidebarItems.forEach(i=>{i.style.background="";i.style.borderColor="";});}else{document.documentElement.removeAttribute("data-theme");if(slv!=="0"&&sb){document.body.style.background=sb;headerBar.style.backgroundColor=sh;sidebarElement.style.backgroundColor=ssb;gradientSlider.value=slv;const h=((slv-1)/99)*360;sidebarItems.forEach(i=>{i.style.background=`hsla(${h},85%,95%,0.45)`;i.style.borderColor=`hsla(${h},80%,75%,0.6)`;});}else{document.body.style.background="";headerBar.style.backgroundColor="";sidebarElement.style.backgroundColor="";gradientSlider.value="0";sidebarItems.forEach(i=>{i.style.background="";i.style.borderColor="";});}}});
 
-    window.addEventListener("DOMContentLoaded", () => {
-      loadSong(0);
-      startAutoPlay();
-      setTimeout(() => { document.getElementById("iosModalOverlay").classList.add("active"); }, 300);
-      renderNavGrid();
-      initCarousel();
-    });
-
-    function closeIosModal() { document.getElementById("iosModalOverlay").classList.remove("active"); }
-
-    let savedBodyBg = "";
-    let savedHeaderBg = "";
-    let savedSidebarBg = "";
-    let savedSliderVal = "0";
-
-    const themeToggle = document.getElementById("themeToggle");
-    themeToggle.addEventListener("change", (e) => {
-      if (e.target.checked) {
-        if (!document.documentElement.hasAttribute("data-theme")) {
-          savedBodyBg = document.body.style.background;
-          savedHeaderBg = headerBar.style.backgroundColor;
-          savedSidebarBg = sidebarElement.style.backgroundColor;
-          savedSliderVal = gradientSlider.value;
-        }
-        document.documentElement.setAttribute("data-theme", "dark");
-        document.body.style.background = ""; 
-        headerBar.style.backgroundColor = ""; 
-        sidebarElement.style.backgroundColor = ""; 
-        sidebarItems.forEach(item => {
-          item.style.background = "";
-          item.style.borderColor = "";
-        });
-      } else {
-        document.documentElement.removeAttribute("data-theme");
-        if (savedSliderVal !== "0" && savedBodyBg) {
-          document.body.style.background = savedBodyBg;
-          headerBar.style.backgroundColor = savedHeaderBg;
-          sidebarElement.style.backgroundColor = savedSidebarBg;
-          gradientSlider.value = savedSliderVal;
-          const val = savedSliderVal;
-          const hue = ((val - 1) / 99) * 360;
-          sidebarItems.forEach(item => {
-            item.style.background = `hsla(${hue}, 85%, 95%, 0.45)`;
-            item.style.borderColor = `hsla(${hue}, 80%, 75%, 0.6)`;
-          });
-        } else {
-          document.body.style.background = "";
-          headerBar.style.backgroundColor = "";
-          sidebarElement.style.backgroundColor = "";
-          gradientSlider.value = "0";
-          sidebarItems.forEach(item => {
-            item.style.background = "";
-            item.style.borderColor = "";
-          });
-        }
-      }
-    });
-
-    let currentSlide = 0;
-    const totalSlides = 3;
-    const track = document.getElementById("carouselTrack");
-    const container = document.getElementById("carouselContainer");
-    const dots = document.querySelectorAll(".dot");
-    let autoPlayTimer = null;
-
-    function goToSlide(index) {
-      currentSlide = index;
-      track.style.transition = "transform 0.5s cubic-bezier(0.25, 1, 0.5, 1)";
-      track.style.transform = `translateX(-${(100 / totalSlides) * currentSlide}%)`;
-      dots.forEach((dot, i) => { dot.classList.toggle("active", i === currentSlide); });
-    }
-
-    function startCarouselAutoPlay() {
-      stopCarouselAutoPlay();
-      autoPlayTimer = setInterval(() => {
-        currentSlide = (currentSlide + 1) % totalSlides;
-        goToSlide(currentSlide);
-      }, 3500);
-    }
-
-    function stopCarouselAutoPlay() {
-      if (autoPlayTimer) clearInterval(autoPlayTimer);
-    }
-
-    function initCarousel() {
-      let isDragging = false;
-      let startX = 0;
-      let movedDistance = 0;
-
-      const getClientX = (e) => e.touches ? e.touches[0].clientX : e.clientX;
-
-      const dragStart = (e) => {
-        isDragging = true;
-        startX = getClientX(e);
-        movedDistance = 0;
-        track.style.transition = "none";
-        stopCarouselAutoPlay();
-      };
-
-      const dragMove = (e) => {
-        if (!isDragging) return;
-        const currentX = getClientX(e);
-        movedDistance = currentX - startX;
-        
-        const containerWidth = container.offsetWidth;
-        const basePx = -currentSlide * containerWidth;
-        const totalPx = basePx + movedDistance;
-        
-        track.style.transform = `translateX(${totalPx}px)`;
-      };
-
-      const dragEnd = () => {
-        if (!isDragging) return;
-        isDragging = false;
-        
-        const threshold = 50;
-        if (movedDistance < -threshold && currentSlide < totalSlides - 1) {
-          currentSlide++;
-        } else if (movedDistance > threshold && currentSlide > 0) {
-          currentSlide--;
-        }
-
-        goToSlide(currentSlide);
-        startCarouselAutoPlay();
-      };
-
-      container.addEventListener("touchstart", dragStart, { passive: true });
-      container.addEventListener("touchmove", dragMove, { passive: true });
-      container.addEventListener("touchend", dragEnd);
-
-      container.addEventListener("mousedown", dragStart);
-      window.addEventListener("mousemove", dragMove);
-      window.addEventListener("mouseup", dragEnd);
-
-      container.addEventListener("click", (e) => {
-        if (Math.abs(movedDistance) > 10) {
-          e.preventDefault();
-        }
-      }, true);
-
-      dots.forEach((dot, index) => { 
-        dot.addEventListener("click", () => {
-          goToSlide(index);
-          startCarouselAutoPlay();
-        }); 
-      });
-
-      startCarouselAutoPlay();
-    }
+    let cs=0,apt=null;const tk=document.getElementById("carouselTrack"),ct=document.getElementById("carouselContainer"),dt=document.querySelectorAll(".dot");
+    function goS(i){cs=i;tk.style.transition="transform 0.5s cubic-bezier(0.25,1,0.5,1)";tk.style.transform=`translateX(-${(100/3)*cs}%)`;dt.forEach((d,x)=>d.classList.toggle("active",x===cs));}
+    function stA(){spA();apt=setInterval(()=>{cs=(cs+1)%3;goS(cs);},3500);}
+    function spA(){if(apt)clearInterval(apt);}
+    function initCarousel(){let d=false,sx=0,mv=0,gx=e=>e.touches?e.touches[0].clientX:e.clientX;const onS=e=>{d=true;sx=gx(e);mv=0;tk.style.transition="none";spA();};const onM=e=>{if(!d)return;mv=gx(e)-sx;tk.style.transform=`translateX(${-cs*ct.offsetWidth+mv}px)`;};const onE=()=>{if(!d)return;d=false;if(mv<-50&&cs<2)cs++;else if(mv>50&&cs>0)cs--;goS(cs);stA();};ct.addEventListener("touchstart",onS,{passive:true});ct.addEventListener("touchmove",onM,{passive:true});ct.addEventListener("touchend",onE);ct.addEventListener("mousedown",onS);window.addEventListener("mousemove",onM);window.addEventListener("mouseup",onE);ct.addEventListener("click",e=>{if(Math.abs(mv)>10)e.preventDefault();},true);dt.forEach((d,i)=>d.addEventListener("click",()=>{goS(i);stA();}));stA();}
   </script>
 </body>
 </html>
