@@ -9,13 +9,13 @@
 <style>
 :root{
     --ios-blue:#007AFF;
+    --ios-purple:#AF52DE;
+    --ios-pink:#FF2D55;
+    --ios-orange:#FF9500;
     --ios-bg:#f2f2f7;
     --ios-card:#ffffff;
     --ios-text:#1c1c1e;
     --ios-secondary:#6c6c70;
-    --ios-orange:#ff9500;
-    --ios-pink:#ff2d55;
-    --ios-purple:#af52de;
     --shadow:0 8px 30px rgba(0,0,0,.08);
     --radius:18px;
 }
@@ -23,31 +23,27 @@
 html,body{
     margin:0;padding:0;
     font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
-    background:var(--ios-bg);
-    color:var(--ios-text);
-    -webkit-font-smoothing:antialiased;
-    text-rendering:optimizeLegibility;
+    background:var(--ios-bg);color:var(--ios-text);
+    -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
 }
 body{
-    min-height:100vh;
-    display:flex;flex-direction:column;align-items:center;
-    padding:32px 16px 48px;
-    position:relative;overflow-x:hidden;
+    min-height:100vh;display:flex;flex-direction:column;align-items:center;
+    padding:36px 16px 48px;position:relative;overflow-x:hidden;
     background:
-        radial-gradient(900px 500px at 12% -10%, rgba(0,122,255,.10), transparent 60%),
-        radial-gradient(800px 460px at 100% 0%, rgba(175,82,222,.10), transparent 60%),
-        radial-gradient(700px 420px at 50% 110%, rgba(255,45,85,.08), transparent 60%),
+        radial-gradient(900px 520px at 10% -8%, rgba(0,122,255,.11), transparent 60%),
+        radial-gradient(820px 480px at 100% 2%, rgba(175,82,222,.11), transparent 60%),
+        radial-gradient(720px 440px at 52% 112%, rgba(255,45,85,.08), transparent 60%),
         var(--ios-bg);
 }
-/* 入场动画 */
-@keyframes fadeUp{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
+@keyframes fadeUp{from{opacity:0;transform:translate3d(0,18px,0);}to{opacity:1;transform:translate3d(0,0,0);}}
 @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
-@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(0,122,255,.35);}50%{box-shadow:0 0 0 10px rgba(0,122,255,0);}}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(0,122,255,.30);}50%{box-shadow:0 0 0 11px rgba(0,122,255,0);}}
 @keyframes spin{to{transform:rotate(360deg);}}
 @keyframes shimmer{0%{background-position:0% 50%;}50%{background-position:100% 50%;}100%{background-position:0% 50%;}}
-.header{text-align:center;margin-bottom:20px;animation:fadeUp .7s cubic-bezier(.2,.7,.2,1) both;}
+@keyframes floatY{0%,100%{transform:translate3d(0,0,0);}50%{transform:translate3d(0,-4px,0);}}
+.header{text-align:center;margin-bottom:22px;animation:fadeUp .7s cubic-bezier(.2,.7,.2,1) both;will-change:opacity,transform;}
 .header h1{
-    font-size:30px;font-weight:800;letter-spacing:.4px;margin:0 0 10px;
+    font-size:30px;font-weight:800;letter-spacing:.4px;margin:0 0 12px;
     background:linear-gradient(135deg,var(--ios-blue),var(--ios-purple) 55%,var(--ios-pink));
     background-size:200% 200%;animation:shimmer 6s ease infinite;
     -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
@@ -55,36 +51,37 @@ body{
 .header .desc{
     display:inline-block;max-width:460px;font-size:13px;line-height:1.65;
     color:var(--ios-secondary);background:var(--ios-card);
-    padding:12px 16px;border-radius:var(--radius);box-shadow:var(--shadow);
-    animation:fadeUp .8s .12s cubic-bezier(.2,.7,.2,1) both;
+    padding:13px 17px;border-radius:var(--radius);box-shadow:var(--shadow);
+    animation:fadeUp .8s .12s cubic-bezier(.2,.7,.2,1) both;will-change:opacity,transform;
 }
-.card,.preview-wrap,.footer{animation:fadeUp .8s .22s cubic-bezier(.2,.7,.2,1) both;}
+.card,.preview-wrap,.footer{animation:fadeUp .8s .22s cubic-bezier(.2,.7,.2,1) both;will-change:opacity,transform;}
 .card{
-    width:100%;max-width:560px;background:var(--ios-card);
+    width:100%;max-width:580px;background:var(--ios-card);
     border-radius:var(--radius);box-shadow:var(--shadow);
-    padding:20px;margin-bottom:16px;
-    transition:transform .3s ease, box-shadow .3s ease;
+    padding:22px 20px;margin-bottom:16px;text-align:center;
+    transition:transform .35s cubic-bezier(.2,.7,.2,1),box-shadow .35s cubic-bezier(.2,.7,.2,1);
+    will-change:transform;
 }
-.card:hover{transform:translateY(-2px);box-shadow:0 12px 36px rgba(0,0,0,.10);}
+.card:hover{transform:translate3d(0,-2px,0);box-shadow:0 12px 36px rgba(0,0,0,.10);}
 .btn-group{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;align-items:center;}
-.ios-btn{
-    position:relative;min-width:92px;height:42px;line-height:42px;
-    font-size:15px;font-weight:600;padding:0 18px;border:0;border-radius:13px;
-    color:#fff;cursor:pointer;
-    transition:transform .15s ease,filter .15s ease,box-shadow .2s ease;
-    box-shadow:0 4px 14px rgba(0,0,0,.14);
-    display:inline-flex;align-items:center;justify-content:center;user-select:none;
-    overflow:hidden;
+.normal_button{
+    min-width:5.2rem;height:42px;line-height:42px;
+    font-size:15px;font-weight:600;padding:0 18px;margin:0 4px;
+    border:0;border-radius:13px;display:inline-flex;align-items:center;justify-content:center;
+    position:relative;vertical-align:middle;color:#fff;cursor:pointer;user-select:none;
+    transition:transform .18s cubic-bezier(.2,.7,.2,1),filter .18s ease,box-shadow .25s ease;
+    box-shadow:0 4px 14px rgba(0,0,0,.14);overflow:hidden;
+    will-change:transform;
 }
-.ios-btn::after{
+.normal_button::after{
     content:"";position:absolute;inset:0;border-radius:inherit;
     background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,255,255,0) 45%);
     pointer-events:none;
 }
-.ios-btn:hover{filter:brightness(1.06);transform:translateY(-1px);box-shadow:0 6px 18px rgba(0,0,0,.16);}
-.ios-btn:active{transform:scale(.955);filter:brightness(.94);box-shadow:0 2px 8px rgba(0,0,0,.14);}
-.ios-btn .ipt_btn{position:absolute;left:0;top:0;width:100%;height:100%;opacity:0;cursor:pointer;}
-.btn-pick{background:linear-gradient(135deg,#1c1c2e,#232342);}
+.normal_button:hover{filter:brightness(1.06);transform:translate3d(0,-1px,0);box-shadow:0 6px 18px rgba(0,0,0,.16);}
+.normal_button:active{transform:scale(.955);filter:brightness(.94);box-shadow:0 2px 8px rgba(0,0,0,.14);transition-duration:.08s;}
+.normal_button .ipt_btn{position:absolute;left:0;top:0;width:100%;height:100%;opacity:0;cursor:pointer;margin:0;padding:0;}
+.btn-pick{background:linear-gradient(135deg,#1c1c2e,#2a2a44);}
 .btn-enc{background:linear-gradient(135deg,var(--ios-purple),#7a2dd6);}
 .btn-dec{background:linear-gradient(135deg,var(--ios-pink),#d9204a);}
 .btn-re{background:linear-gradient(135deg,var(--ios-orange),#e6850e);}
@@ -95,60 +92,58 @@ body{
     animation:spin .8s linear infinite;
 }
 .preview-wrap{
-    width:100%;max-width:560px;background:var(--ios-card);
+    width:100%;max-width:580px;background:var(--ios-card);
     border-radius:var(--radius);box-shadow:var(--shadow);
-    padding:14px;display:flex;align-items:center;justify-content:center;min-height:140px;
-    transition:transform .3s ease, box-shadow .3s ease;
+    padding:14px;display:flex;align-items:center;justify-content:center;min-height:150px;
+    transition:transform .35s cubic-bezier(.2,.7,.2,1),box-shadow .35s cubic-bezier(.2,.7,.2,1);
+    will-change:transform;
 }
-.preview-wrap:hover{transform:translateY(-2px);box-shadow:0 12px 36px rgba(0,0,0,.10);}
+.preview-wrap:hover{transform:translate3d(0,-2px,0);box-shadow:0 12px 36px rgba(0,0,0,.10);}
 #display-img{
     max-width:calc(100vw - 60px);max-height:calc(100vh - 280px);
-    display:none;border-radius:12px;box-shadow:0 4px 18px rgba(0,0,0,.12);
-    opacity:0;transform:scale(.985);
-    transition:opacity .45s ease, transform .45s cubic-bezier(.2,.7,.2,1);
+    border-radius:12px;box-shadow:0 4px 18px rgba(0,0,0,.12);
+    opacity:0;transform:scale3d(.985,.985,1);
+    transition:opacity .5s ease,transform .5s cubic-bezier(.2,.7,.2,1);
+    will-change:opacity,transform;
 }
-#display-img.show{opacity:1;transform:scale(1);}
-.footer{margin-top:20px;font-size:12px;color:#8e8e93;text-align:center;animation:fadeIn 1s .4s both;}
-.tag{
-    display:inline-block;font-size:11px;font-weight:600;color:var(--ios-blue);
-    background:rgba(0,122,255,.10);padding:4px 10px;border-radius:7px;margin-bottom:12px;
-    animation:pulse 2.6s ease infinite;
-}
-/* 提示 toast */
-.toast{
-    position:fixed;left:50%;bottom:34px;transform:translateX(-50%) translateY(20px);
+#display-img.show{opacity:1;transform:scale3d(1,1,1);animation:floatY 5s ease-in-out infinite;}
+.footer{margin-top:22px;font-size:12px;color:#8e8e93;text-align:center;animation:fadeIn 1s .4s both;}
+.tag{display:inline-block;font-size:11px;font-weight:600;color:var(--ios-blue);
+    background:rgba(0,122,255,.10);padding:4px 10px;border-radius:7px;margin-bottom:14px;
+    animation:pulse 2.6s ease infinite;}
+.toast{position:fixed;left:50%;bottom:34px;transform:translate3d(-50%,20px,0);
     background:rgba(28,28,30,.92);color:#fff;font-size:13px;font-weight:500;
     padding:10px 18px;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.2);
-    opacity:0;pointer-events:none;transition:opacity .3s ease,transform .3s ease;z-index:99;
-    backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
-}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+    opacity:0;pointer-events:none;transition:opacity .35s ease,transform .35s cubic-bezier(.2,.7,.2,1);z-index:99;
+    backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);will-change:opacity,transform;}
+.toast.show{opacity:1;transform:translate3d(-50%,0,0);}
 </style>
 </head>
 <body>
 <div class="header">
     <h1>X2050.TOP</h1>
-    <div class="desc">基于空间填充曲线的图片混淆，保持像素空间相关性，压缩后仍保色彩。仅供技术交流，输出 jpeg 质量 0.95。</div>
+    <div class="desc">温馨提示: 请勿使用本工具对抗审查，请在保证文件合法合规的情况下使用！</div>
 </div>
 
 <div class="card">
-    <div style="text-align:center;"><span class="tag">操作面板</span></div>
+    <div><span class="tag">操作面板</span></div>
     <div class="btn-group">
-        <button class="ios-btn btn-pick">选择图片<input type="file" accept="image/*" id="ipt" class="ipt_btn" /></button>
-        <button id="enc" class="ios-btn btn-enc">混淆</button>
-        <button id="dec" class="ios-btn btn-dec">解混淆</button>
-        <button id="re" class="ios-btn btn-re">还原</button>
+        <button class="normal_button btn-pick">选择图片<input type="file" accept="image/*" id="ipt" class="ipt_btn" /></button>
+        <button id="enc" class="normal_button btn-enc">混淆</button>
+        <button id="dec" class="normal_button btn-dec">解混淆</button>
+        <button id="re" class="normal_button btn-re">还原</button>
     </div>
 </div>
 
 <div class="preview-wrap">
-    <img id="display-img" alt="预览" />
+    <img id="display-img" alt="预览" style="display:none;" />
 </div>
 
 <div class="footer">x2050.top</div>
 <div id="toast" class="toast"></div>
 
 <script>
+/* ===== Gilbert 空间填充曲线（与源文件逐字一致）===== */
 function gilbert2d(width, height) {
     const coordinates = [];
     if (width >= height) generate2d(0, 0, width, 0, 0, height, coordinates);
@@ -178,6 +173,7 @@ function generate2d(x, y, ax, ay, bx, by, coordinates) {
 }
 </script>
 <script>
+/* ===== 业务逻辑（与源文件一致；修复：等待图片解码确保尺寸有效）===== */
 const img = document.getElementById("display-img");
 const toast = document.getElementById("toast");
 let toastTimer;
@@ -186,30 +182,22 @@ function showToast(msg){
     clearTimeout(toastTimer); toastTimer = setTimeout(()=>toast.classList.remove("show"), 1800);
 }
 function setLoading(btn, loading, text){
+    if(!btn) return;
     if(loading){ btn.dataset.label = btn.textContent; btn.classList.add("btn-loading"); btn.textContent = text; btn.disabled = true; }
     else { btn.classList.remove("btn-loading"); btn.textContent = btn.dataset.label || text; btn.disabled = false; }
 }
 function setsrc(src){
-    URL.revokeObjectURL(img.src);
+    if(img.src) URL.revokeObjectURL(img.src);
     img.src = src;
     img.style.display = "inline-block";
-    requestAnimationFrame(()=>requestAnimationFrame(()=>img.classList.add("show")));
+    // 等待图片解码完成再显示，确保后续 encrypt/decrypt 能拿到正确 width/height
+    if(img.decode){ img.decode().catch(()=>{}).then(()=>{ requestAnimationFrame(()=>img.classList.add("show")); }); }
+    else { requestAnimationFrame(()=>img.classList.add("show")); }
 }
-function processImage(action){
-    if(!img.src || img.src.endsWith("/")){ showToast("请先选择图片"); return; }
-    const btn = action==="encrypt" ? document.getElementById("enc") : document.getElementById("dec");
-    setLoading(btn, true, "处理中");
-    img.classList.remove("show");
-    setTimeout(()=>{
-        action==="encrypt" ? encrypt(img) : decrypt(img);
-        setLoading(btn, false);
-        showToast(action==="encrypt" ? "混淆完成" : "解混淆完成");
-    }, 260);
-}
-function encrypt(img){
+function encrypt(imgEl){
     const cvs = document.createElement("canvas");
-    const width = cvs.width = img.width, height = cvs.height = img.height;
-    const ctx = cvs.getContext("2d"); ctx.drawImage(img, 0, 0);
+    const width = cvs.width = imgEl.width, height = cvs.height = imgEl.height;
+    const ctx = cvs.getContext("2d"); ctx.drawImage(imgEl, 0, 0);
     const imgdata = ctx.getImageData(0, 0, width, height);
     const imgdata2 = new ImageData(width, height);
     const curve = gilbert2d(width, height);
@@ -223,10 +211,10 @@ function encrypt(img){
     ctx.putImageData(imgdata2, 0, 0);
     cvs.toBlob(b => { setsrc(URL.createObjectURL(b)); }, "image/jpeg", 0.95);
 }
-function decrypt(img){
+function decrypt(imgEl){
     const cvs = document.createElement("canvas");
-    const width = cvs.width = img.width, height = cvs.height = img.height;
-    const ctx = cvs.getContext("2d"); ctx.drawImage(img, 0, 0);
+    const width = cvs.width = imgEl.width, height = cvs.height = imgEl.height;
+    const ctx = cvs.getContext("2d"); ctx.drawImage(imgEl, 0, 0);
     const imgdata = ctx.getImageData(0, 0, width, height);
     const imgdata2 = new ImageData(width, height);
     const curve = gilbert2d(width, height);
@@ -244,9 +232,24 @@ const ipt = document.getElementById("ipt");
 ipt.onchange = () => {
     if(ipt.files.length > 0){ setsrc(URL.createObjectURL(ipt.files[0])); showToast("已加载图片"); }
 };
-document.getElementById("enc").onclick = () => processImage("encrypt");
-document.getElementById("dec").onclick = () => processImage("decrypt");
-document.getElementById("re").onclick = () => {
+function runWithFade(btn, loadingText, doneText, fn){
+    if(!img.src || img.src.endsWith("/")){ showToast("请先选择图片"); return; }
+    setLoading(btn, true, loadingText);
+    img.classList.remove("show");
+    img.style.display = "none";
+    const onFade = () => {
+        fn();
+        setLoading(btn, false);
+        showToast(doneText);
+    };
+    requestAnimationFrame(()=>requestAnimationFrame(()=>requestAnimationFrame(onFade)));
+}
+const btn_enc = document.getElementById("enc");
+btn_enc.onclick = () => runWithFade(btn_enc, "混淆中", "混淆完成", ()=>encrypt(img));
+const btn_dec = document.getElementById("dec");
+btn_dec.onclick = () => runWithFade(btn_dec, "解混淆中", "解混淆完成", ()=>decrypt(img));
+const btn_restore = document.getElementById("re");
+btn_restore.onclick = () => {
     if(ipt.files.length > 0){ setsrc(URL.createObjectURL(ipt.files[0])); showToast("已还原"); }
 };
 </script>
