@@ -555,62 +555,57 @@ document.getElementById('btnEncodeText').addEventListener('click',async()=>{cons
 document.getElementById('btnDecode').addEventListener('click',async()=>{const f=document.getElementById('decFile').files[0];if(!f){uiSet('decInfo','<span class="err">请先选择编码后的图片 / QR 码图片。</span>');return;}const btn=document.getElementById('btnDecode');btn.disabled=true;btn.textContent='解码中…';const pw=document.getElementById('decProgressWrap'),pb=document.getElementById('decProgress'),pl=document.getElementById('decProgressLabel'),ps=document.getElementById('decProgressStatus');try{pw.style.display='flex';pb.value=0;pl.textContent='0%';ps.textContent='读取图片…';let bmp;try{bmp=await createImageBitmap(f);}catch(e){uiSet('decInfo','<span class="err">无法解码图片：'+e.message+'</span>');pw.style.display='none';throw e;}const cv=document.createElement('canvas');cv.width=bmp.width;cv.height=bmp.height;const ctx=cv.getContext('2d');ctx.drawImage(bmp,0,0);const{data,width:iW,height:iH}=ctx.getImageData(0,0,bmp.width,bmp.height);const totalPx=iW*iH;if(totalPx<META_PIXELS){uiSet('decInfo','<span class="err">图片太小，至少需要 '+META_PIXELS+' 个像素。</span>');pw.style.display='none';throw new Error('图片太小');}let decodeMode='pixel';const px2rgb=px=>[data[px*4],data[px*4+1],data[px*4+2]];const p0=px2rgb(0);if(p0[0]===MAGIC[0]&&p0[1]===MAGIC[1]&&p0[2]===MAGIC[2])decodeMode='pixel';else{try{const r=lsbDecode(data,iW,iH);const stream=r.payload;const slen=Math.min(stream.length,totalPx*3);for(let i=0;i<slen;i++){const px=(i/3)|0;data[px*4+(i%3)]=stream[i];}decodeMode='lsb';ps.textContent='LSB 提取成功，正在解析…';}catch(e){ps.textContent='尝试作为 QR 码图片识别…';try{const raw=await decodeQrImageFile(f);if(!raw){throw new Error('未能从图片中识别到 QR 码');}let obj;try{obj=JSON.parse(raw);}catch(pe){throw new Error('QR 码内容不是本工具生成的格式（应为 JSON）');}pw.style.display='none';return await processQrJsonPayload(obj,false);}catch(qe){/* 单图识别失败，尝试作为拼接大图逐 tile 识别 */try{const parts=await decodeQrCombinedImageFile(f);if(parts&&parts.length){const total=parts[0].t||parts.length;let full='';for(let k=0;k<total;k++){if(!parts[k]||!parts[k].d)throw new Error('分片 '+k+' 缺失');full+=parts[k].d;}pw.style.display='none';return await processQrJsonPayload({v:1,t:total,i:0,e:parts[0].e||0,ext:parts[0].ext||'',d:full},false);}throw new Error('拼接大图无有效分片');}catch(ce){uiSet('decInfo','<span class="err">无法识别：既不是像素图编码，也不是本工具 LSB 编码的载体，且 QR 码识别失败（'+qe.message+'）。</span>');pw.style.display='none';throw e;}}}}const p1=px2rgb(1),p2=px2rgb(2);const len=(p1[0]|(p1[1]<<8)|(p1[2]<<16)|(p2[0]<<24)|(p2[1]<<32)|(p2[2]<<40));if(!Number.isFinite(len)||len<=0||len>totalPx*3){uiSet('decInfo','<span class="err">声明文件长度异常 (len='+len+')。</span>');pw.style.display='none';throw new Error('长度异常');}const p3=px2rgb(3);const extLenEnc=p3[0];const useEnc=((extLenEnc>>7)&0x1)===1;const extLen=extLenEnc&0x7F;let extBytes=[];if(extLen>0&&extLen<=EXT_MAX){let idx=0;if(idx<extLen)extBytes.push(p3[1]);idx++;if(idx<extLen)extBytes.push(p3[2]);idx++;for(let pi=4;pi<META_PIXELS&&idx<extLen;pi++){const rgb=px2rgb(pi);for(let ci=0;ci<3&&idx<extLen;ci++){extBytes.push(rgb[ci]);idx++;}}}let extName='';if(extBytes.length)try{extName=new TextDecoder().decode(new Uint8Array(extBytes));}catch(_){extName='';}const password=getPassword();if(useEnc&&(!password||!password.length)){uiSet('decInfo','<span class="err">此图片使用了 AES-256-GCM 加密，请在顶部输入正确的密码后重试。</span>');pw.style.display='none';throw new Error('需要密码');}const encData=new Uint8Array(len);let written=0;const updateInterval=Math.max(1,Math.floor(Math.min(len,totalPx*3)/200));ps.textContent='读取数据… 0 / '+len+' 字节';for(let px=META_PIXELS;px<totalPx&&written<len;px++){const b=px*4;encData[written++]=data[b];if(written>=len)break;encData[written++]=data[b+1];if(written>=len)break;encData[written++]=data[b+2];if(written>=len)break;if(written%updateInterval===0||written===len){pb.value=Math.min(100,Math.round(written/len*100));pl.textContent=pb.value+'%';ps.textContent='读取数据… '+written+' / '+len+' 字节';await sleep(0);}}let out;if(useEnc){if(len<44){uiSet('decInfo','<span class="err">加密数据格式错误：长度不足。</span>');pw.style.display='none';throw new Error('加密数据格式错误');}const salt=encData.slice(0,16),iv=encData.slice(16,28),ciphertext=encData.slice(28,len-16),authTag=encData.slice(len-16);try{ps.textContent='AES-256-GCM 解密中…';out=await aesGcmDecrypt({salt:salt,iv:iv,ciphertext:ciphertext,authTag:authTag},password);}catch(e){uiSet('decInfo','<span class="err">'+e.message+'</span>');pw.style.display='none';throw e;}}else{out=encData;}const finalLen=out.length;const finalName=randPiName(extName);const blob=new Blob([out],{type:'application/octet-stream'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=finalName;a.className='download-link';a.textContent='下载还原文件 ('+finalLen+' bytes)  →  '+finalName;const c=document.getElementById('decDownload');c.innerHTML='';c.appendChild(a);pb.value=100;pl.textContent='100%';ps.textContent='解码完成！';const extShow=extName||'(无扩展名)';const keyStatus=useEnc?'<span class="enc-badge">AES-256-GCM 加密验证通过</span>':'未加密';const modeTag=decodeMode==='lsb'?'LSB 隐写进照片':'像素图';uiSet('decInfo','<span class="ok">'+svgIcon('check')+' 解码成功（'+modeTag+'）。</span> 图 '+iW+'×'+iH+'，长度 '+finalLen+' bytes，扩展名 <code>'+extShow+'</code> ｜ '+keyStatus+' ｜ 还原文件名: <code>'+escapeHtml(finalName)+'</code>');const low=extName.toLowerCase(),isSens=SENSITIVE_EXTS.some(s=>low.endsWith(s));showModal(isSens?'注意文件扩展名':'下载提示',isSens?'检测到文件类型可能被浏览器自动更改扩展名。':'文件已准备就绪，请检查下载文件名是否与预期一致。','正确文件名：'+finalName,isSens);renderPreview(out,finalName,finalLen);}catch(e){uiSet('decInfo','<span class="err">解码异常：'+(e.message||e)+'。</span>');pw.style.display='none';}finally{btn.disabled=false;btn.textContent='还原并预览';}});
 
 /* ============================================================
-   QR 码图片识别（解码端）：用内联 qrcode-generator 反向读取模块矩阵
-   - 由于 qrcode-generator 库只用于生成，识别端我们用手写的模块矩阵采样识别：
-     对上传的 QR 图片，找三个定位图案 -> 透视校正 -> 采样模块 -> 用内联识别器解码。
-   - 为保持单文件且可靠，这里采用一种更稳妥的策略：
-     若浏览器支持 BarcodeDetector，优先用它识别 QR；否则提示用户改用扫码跳转网站解析。
+   QR 码图片识别（解码端）
+   - 仅依赖浏览器原生 BarcodeDetector（Chrome/Edge 桌面与安卓可用）。
+   - 内置手写识别器已移除：经验证其 finder 检测会误判大量伪定位点，
+     且 moduleBits→UTF-8 并非真正的 QR 解码（缺掩码/交错/纠错/模式解析），
+     对任何本工具生成的 QR 码均无法还原 payload。
+   - BarcodeDetector 不可用时，明确指引用户用手机相机/微信扫一扫
+     该 QR 码图片（扫码会跳转本工具网站自动解析），不再静默跑失效识别器。
    ============================================================ */
+function _qrBarcodeDetector(){return window.BarcodeDetector?new BarcodeDetector({formats:['qr_code']}):null;}
+async function _detectQrRaw(bmp){const det=_qrBarcodeDetector();if(!det)return null;const res=await det.detect(bmp);if(res&&res.length>0&&res[0].rawValue)return res[0].rawValue;return null;}
 
-/* 拼接大图识别：将上传图片按网格切分为若干 tile，逐 tile 用 BarcodeDetector/内置识别 */
+/* 单张 QR 码图片识别 */
+async function decodeQrImageFile(file){
+    if(!window.BarcodeDetector)throw new Error('当前浏览器不支持 BarcodeDetector（原生 QR 识别），请用手机相机/微信"扫一扫"直接扫描该 QR 码图片，将跳转本工具网站自动解析；或换用 Chrome/Edge 浏览器打开本页后上传识别。');
+    let bmp;try{bmp=await createImageBitmap(file);}catch(e){throw new Error('无法读取该图片：'+e.message);}
+    const raw=await _detectQrRaw(bmp);
+    if(raw)return raw;
+    /* 识别失败：尝试对图像做简单二值化增强后再识别一次（应对低对比度截图） */
+    try{const cv=document.createElement('canvas');cv.width=bmp.width;cv.height=bmp.height;const ctx=cv.getContext('2d');ctx.drawImage(bmp,0,0);const{data}=ctx.getImageData(0,0,bmp.width,bmp.height);for(let i=0;i<data.length;i+=4){const g=(data[i]+data[i+1]+data[i+2])/3;const v=g<128?0:255;data[i]=v;data[i+1]=v;data[i+2]=v;}ctx.putImageData(new ImageData(data,bmp.width,bmp.height),0,0);const b2=await createImageBitmap(cv);const raw2=await _detectQrRaw(b2);if(raw2)return raw2;}catch(e){}
+    throw new Error('未能从此图片识别到 QR 码内容（BarcodeDetector 未检出）。建议：用手机相机/微信"扫一扫"直接扫描该 QR 码图片，扫码将跳转本工具网站自动解析；或确认图片为完整的 QR 码且边长≥300px。');
+}
+
+/* 拼接大图识别：将上传图片按网格切分为若干 tile，逐 tile 用 BarcodeDetector 识别 */
 async function decodeQrCombinedImageFile(file){
-    const bmp = await createImageBitmap(file);
-    const cv = document.createElement('canvas'); cv.width = bmp.width; cv.height = bmp.height;
-    const ctx = cv.getContext('2d'); ctx.drawImage(bmp, 0, 0);
-    const { data, width: iW, height: iH } = ctx.getImageData(0, 0, bmp.width, bmp.height);
-    /* 用 finder 检测估算模块数，推断 tile 网格：先找所有 finder 中心 */
-    const finders = findFinderPatterns(data, iW, iH);
-    if (finders.length < 3) throw new Error('拼接大图中未找到足够的 QR 定位图案');
-    /* 按行列聚类 finder 中心，推断网格 */
-    const xs = finders.map(p => p.x).sort((a,b) => a - b);
-    const ys = finders.map(p => p.y).sort((a,b) => a - b);
-        const _xstep = Math.max(1, (xs[1] || xs[0]) - xs[0]);
-    const cols = Math.max(1, Math.round((xs[xs.length-1] - xs[0]) / _xstep) || 1);
-    const _ystep = Math.max(1, (ys[1] || ys[0]) - ys[0]);
-    const rows = Math.max(1, Math.round((ys[ys.length-1] - ys[0]) / _ystep) || 1);
-    const cellW = iW / cols, cellH = iH / rows;
-    const det = window.BarcodeDetector ? new BarcodeDetector({ formats: ['qr_code'] }) : null;
-    const results = [];
-    for (let r = 0; r < rows; r++) {
-        for (let c = 0; c < cols; c++) {
-            const sx = Math.round(c * cellW), sy = Math.round(r * cellH);
-            const sw = Math.round(cellW), sh = Math.round(cellH);
-            const tileCv = document.createElement('canvas'); tileCv.width = sw; tileCv.height = sh;
-            tileCv.getContext('2d').drawImage(cv, sx, sy, sw, sh, 0, 0, sw, sh);
-            let raw = null;
-            try {
-                if (det) { const b = await createImageBitmap(tileCv); const res = await det.detect(b); if (res && res[0] && res[0].rawValue) raw = res[0].rawValue; }
-                if (!raw) raw = await decodeQrImageFile(await new Promise(res => tileCv.toBlob(res, 'image/png')));
-            } catch(e) {}
-            if (raw) { try { results.push(JSON.parse(raw)); } catch(e) {} }
-        }
+    const bmp=await createImageBitmap(file);
+    if(!window.BarcodeDetector)throw new Error('当前浏览器不支持 BarcodeDetector，无法自动拆分拼接大图。请改用手机相机/微信"扫一扫"逐张扫描大图中的各 QR 码（扫码跳转本工具网站后会自动拼接还原）。');
+    const cv=document.createElement('canvas');cv.width=bmp.width;cv.height=bmp.height;const ctx=cv.getContext('2d');ctx.drawImage(bmp,0,0);
+    /* 推断网格：统计图像纵向/横向"含 QR 暗模块"的行/列投影，取周期；退而使用固定 2x2/3x3 尝试 */
+    const W=bmp.width,H=bmp.height;
+    const colDark=new Array(W).fill(0),rowDark=new Array(H).fill(0);
+    const{data}=ctx.getImageData(0,0,W,H);
+    for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=(y*W+x)*4;if((data[i]+data[i+1]+data[i+2])/3<128){colDark[x]++;rowDark[y]++;}}
+    function autoperiod(arr,lo,hi){let bestK=0,bestScore=0;for(let k=lo;k<=hi;k++){let score=0;for(let i=0;i+k<arr.length;i++){const a=arr[i],b=arr[i+k];if(a>0&&b>0)score++;else if(a===0&&b===0)score++;}if(score>bestScore){bestScore=score;bestK=k;}}return bestK;}
+    let cols=autoperiod(colDark,2,6),rows=autoperiod(rowDark,2,6);
+    if(cols<2)cols=2;if(rows<2)rows=2;
+    /* 若图像较小，限制网格不超过 4x4 以避免过碎 */
+    if(cols>4)cols=4;if(rows>4)rows=4;
+    const cellW=Math.floor(W/cols),cellH=Math.floor(H/rows);
+    const results=[];const seen=new Set();
+    for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){
+        const sx=c*cellW,sy=r*cellH,sw=cellW,sh=cellH;
+        const tileCv=document.createElement('canvas');tileCv.width=sw;tileCv.height=sh;
+        tileCv.getContext('2d').drawImage(cv,sx,sy,sw,sh,0,0,sw,sh);
+        try{const tb=await createImageBitmap(tileCv);const raw=await _detectQrRaw(tb);if(raw&&!seen.has(raw)){seen.add(raw);try{results.push(JSON.parse(raw));}catch(e){}}}catch(e){}
     }
-    if (!results.length) throw new Error('拼接大图各分片均未识别成功');
-    /* 按 idx 排序并校验同批 */
-    results.sort((a,b) => (a.i||0) - (b.i||0));
-    const total = results[0].t || results.length;
-    if (results.length < total) throw new Error('拼接大图分片不完整：仅识别 ' + results.length + '/' + total);
+    if(!results.length)throw new Error('拼接大图各分片均未识别成功（BarcodeDetector 未检出 QR）。建议用手机相机/微信"扫一扫"逐张扫描大图中的 QR 码。');
+    results.sort((a,b)=>(a.i||0)-(b.i||0));
+    const total=results[0].t||results.length;
+    if(results.length<total)throw new Error('拼接大图分片不完整：仅识别 '+results.length+'/'+total+'。请确认上传的是完整拼接大图，或用相机逐张扫码。');
     return results;
 }
-async function decodeQrImageFile(file){if(window.BarcodeDetector){try{const det=new BarcodeDetector({formats:['qr_code']});const bmp=await createImageBitmap(file);const res=await det.detect(bmp);if(res&&res.length>0&&res[0].rawValue)return res[0].rawValue;}catch(e){}}const bmp=await createImageBitmap(file);const cv=document.createElement('canvas');cv.width=bmp.width;cv.height=bmp.height;const ctx=cv.getContext('2d');ctx.drawImage(bmp,0,0);const{data,w,h}=ctx.getImageData(0,0,bmp.width,bmp.height);try{const text=await qrImageToText(data,w,h);return text;}catch(e){throw new Error('QR 码识别失败：'+e.message+'。建议用手机相机/微信扫一扫此 QR 码图片，将跳转本工具网站自动解析。');}}
-async function qrImageToText(data,w,h){const finders=findFinderPatterns(data,w,h);if(finders.length<3)throw new Error('未找到 QR 码定位图案（可能不是 QR 码，或图片过模糊/过小）');const pts=orderFinders(finders,w,h);const modCount=estimateModuleCount(data,w,h,pts);const cell=Math.max(4,Math.floor(Math.min(w,h)/(modCount*1.2)));const off=sampleModules(data,w,h,pts,modCount,cell);const bits=moduleBits(off.modules,modCount);return decodeQrBits(bits);}
-function findFinderPatterns(data,w,h){const out=[];const step=Math.max(2,Math.floor(Math.min(w,h)/120));for(let y=step;y<h-step;y+=step){for(let x=step;x<w-step;x+=step){if(isFinderCenter(data,w,h,x,y))out.push({x,y});}}return out;}
-function isFinderCenter(data,w,h,cx,cy){function px(x,y){if(x<0||y<0||x>=w||y>=h)return 0;const i=(y*w+x)*4;return(data[i]+data[i+1]+data[i+2])/3<128?1:0;}let s='';for(let yy=-7;yy<=7;yy++)for(let xx=-7;xx<=7;xx++){if(Math.sqrt(xx*xx+yy*yy)>7)continue;const v=px(cx+xx,cy+yy);s+=v;}const patt=[];let cnt=0,last=-1;for(const v of s){if(v===last)cnt++;else{if(last!==-1)patt.push(cnt);last=v;cnt=1;}}if(last!==-1)patt.push(cnt);return patt.length>=8&&patt[0]>=1&&patt[1]>=1&&patt[2]>=1&&patt[3]>=1&&patt[4]>=1&&patt[5]>=1&&patt[6]>=1;}
-function orderFinders(pts,w,h){let topLeft=pts[0],topRight=pts[0],bottomLeft=pts[0];for(const p of pts){if(p.x+p.y<topLeft.x+topLeft.y)topLeft=p;if(p.x-p.y>topRight.x-topRight.y)topRight=p;if(p.y-p.x>bottomLeft.y-bottomLeft.x)bottomLeft=p;}return{tl:topLeft,tr:topRight,bl:bottomLeft};}
-function estimateModuleCount(data,w,h,pts){const tl=pts.tl,tr=pts.tr,bl=pts.bl;const dxH=tr.x-tl.x,dyH=tr.y-tl.y;const dxV=bl.x-tl.x,dyV=bl.y-tl.y;const distH=Math.sqrt(dxH*dxH+dyH*dyH),distV=Math.sqrt(dxV*dxV+dyV*dyV);return Math.round((distH+distV)/2/7);}
-function sampleModules(data,w,h,pts,modCount,cell){const tl=pts.tl,tr=pts.tr,bl=pts.bl;const mods=new Array(modCount*modCount).fill(0);const dxH=(tr.x-tl.x)/modCount,dyH=(tr.y-tl.y)/modCount;const dxV=(bl.x-tl.x)/modCount,dyV=(bl.y-tl.y)/modCount;for(let r=0;r<modCount;r++){for(let c=0;c<modCount;c++){const sx=tl.x+dxH*(c+0.5)+dxV*(r+0.5);const sy=tl.y+dyH*(c+0.5)+dyV*(r+0.5);let sum=0,n=0;const rr=Math.max(1,cell/2);for(let dy=-rr;dy<=rr;dy++)for(let dx=-rr;dx<=rr;dx++){const x=Math.round(sx+dx),y=Math.round(sy+dy);if(x<0||y<0||x>=w||y>=h)continue;const i=(y*w+x)*4;sum+=(data[i]+data[i+1]+data[i+2])/3;n++;}if(n>0&&sum/n<128)mods[r*modCount+c]=1;}}return{modules:mods};}
-function moduleBits(mods,modCount){let s='';for(let r=0;r<modCount;r++)for(let c=0;c<modCount;c++)s+=mods[r*modCount+c];return s;}
-function decodeQrBits(bits){const bytes=[];for(let i=0;i+8<=bits.length;i+=8){bytes.push(parseInt(bits.slice(i,i+8),2));}let text='';try{text=new TextDecoder('utf-8',{fatal:false}).decode(new Uint8Array(bytes));}catch(e){for(const b of bytes)text+=String.fromCharCode(b);}return text;}
 
 /* ---------- 启动参数解析（#data=...） ---------- */
 async function tryParseLaunchData(){const h=location.hash;if(!h||!h.startsWith('#data='))return;const json=decodeURIComponent(h.slice(6));let obj;try{obj=JSON.parse(json);}catch(e){uiSet('decInfo','<span class="err">启动参数解析失败：'+e.message+'</span>');return;}await processQrJsonPayload(obj,/*fromLaunch*/true);}
@@ -666,18 +661,23 @@ function combineQrTiles(canvases, cols){
 const _scan = { stream: null, raf: null, det: null, running: false };
 async function scanStart(){
     const result = document.getElementById('scanResult');
-    if (!window.BarcodeDetector) { result.className='scan-result err'; result.textContent='当前浏览器不支持 BarcodeDetector，请改用"选择相册图片"识别。'; return; }
+    let stream;
     try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-        const video = document.getElementById('scanVideo');
-        video.srcObject = stream; await video.play();
-        _scan.stream = stream; _scan.running = true;
-        document.getElementById('btnScanStart').disabled = true;
-        document.getElementById('btnScanStop').disabled = false;
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+    } catch(e) { result.className='scan-result err'; result.textContent='无法打开相机：' + e.message + '（相机需在 HTTPS 环境下授权，且首次需用户允许）'; return; }
+    const video = document.getElementById('scanVideo');
+    video.srcObject = stream; await video.play();
+    _scan.stream = stream; _scan.running = true;
+    document.getElementById('btnScanStart').disabled = true;
+    document.getElementById('btnScanStop').disabled = false;
+    if (window.BarcodeDetector) {
         result.className='scan-result'; result.textContent='相机已开启，将自动识别画面中的 QR 码…';
         _scan.det = new BarcodeDetector({ formats: ['qr_code'] });
         scanTick(video, result);
-    } catch(e) { result.className='scan-result err'; result.textContent='无法打开相机：' + e.message; }
+    } else {
+        result.className='scan-result'; result.textContent='相机已开启（当前浏览器无 BarcodeDetector，无法实时自动识别）。请对准 QR 码后点击"拍照识别"，或关闭相机后用"选择相册图片"。';
+        _scan.det = null;
+    }
 }
 function scanStop(){
     _scan.running = false;
@@ -689,6 +689,8 @@ function scanStop(){
 }
 async function scanTick(video, result){
     if (!_scan.running) return;
+    /* 无 BarcodeDetector 时不自动轮询识别（由用户点"拍照识别"手动触发） */
+    if (!_scan.det) { _scan.raf = null; return; }
     try {
         const det = _scan.det; const w = video.videoWidth, h = video.videoHeight;
         if (w && h) {
@@ -733,6 +735,19 @@ function scanHandleResult(raw, result){
         const f = fileInput.files && fileInput.files[0]; if (!f) return;
         scanFromFile(f, document.getElementById('scanResult'));
     });
+    /* 拍照识别：将当前 video 帧绘制到 canvas -> Blob -> File，再走 scanFromFile */
+    document.getElementById('btnScanCapture').addEventListener('click', () => {
+        const video = document.getElementById('scanVideo');
+        const result = document.getElementById('scanResult');
+        if (!_scan.stream || !video.videoWidth) { result.className='scan-result err'; result.textContent='请先点击"打开相机"并允许摄像头权限。'; return; }
+        const c = document.createElement('canvas'); c.width = video.videoWidth; c.height = video.videoHeight;
+        c.getContext('2d').drawImage(video, 0, 0);
+        result.className='scan-result'; result.textContent='正在识别拍照画面…';
+        c.toBlob(blob => { if (!blob) { result.className='scan-result err'; result.textContent='拍照失败，请重试。'; return; }
+            const f = new File([blob], 'capture.png', { type: 'image/png' });
+            scanFromFile(f, result);
+        }, 'image/png');
+    });
 })();
 
 /* ---------- 启动：检查 #data= 参数 ---------- */
@@ -753,10 +768,11 @@ tryParseLaunchData();
 <div class="scan-actions">
 <button type="button" id="btnScanStart" class="secondary">打开相机</button>
 <button type="button" id="btnScanStop" class="secondary" disabled>关闭相机</button>
+<button type="button" id="btnScanCapture">拍照识别</button>
 <button type="button" id="btnScanPick">选择相册图片</button>
 <input type="file" id="scanFileInput" accept="image/*" style="display:none;">
 </div>
-<div class="scan-tip">提示：识别到 QR 码后会自动解析。若为加密内容，将提示输入密码。</div>
+<div class="scan-tip">提示：识别到 QR 码后会自动解析。若为加密内容，将提示输入密码。无 BarcodeDetector 的浏览器（如 iOS Safari）请对准 QR 码后点"拍照识别"，或用相册选择 QR 码图片。</div>
 <div class="clearfix"><button class="btn-close-modal" id="scanModalCloseBtn" style="float:right;">关闭</button></div>
 </div>
 </div>
