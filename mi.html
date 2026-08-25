@@ -1,1415 +1,572 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-    <title>Spore Protocol - 孢子协议</title>
-    <style>
-        * { box-sizing: border-box; }
-        body {
-            font-family: -apple-font, "Segoe UI", "PingFang SC", sans-serif;
-            max-width: 1000px;
-            margin: 24px auto;
-            padding: 0 16px;
-            color: #222;
-        }
-        h1 { font-size: 22px; margin-bottom: 6px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-        .spore-icon { width: 1.4em; height: 1.4em; }
-        .title-en { font-size: 22px; font-weight: 700; letter-spacing: 0.5px; color: #1a5ba8; }
-        .title-cn { font-size: 13px; color: #666; letter-spacing: 1px; margin-left: -4px; }
-        .slogan {
-            font-size: 15px;
-            color: #4a90d9;
-            margin: 8px 0 16px 0;
-            padding: 8px 16px;
-            background: linear-gradient(135deg, #f0f4fa 0%, #e8f0fe 100%);
-            border-radius: 8px;
-            border-left: 4px solid #4a90d9;
-            font-weight: 500;
-            letter-spacing: 0.5px;
-        }
-        h2 { font-size: 16px; margin-top: 22px; border-left: 4px solid #4a90d9; padding-left: 8px; }
-        .card {
-            border: 1px solid #ddd; border-radius: 8px; padding: 14px 16px;
-            margin-top: 10px; background: #fafbfc;
-        }
-        input[type=file] { margin: 6px 0; }
-        button {
-            background: #4a90d9; color: #fff; border: 0; padding: 8px 16px;
-            border-radius: 6px; cursor: pointer; font-size: 14px; margin-top: 6px;
-            transition: background 0.15s;
-        }
-        button:hover { background: #3a7bc8; }
-        button:disabled { background: #aaa; cursor: not-allowed; }
-        button.secondary { background: #fff; color: #4a90d9; border: 1px solid #4a90d9; }
-        button.secondary:hover { background: #eaf2fc; }
-        .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-        .info { font-size: 13px; color: #555; line-height: 1.7; }
-        .ok { color: #1a7f37; }
-        .err { color: #c0392b; }
-        .key-row {
-            display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
-            margin: 8px 0 4px 0; padding: 8px 12px; background: #f0f4fa;
-            border-radius: 6px; border: 1px solid #dce3ed;
-        }
-        .key-row label { font-weight: 500; font-size: 14px; color: #333; display: flex; align-items: center; gap: 4px; }
-        .input-box {
-            padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px;
-            font-size: 14px; font-family: ui-monospace, Menlo, monospace;
-            background: #fff; transition: border-color 0.2s; width: 100%;
-            color: #333;
-        }
-        .input-box:focus { border-color: #4a90d9; outline: none; box-shadow: 0 0 0 3px rgba(74,144,217,0.15); }
-        input[type="file"].input-box { padding: 5px; cursor: pointer; }
-        textarea.input-box { resize: vertical; min-height: 80px; line-height: 1.5; }
-        .key-hint { font-size: 12px; color: #888; margin-left: 2px; }
-        .key-strength { font-size: 12px; margin-left: 8px; font-weight: 600; }
-        .strength-weak { color: #c0392b; }
-        .strength-medium { color: #d97706; }
-        .strength-strong { color: #1a7f37; }
-
-        /* 密钥操作按钮 */
-        .key-actions {
-            display: flex; gap: 6px; align-items: center; flex-shrink: 0;
-        }
-        .key-actions button {
-            display: inline-flex; align-items: center; gap: 4px;
-            padding: 6px 12px; font-size: 13px; margin-top: 0;
-            white-space: nowrap;
-        }
-        .key-actions button .ico { width: 0.9em; height: 0.9em; }
-
-        /* 进度条 */
-        .progress-wrap { margin: 10px 0 4px 0; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-        .progress-wrap progress { flex: 1; min-width: 120px; height: 20px; border-radius: 10px; border: none; background: #e9ecef; appearance: none; -webkit-appearance: none; }
-        .progress-wrap progress::-webkit-progress-bar { background: #e9ecef; border-radius: 10px; }
-        .progress-wrap progress::-webkit-progress-value { background: #4a90d9; border-radius: 10px; transition: width 0.2s; }
-        .progress-wrap progress::-moz-progress-bar { background: #4a90d9; border-radius: 10px; }
-        .progress-label { font-size: 13px; color: #555; white-space: nowrap; min-width: 56px; text-align: right; font-variant-numeric: tabular-nums; }
-        .progress-status { font-size: 12px; color: #777; flex: 1; min-width: 100px; }
-
-        .download-link {
-            display: inline-block; margin-top: 8px; background: #e8f0fe; padding: 6px 14px;
-            border-radius: 4px; color: #1a5ba8; text-decoration: none; font-size: 13px;
-            border: 1px solid #c5d8ed; transition: background 0.15s; cursor: pointer;
-        }
-        .download-link:hover { background: #d4e3fa; }
-
-        /* 弹窗 */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.45); display: none; justify-content: center; align-items: center;
-            z-index: 9999; backdrop-filter: blur(2px); animation: fadeIn 0.25s ease;
-        }
-        .modal-overlay.active { display: flex; }
-        .modal-box {
-            background: #fff; border-radius: 16px; max-width: 480px; width: 90%;
-            padding: 28px 24px 20px; box-shadow: 0 20px 48px rgba(0,0,0,0.25);
-            animation: slideUp 0.3s ease; border: 1px solid #e4e8f0;
-        }
-        .modal-box h3 { margin: 0 0 8px 0; font-size: 20px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
-        .modal-box h3 .icon { font-size: 24px; }
-        .modal-box p { margin: 10px 0 6px 0; font-size: 14px; color: #333; line-height: 1.6; }
-        .modal-box .file-name-highlight { background: #f0f4fa; border-radius: 6px; padding: 8px 12px; font-family: ui-monospace, Menlo, monospace; font-size: 14px; color: #1a5ba8; word-break: break-all; margin: 8px 0 12px 0; border: 1px solid #dce3ed; }
-        .modal-box .btn-close-modal { background: #4a90d9; color: #fff; border: none; padding: 8px 24px; border-radius: 6px; font-size: 14px; cursor: pointer; margin-top: 8px; float: right; }
-        .modal-box .btn-close-modal:hover { background: #3a7bc8; }
-        .modal-box .warning-icon { color: #d97706; }
-        .modal-box .info-icon { color: #4a90d9; }
-        .clearfix::after { content: ""; display: table; clear: both; }
-
-
-        /* 右上角操作按钮 */
-        .header-actions {
-            position: absolute;
-            top: 20px;
-            right: 16px;
-            display: flex;
-            gap: 8px;
-            z-index: 100;
-        }
-        .header-actions button {
-            margin-top: 0;
-            font-size: 13px;
-            padding: 6px 12px;
-        }
-        /* 使用说明弹窗 - 更大更宽 */
-        .modal-box.usage-modal {
-            max-width: 680px;
-            width: 92%;
-            max-height: 85vh;
-            overflow-y: auto;
-            padding: 28px 28px 24px;
-        }
-        .usage-modal h4 {
-            margin: 18px 0 8px 0;
-            font-size: 15px;
-            font-weight: 600;
-            color: #1a5ba8;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .usage-modal h4:first-child {
-            margin-top: 0;
-        }
-        .usage-modal p {
-            margin: 6px 0;
-            font-size: 14px;
-            line-height: 1.7;
-        }
-        .usage-modal ul {
-            margin: 6px 0 6px 20px;
-            padding: 0;
-        }
-        .usage-modal ul li {
-            margin: 4px 0;
-            font-size: 14px;
-            line-height: 1.6;
-            color: #333;
-            list-style: none;
-        }
-        .usage-modal .usage-steps {
-            background: #f0f4fa;
-            border: 1px solid #dce3ed;
-            border-radius: 8px;
-            padding: 14px 18px;
-            margin: 10px 0;
-        }
-        .usage-modal .usage-steps li {
-            list-style: none;
-            margin-left: -20px;
-            padding-left: 8px;
-        }
-        .usage-modal .usage-steps li::before {
-            content: "\25B6";
-            color: #4a90d9;
-            font-weight: bold;
-            font-size: 10px;
-            vertical-align: middle;
-        }
-        .usage-modal .usage-warning {
-            background: #fff8ee;
-            border: 1px solid #f0e3c2;
-            border-radius: 8px;
-            padding: 12px 16px;
-            margin: 10px 0;
-        }
-        .usage-modal .usage-warning li::before {
-            content: "\26A0";
-            color: #d97706;
-            font-weight: bold;
-        }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-
-        .sep { border-top: 1px dashed #ddd; margin: 18px 0 8px 0; }
-        .mt-1 { margin-top: 4px; }
-        .flex { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-
-        /* SVG 图标 */
-        .ico { display: inline-flex; align-items: center; justify-content: center; vertical-align: -0.15em; width: 1em; height: 1em; flex: none; }
-        .ico svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-        .ico svg .fill { fill: currentColor; stroke: none; }
-        .modal-box h3 .ico { width: 1.2em; height: 1.2em; vertical-align: -0.2em; }
-        .audio-cover .ico { width: 44px; height: 44px; }
-        .generic-icon .ico { width: 56px; height: 56px; }
-        .arch-icon .ico { width: 16px; height: 16px; }
-        .pv-title .ico { width: 1.05em; height: 1.05em; vertical-align: -0.18em; }
-
-        /* ===== 编码：文字输入区 ===== */
-        .text-encode-area { margin-top: 10px; }
-        .text-encode-area textarea {
-            width: 100%; min-height: 100px; padding: 10px 12px; border: 1px solid #ccc;
-            border-radius: 6px; font-size: 14px; font-family: ui-monospace, Menlo, monospace;
-            resize: vertical; background: #fff; transition: border-color 0.2s;
-        }
-        .text-encode-area textarea:focus { border-color: #4a90d9; outline: none; box-shadow: 0 0 0 3px rgba(74,144,217,0.15); }
-        .tab-bar { display: flex; gap: 0; margin-bottom: -1px; }
-        .tab-bar button {
-            background: #fff; color: #555; border: 1px solid #ddd; border-bottom: none;
-            border-radius: 6px 6px 0 0; padding: 7px 14px; font-size: 13px; margin: 0;
-        }
-        .tab-bar button.active { background: #fafbfc; color: #4a90d9; border-color: #ddd; font-weight: 600; }
-        .tab-panel { display: none; }
-        .tab-panel.active { display: block; }
-
-        /* 隐写模式分段控件 */
-        .mode-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 6px 0 10px 0; padding: 8px 12px; background: #f0f4fa; border: 1px solid #dce3ed; border-radius: 6px; }
-        .mode-row .mode-label { font-weight: 500; font-size: 13px; color: #333; display: flex; align-items: center; gap: 4px; }
-        .mode-row .seg { display: inline-flex; border: 1px solid #c5d8ed; border-radius: 6px; overflow: hidden; background: #fff; }
-        .mode-row .seg button { background: #fff; color: #555; border: 0; padding: 6px 12px; font-size: 12.5px; cursor: pointer; transition: background .15s, color .15s; }
-        .mode-row .seg button.active { background: #4a90d9; color: #fff; font-weight: 600; }
-        .mode-row .seg button:not(.active):hover { background: #eaf2fc; }
-        .mode-row .mode-hint { font-size: 12px; color: #888; margin-left: auto; }
-        .carrier-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 8px 0 4px 0; padding: 8px 12px; background: #fff8ee; border: 1px solid #f0e3c2; border-radius: 6px; }
-        .carrier-row .carrier-label { font-weight: 500; font-size: 13px; color: #8a5a00; }
-        .carrier-row .carrier-info { font-size: 12px; color: #888; }
-
-        /* ===== 预览区 ===== */
-        .preview-wrap {
-            margin-top: 12px; border: 1px solid #dce3ed; border-radius: 10px;
-            background: #fff; overflow: hidden;
-        }
-        .preview-header {
-            display: flex; align-items: center; gap: 8px; padding: 8px 12px;
-            background: #f0f4fa; border-bottom: 1px solid #dce3ed; font-size: 13px; color: #333;
-        }
-        .preview-header .pv-title { font-weight: 600; }
-        .preview-header .pv-meta { color: #888; font-size: 12px; margin-left: auto; }
-        .preview-body { padding: 14px; }
-        .preview-body .pv-placeholder { color: #999; font-size: 13px; text-align: center; padding: 30px 10px; }
-
-        .pv-image { text-align: center; }
-        .pv-image img { max-width: 100%; max-height: 420px; border-radius: 6px; box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
-        .pv-image .pv-info { font-size: 12px; color: #888; margin-top: 6px; }
-
-        .pv-text pre {
-            margin: 0; max-height: 420px; overflow: auto; background: #0f1729; color: #e6edf3;
-            padding: 14px 16px; border-radius: 8px; font-size: 13px; line-height: 1.6;
-            font-family: ui-monospace, Menlo, "Fira Code", monospace; white-space: pre-wrap; word-break: break-all;
-        }
-        .pv-text .pv-lang-badge {
-            display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 10px;
-            background: #4a90d9; color: #fff; margin-bottom: 8px; font-weight: 600;
-        }
-
-        .pv-audio { text-align: center; padding: 10px 6px; }
-        .pv-audio .audio-cover {
-            width: 110px; height: 110px; border-radius: 50%; margin: 0 auto 14px;
-            background: linear-gradient(135deg, #4a90d9, #7bb8f0); display: flex; align-items: center;
-            justify-content: center; font-size: 44px; color: #fff; box-shadow: 0 6px 20px rgba(74,144,217,0.35);
-        }
-        .pv-audio .audio-title { font-size: 14px; font-weight: 600; color: #333; margin-bottom: 4px; word-break: break-all; }
-        .pv-audio audio { width: 100%; max-width: 460px; margin-top: 6px; }
-
-        .pv-video { text-align: center; }
-        .pv-video .video-frame {
-            position: relative; max-width: 640px; margin: 0 auto; border-radius: 12px;
-            overflow: hidden; background: #000; box-shadow: 0 8px 30px rgba(0,0,0,0.25);
-        }
-        .pv-video video { width: 100%; display: block; border-radius: 12px; }
-        .pv-video .video-frame::after {
-            content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 44px;
-            background: linear-gradient(to top, rgba(0,0,0,0.55), rgba(0,0,0,0)); border-radius: 0 0 12px 12px; pointer-events: none;
-        }
-
-        .pv-archive .arch-summary { font-size: 13px; color: #555; margin-bottom: 8px; }
-        .pv-archive .arch-list { max-height: 340px; overflow: auto; border: 1px solid #e5e9f0; border-radius: 8px; }
-        .pv-archive .arch-row {
-            display: flex; align-items: center; gap: 8px; padding: 6px 10px; font-size: 12.5px;
-            border-bottom: 1px solid #f0f2f5; font-family: ui-monospace, Menlo, monospace;
-        }
-        .pv-archive .arch-row:last-child { border-bottom: none; }
-        .pv-archive .arch-row:hover { background: #f5f9ff; }
-        .pv-archive .arch-icon { font-size: 15px; width: 20px; text-align: center; }
-        .pv-archive .arch-name { flex: 1; word-break: break-all; color: #333; }
-        .pv-archive .arch-size { color: #999; white-space: nowrap; font-size: 11.5px; }
-        .pv-archive .arch-empty { padding: 18px; text-align: center; color: #999; font-size: 13px; }
-
-        .pv-generic { text-align: center; padding: 20px 10px; }
-        .pv-generic .generic-icon { font-size: 56px; margin-bottom: 10px; }
-        .pv-generic .generic-name { font-size: 14px; font-weight: 600; color: #333; word-break: break-all; }
-        .pv-generic .generic-meta { font-size: 12px; color: #999; margin-top: 4px; }
-
-        .pv-hex pre {
-            margin: 0; max-height: 320px; overflow: auto; background: #0f1729; color: #c9d3df;
-            padding: 12px 14px; border-radius: 8px; font-size: 12px; line-height: 1.55;
-            font-family: ui-monospace, Menlo, monospace;
-        }
-
-        /* 加密标识徽章 */
-        .enc-badge {
-            display: inline-flex; align-items: center; gap: 4px;
-            background: #1a7f37; color: #fff; font-size: 11px; font-weight: 600;
-            padding: 2px 8px; border-radius: 10px; margin-left: 8px;
-        }
-        .enc-badge svg { width: 12px; height: 12px; }
-    
-        /* ===== 移动端响应式适配 ===== */
-        @media (max-width: 600px) {
-            body {
-                margin: 12px auto;
-                padding: 0 10px;
-            }
-            h1 {
-                font-size: 18px;
-                margin-bottom: 4px;
-                gap: 6px;
-            }
-            .spore-icon {
-                width: 1.3em;
-                height: 1.3em;
-            }
-            .title-en {
-                font-size: 18px;
-            }
-            .title-cn {
-                font-size: 12px;
-            }
-            .enc-badge {
-                font-size: 10px;
-                padding: 1px 6px;
-                margin-left: 0;
-            }
-            .slogan {
-                font-size: 13px;
-                padding: 6px 12px;
-                margin: 6px 0 12px 0;
-            }
-            .info {
-                font-size: 12px;
-                line-height: 1.5;
-            }
-            h2 {
-                font-size: 14px;
-                margin-top: 16px;
-            }
-            .card {
-                padding: 10px 12px;
-                margin-top: 8px;
-            }
-            .key-row {
-                padding: 6px 8px;
-                gap: 6px;
-            }
-            .key-row label {
-                font-size: 13px;
-            }
-            .input-box {
-                font-size: 13px;
-                padding: 5px 8px;
-            }
-            .key-actions button {
-                padding: 5px 8px;
-                font-size: 12px;
-            }
-            .key-hint {
-                font-size: 11px;
-            }
-            .key-strength {
-                font-size: 11px;
-                margin-left: 4px;
-            }
-            button {
-                padding: 7px 14px;
-                font-size: 13px;
-            }
-            .tab-bar button {
-                padding: 6px 10px;
-                font-size: 12px;
-            }
-            .mode-row {
-                padding: 6px 8px;
-                gap: 8px;
-            }
-            .mode-row .mode-label {
-                font-size: 12px;
-            }
-            .mode-row .seg button {
-                padding: 5px 10px;
-                font-size: 11px;
-            }
-            .mode-row .mode-hint {
-                font-size: 11px;
-            }
-            .carrier-row {
-                padding: 6px 8px;
-                gap: 6px;
-            }
-            .carrier-row .carrier-label {
-                font-size: 12px;
-            }
-            .carrier-row .carrier-info {
-                font-size: 11px;
-            }
-            .progress-wrap {
-                margin: 8px 0 2px 0;
-                gap: 8px;
-            }
-            .progress-label {
-                font-size: 12px;
-                min-width: 44px;
-            }
-            .progress-status {
-                font-size: 11px;
-            }
-            .download-link {
-                font-size: 12px;
-                padding: 5px 10px;
-            }
-            .flex {
-                gap: 6px;
-            }
-            /* 右上角按钮适配 */
-            .header-actions {
-                position: static;
-                justify-content: flex-end;
-                margin-bottom: 10px;
-            }
-            .header-actions button {
-                font-size: 12px;
-                padding: 5px 10px;
-            }
-            /* 预览区适配 */
-            .preview-header {
-                padding: 6px 10px;
-                font-size: 12px;
-            }
-            .preview-body {
-                padding: 10px;
-            }
-            .pv-image img {
-                max-height: 300px;
-            }
-            .pv-text pre {
-                font-size: 12px;
-                padding: 10px 12px;
-            }
-            .pv-audio .audio-cover {
-                width: 80px;
-                height: 80px;
-                font-size: 32px;
-            }
-            .pv-archive .arch-row {
-                font-size: 11px;
-                padding: 5px 8px;
-            }
-            /* 弹窗适配 */
-            .modal-box {
-                width: 95%;
-                padding: 20px 16px 16px;
-            }
-            .modal-box h3 {
-                font-size: 18px;
-            }
-            .modal-box p {
-                font-size: 13px;
-            }
-            .usage-modal {
-                max-width: 95%;
-                padding: 20px 16px 16px;
-            }
-            .usage-modal h4 {
-                font-size: 14px;
-            }
-            .usage-modal p,
-            .usage-modal ul li {
-                font-size: 13px;
-            }
-        }
-
-        /* 小屏手机特别优化 */
-        @media (max-width: 380px) {
-            h1 {
-                font-size: 16px;
-            }
-            .title-en {
-                font-size: 16px;
-            }
-            .spore-icon {
-                width: 1.2em;
-                height: 1.2em;
-            }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+<title>Spore Protocol - 孢子协议</title>
+<style>
+*{box-sizing:border-box}
+body{font-family:-apple-font,"Segoe UI","PingFang SC",sans-serif;max-width:1000px;margin:24px auto;padding:0 16px;color:#222}
+h1{font-size:22px;margin-bottom:6px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.spore-icon{width:1.4em;height:1.4em}
+.title-en{font-size:22px;font-weight:700;letter-spacing:.5px;color:#1a5ba8}
+.title-cn{font-size:13px;color:#666;letter-spacing:1px;margin-left:-4px}
+.slogan{font-size:15px;color:#4a90d9;margin:8px 0 16px;padding:8px 16px;background:linear-gradient(135deg,#f0f4fa,#e8f0fe);border-radius:8px;border-left:4px solid #4a90d9;font-weight:500}
+h2{font-size:16px;margin-top:22px;border-left:4px solid #4a90d9;padding-left:8px}
+.card{border:1px solid #ddd;border-radius:8px;padding:14px 16px;margin-top:10px;background:#fafbfc}
+input[type=file]{margin:6px 0}
+button{background:#4a90d9;color:#fff;border:0;padding:8px 16px;border-radius:6px;cursor:pointer;font-size:14px;margin-top:6px;transition:background .15s}
+button:hover{background:#3a7bc8}
+button:disabled{background:#aaa;cursor:not-allowed}
+button.secondary{background:#fff;color:#4a90d9;border:1px solid #4a90d9}
+button.secondary:hover{background:#eaf2fc}
+.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.info{font-size:13px;color:#555;line-height:1.7}
+.ok{color:#1a7f37}
+.err{color:#c0392b}
+.key-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:8px 0 4px;padding:8px 12px;background:#f0f4fa;border-radius:6px;border:1px solid #dce3ed}
+.key-row label{font-weight:500;font-size:14px;color:#333;display:flex;align-items:center;gap:4px}
+.input-box{padding:6px 10px;border:1px solid #ccc;border-radius:4px;font-size:14px;font-family:ui-monospace,Menlo,monospace;background:#fff;transition:border-color .2s;width:100%;color:#333}
+.input-box:focus{border-color:#4a90d9;outline:none;box-shadow:0 0 0 3px rgba(74,144,217,.15)}
+input[type=file].input-box{padding:5px;cursor:pointer}
+textarea.input-box{resize:vertical;min-height:80px;line-height:1.5}
+.key-hint{font-size:12px;color:#888;margin-left:2px}
+.key-strength{font-size:12px;margin-left:8px;font-weight:600}
+.strength-weak{color:#c0392b}
+.strength-medium{color:#d97706}
+.strength-strong{color:#1a7f37}
+.key-actions{display:flex;gap:6px;align-items:center;flex-shrink:0}
+.key-actions button{display:inline-flex;align-items:center;gap:4px;padding:6px 12px;font-size:13px;margin-top:0;white-space:nowrap}
+.progress-wrap{margin:10px 0 4px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.progress-wrap progress{flex:1;min-width:120px;height:20px;border-radius:10px;border:none;background:#e9ecef;appearance:none;-webkit-appearance:none}
+.progress-wrap progress::-webkit-progress-bar{background:#e9ecef;border-radius:10px}
+.progress-wrap progress::-webkit-progress-value{background:#4a90d9;border-radius:10px;transition:width .2s}
+.progress-wrap progress::-moz-progress-bar{background:#4a90d9;border-radius:10px}
+.progress-label{font-size:13px;color:#555;white-space:nowrap;min-width:56px;text-align:right;font-variant-numeric:tabular-nums}
+.progress-status{font-size:12px;color:#777;flex:1;min-width:100px}
+.download-link{display:inline-block;margin-top:8px;background:#e8f0fe;padding:6px 14px;border-radius:4px;color:#1a5ba8;text-decoration:none;font-size:13px;border:1px solid #c5d8ed;transition:background .15s;cursor:pointer}
+.download-link:hover{background:#d4e3fa}
+.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.45);display:none;justify-content:center;align-items:center;z-index:9999;backdrop-filter:blur(2px);animation:fadeIn .25s ease}
+.modal-overlay.active{display:flex}
+.modal-box{background:#fff;border-radius:16px;max-width:480px;width:90%;padding:28px 24px 20px;box-shadow:0 20px 48px rgba(0,0,0,.25);animation:slideUp .3s ease;border:1px solid #e4e8f0}
+.modal-box h3{margin:0 0 8px;font-size:20px;font-weight:600;display:flex;align-items:center;gap:8px}
+.modal-box p{margin:10px 0 6px;font-size:14px;color:#333;line-height:1.6}
+.modal-box .file-name-highlight{background:#f0f4fa;border-radius:6px;padding:8px 12px;font-family:ui-monospace,Menlo,monospace;font-size:14px;color:#1a5ba8;word-break:break-all;margin:8px 0 12px;border:1px solid #dce3ed}
+.modal-box .btn-close-modal{background:#4a90d9;color:#fff;border:none;padding:8px 24px;border-radius:6px;font-size:14px;cursor:pointer;margin-top:8px;float:right}
+.modal-box .btn-close-modal:hover{background:#3a7bc8}
+.clearfix::after{content:"";display:table;clear:both}
+.header-actions{position:absolute;top:20px;right:16px;display:flex;gap:8px;z-index:100}
+.header-actions button{margin-top:0;font-size:13px;padding:6px 12px}
+.modal-box.usage-modal{max-width:680px;width:92%;max-height:85vh;overflow-y:auto;padding:28px 28px 24px}
+.usage-modal h4{margin:18px 0 8px;font-size:15px;font-weight:600;color:#1a5ba8;display:flex;align-items:center;gap:6px}
+.usage-modal h4:first-child{margin-top:0}
+.usage-modal p{margin:6px 0;font-size:14px;line-height:1.7}
+.usage-modal ul{margin:6px 0 6px 20px;padding:0}
+.usage-modal ul li{margin:4px 0;font-size:14px;line-height:1.6;color:#333;list-style:none}
+.usage-modal .usage-steps{background:#f0f4fa;border:1px solid #dce3ed;border-radius:8px;padding:14px 18px;margin:10px 0}
+.usage-modal .usage-steps li{list-style:none;margin-left:-20px;padding-left:8px}
+.usage-modal .usage-steps li::before{content:"\25B6";color:#4a90d9;font-weight:bold;font-size:10px;vertical-align:middle}
+.usage-modal .usage-warning{background:#fff8ee;border:1px solid #f0e3c2;border-radius:8px;padding:12px 16px;margin:10px 0}
+.usage-modal .usage-warning li::before{content:"\26A0";color:#d97706;font-weight:bold}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideUp{from{transform:translateY(30px);opacity:0}to{transform:translateY(0);opacity:1}}
+.sep{border-top:1px dashed #ddd;margin:18px 0 8px}
+.mt-1{margin-top:4px}
+.flex{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ico{display:inline-flex;align-items:center;justify-content:center;vertical-align:-.15em;width:1em;height:1em;flex:none}
+.ico svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ico svg .fill{fill:currentColor;stroke:none}
+.modal-box h3 .ico{width:1.2em;height:1.2em;vertical-align:-.2em}
+.enc-badge{display:inline-flex;align-items:center;gap:4px;background:#1a7f37;color:#fff;font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px;margin-left:8px}
+.enc-badge svg{width:12px;height:12px}
+.text-encode-area{margin-top:10px}
+.text-encode-area textarea{width:100%;min-height:100px;padding:10px 12px;border:1px solid #ccc;border-radius:6px;font-size:14px;font-family:ui-monospace,Menlo,monospace;resize:vertical;background:#fff;transition:border-color .2s}
+.text-encode-area textarea:focus{border-color:#4a90d9;outline:none;box-shadow:0 0 0 3px rgba(74,144,217,.15)}
+.tab-bar{display:flex;gap:0;margin-bottom:-1px}
+.tab-bar button{background:#fff;color:#555;border:1px solid #ddd;border-bottom:none;border-radius:6px 6px 0 0;padding:7px 14px;font-size:13px;margin:0}
+.tab-bar button.active{background:#fafbfc;color:#4a90d9;border-color:#ddd;font-weight:600}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+.mode-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:6px 0 10px;padding:8px 12px;background:#f0f4fa;border:1px solid #dce3ed;border-radius:6px}
+.mode-row .mode-label{font-weight:500;font-size:13px;color:#333;display:flex;align-items:center;gap:4px}
+.mode-row .seg{display:inline-flex;border:1px solid #c5d8ed;border-radius:6px;overflow:hidden;background:#fff}
+.mode-row .seg button{background:#fff;color:#555;border:0;padding:6px 12px;font-size:12.5px;cursor:pointer;transition:background .15s,color .15s}
+.mode-row .seg button.active{background:#4a90d9;color:#fff;font-weight:600}
+.mode-row .seg button:not(.active):hover{background:#eaf2fc}
+.mode-row .mode-hint{font-size:12px;color:#888;margin-left:auto}
+.carrier-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:8px 0 4px;padding:8px 12px;background:#fff8ee;border:1px solid #f0e3c2;border-radius:6px}
+.carrier-row .carrier-label{font-weight:500;font-size:13px;color:#8a5a00}
+.carrier-row .carrier-info{font-size:12px;color:#888}
+.qr-carrier-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:8px 0 4px;padding:8px 12px;background:#eefaf3;border:1px solid #c2ead4;border-radius:6px}
+.qr-carrier-row .carrier-label{font-weight:500;font-size:13px;color:#0a7a45}
+.qr-carrier-row .carrier-info{font-size:12px;color:#555}
+.preview-wrap{margin-top:12px;border:1px solid #dce3ed;border-radius:10px;background:#fff;overflow:hidden}
+.preview-header{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#f0f4fa;border-bottom:1px solid #dce3ed;font-size:13px;color:#333}
+.preview-header .pv-title{font-weight:600}
+.preview-header .pv-meta{color:#888;font-size:12px;margin-left:auto}
+.preview-body{padding:14px}
+.preview-body .pv-placeholder{color:#999;font-size:13px;text-align:center;padding:30px 10px}
+.pv-image{text-align:center}
+.pv-image img{max-width:100%;max-height:420px;border-radius:6px;box-shadow:0 4px 16px rgba(0,0,0,.08)}
+.pv-image .pv-info{font-size:12px;color:#888;margin-top:6px}
+.pv-text pre{margin:0;max-height:420px;overflow:auto;background:#0f1729;color:#e6edf3;padding:14px 16px;border-radius:8px;font-size:13px;line-height:1.6;font-family:ui-monospace,Menlo,"Fira Code",monospace;white-space:pre-wrap;word-break:break-all}
+.pv-text .pv-lang-badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:10px;background:#4a90d9;color:#fff;margin-bottom:8px;font-weight:600}
+.pv-audio{text-align:center;padding:10px 6px}
+.pv-audio .audio-cover{width:110px;height:110px;border-radius:50%;margin:0 auto 14px;background:linear-gradient(135deg,#4a90d9,#7bb8f0);display:flex;align-items:center;justify-content:center;font-size:44px;color:#fff;box-shadow:0 6px 20px rgba(74,144,217,.35)}
+.pv-audio .audio-title{font-size:14px;font-weight:600;color:#333;margin-bottom:4px;word-break:break-all}
+.pv-audio audio{width:100%;max-width:460px;margin-top:6px}
+.pv-video{text-align:center}
+.pv-video .video-frame{position:relative;max-width:640px;margin:0 auto;border-radius:12px;overflow:hidden;background:#000;box-shadow:0 8px 30px rgba(0,0,0,.25)}
+.pv-video video{width:100%;display:block;border-radius:12px}
+.pv-video .video-frame::after{content:"";position:absolute;left:0;right:0;bottom:0;height:44px;background:linear-gradient(to top,rgba(0,0,0,.55),rgba(0,0,0,0));border-radius:0 0 12px 12px;pointer-events:none}
+.pv-archive .arch-summary{font-size:13px;color:#555;margin-bottom:8px}
+.pv-archive .arch-list{max-height:340px;overflow:auto;border:1px solid #e5e9f0;border-radius:8px}
+.pv-archive .arch-row{display:flex;align-items:center;gap:8px;padding:6px 10px;font-size:12.5px;border-bottom:1px solid #f0f2f5;font-family:ui-monospace,Menlo,monospace}
+.pv-archive .arch-row:last-child{border-bottom:none}
+.pv-archive .arch-row:hover{background:#f5f9ff}
+.pv-archive .arch-name{flex:1;word-break:break-all;color:#333}
+.pv-archive .arch-size{color:#999;white-space:nowrap;font-size:11.5px}
+.pv-archive .arch-empty{padding:18px;text-align:center;color:#999;font-size:13px}
+.pv-generic{text-align:center;padding:20px 10px}
+.pv-generic .generic-icon{font-size:56px;margin-bottom:10px}
+.pv-generic .generic-name{font-size:14px;font-weight:600;color:#333;word-break:break-all}
+.pv-generic .generic-meta{font-size:12px;color:#999;margin-top:4px}
+.pv-hex pre{margin:0;max-height:320px;overflow:auto;background:#0f1729;color:#c9d3df;padding:12px 14px;border-radius:8px;font-size:12px;line-height:1.55;font-family:ui-monospace,Menlo,monospace}
+/* QR 结果区 */
+.qr-result-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-top:10px}
+.qr-tile{border:1px solid #dce3ed;border-radius:10px;padding:12px;background:#fff;text-align:center}
+.qr-tile canvas,.qr-tile img{width:100%;max-width:240px;height:auto;border-radius:6px;background:#fff;display:block;margin:0 auto}
+.qr-tile .qr-meta{font-size:12px;color:#555;margin-top:8px;word-break:break-all}
+.qr-tile .qr-actions{margin-top:8px;display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+.qr-tile .qr-actions button{font-size:12px;padding:5px 10px;margin:0}
+.qr-share-url{width:100%;padding:8px 10px;border:1px solid #ccc;border-radius:6px;font-size:12px;font-family:ui-monospace,Menlo,monospace;background:#f7f9fc;color:#333;word-break:break-all;resize:vertical;min-height:52px;margin-top:8px}
+.qr-badge{display:inline-flex;align-items:center;gap:4px;background:#0a7a45;color:#fff;font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px;margin-left:8px}
+.qr-badge svg{width:12px;height:12px}
+@media(max-width:600px){
+body{margin:12px auto;padding:0 10px}
+h1{font-size:18px;gap:6px}
+.title-en{font-size:18px}
+.enc-badge{font-size:10px;padding:1px 6px;margin-left:0}
+.slogan{font-size:13px;padding:6px 12px;margin:6px 0 12px}
+.info{font-size:12px;line-height:1.5}
+h2{font-size:14px;margin-top:16px}
+.card{padding:10px 12px;margin-top:8px}
+.key-row{padding:6px 8px;gap:6px}
+.key-row label{font-size:13px}
+.input-box{font-size:13px;padding:5px 8px}
+.key-actions button{padding:5px 8px;font-size:12px}
+.key-hint{font-size:11px}
+.key-strength{font-size:11px;margin-left:4px}
+button{padding:7px 14px;font-size:13px}
+.tab-bar button{padding:6px 10px;font-size:12px}
+.mode-row{padding:6px 8px;gap:8px}
+.mode-row .mode-label{font-size:12px}
+.mode-row .seg button{padding:5px 10px;font-size:11px}
+.mode-row .mode-hint{font-size:11px}
+.carrier-row,.qr-carrier-row{padding:6px 8px;gap:6px}
+.carrier-row .carrier-label,.qr-carrier-row .carrier-label{font-size:12px}
+.carrier-row .carrier-info,.qr-carrier-row .carrier-info{font-size:11px}
+.progress-wrap{margin:8px 0 2px;gap:8px}
+.progress-label{font-size:12px;min-width:44px}
+.progress-status{font-size:11px}
+.download-link{font-size:12px;padding:5px 10px}
+.header-actions{position:static;justify-content:flex-end;margin-bottom:10px}
+.header-actions button{font-size:12px;padding:5px 10px}
+.preview-header{padding:6px 10px;font-size:12px}
+.preview-body{padding:10px}
+.pv-image img{max-height:300px}
+.pv-text pre{font-size:12px;padding:10px 12px}
+.pv-audio .audio-cover{width:80px;height:80px;font-size:32px}
+.pv-archive .arch-row{font-size:11px;padding:5px 8px}
+.modal-box{width:95%;padding:20px 16px 16px}
+.modal-box h3{font-size:18px}
+.modal-box p{font-size:13px}
+.usage-modal{max-width:95%;padding:20px 16px 16px}
+.usage-modal h4{font-size:14px}
+.usage-modal p,.usage-modal ul li{font-size:13px}
+.qr-result-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
+}
+@media(max-width:380px){
+h1{font-size:16px}
+.title-en{font-size:16px}
+}
+</style>
 </head>
 <body>
 
-    <h1>
-    <span class="ico spore-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-                <linearGradient id="sporeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stop-color="#10b981" />
-                    <stop offset="100%" stop-color="#06b6d4" />
-                </linearGradient>
-            </defs>
-            <path d="M2 12C2 12 5 5 12 5C19 5 22 12 22 12C22 12 19 19 12 19C5 19 2 12 2 12Z"
-                  stroke="url(#sporeGradient)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" />
-            <path d="M10 9.5H13L14.5 11V14.5C14.5 14.7761 14.2761 15 14 15H10C9.72386 15 9.5 14.7761 9.5 14.5V10C9.5 9.72386 9.72386 9.5 10 9.5Z"
-                  stroke="url(#sporeGradient)" stroke-width="1.5" fill="none" stroke-linejoin="round" />
-            <path d="M13 9.5V11H14.5" stroke="url(#sporeGradient)" stroke-width="1.5" fill="none" stroke-linejoin="round" />
-            <path d="M18 3L6 21" stroke="url(#sporeGradient)" stroke-width="2" stroke-linecap="round" />
-        </svg>
-    </span>
-    <span class="title-en">Spore Protocol</span>
-    <span class="title-cn">孢子协议</span>
-    <span class="enc-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L4 6v6c0 5 3.5 9 8 10 4.5-1 8-5 8-10V6z"/><path d="M9 12l2 2 4-4"/></svg> AES-256-GCM</span>
+<h1>
+<span class="ico spore-icon" aria-hidden="true">
+<svg viewBox="0 0 24 24"><defs><linearGradient id="sporeGradient" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#10b981"/><stop offset="100%" stop-color="#06b6d4"/></linearGradient></defs><path d="M2 12C2 12 5 5 12 5C19 5 22 12 22 12C22 12 19 19 12 19C5 19 2 12 2 12Z" stroke="url(#sporeGradient)" stroke-width="2" fill="none"/><path d="M10 9.5H13L14.5 11V14.5C14.5 14.7761 14.2761 15 14 15H10C9.72386 15 9.5 14.7761 9.5 14.5V10C9.5 9.72386 9.72386 9.5 10 9.5Z" stroke="url(#sporeGradient)" stroke-width="1.5" fill="none"/><path d="M13 9.5V11H14.5" stroke="url(#sporeGradient)" stroke-width="1.5" fill="none"/><path d="M18 3L6 21" stroke="url(#sporeGradient)" stroke-width="2"/></svg>
+</span>
+<span class="title-en">Spore Protocol</span>
+<span class="title-cn">孢子协议</span>
+<span class="enc-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L4 6v6c0 5 3.5 9 8 10 4.5-1 8-5 8-10V6z"/><path d="M9 12l2 2 4-4"/></svg> AES-256-GCM</span>
+<span class="qr-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><path d="M7 7h.01M17 7h.01M7 17h.01"/></svg> QR 码</span>
 </h1>
-    <p class="slogan">让数据如孢子般伪装、生存并自由传递</p>
-    <p class="info">将任意文件（或文字内容）编码为 PNG 图片（每 3 字节 → 1 个 RGB 像素），或从其生成的图片中还原原文件并即时预览。<strong>使用 AES-256-GCM + PBKDF2 加密，防篡改、抗审查</strong></p>
+<p class="slogan">让数据如孢子般伪装、生存并自由传递</p>
+<p class="info">将任意文件（或文字内容）编码为 PNG 图片（每 3 字节 → 1 个 RGB 像素），或从其生成的图片中还原原文件并即时预览。<strong>使用 AES-256-GCM + PBKDF2 加密，防篡改、抗审查</strong>。新增 <strong>QR 码模式</strong>：将内容编码为可扫码的 QR 码（大文件自动分片），扫码直接跳转本工具网站自动解析。</p>
 
-    <!-- 右上角操作按钮 -->
-    <div class="header-actions">
-        <button type="button" id="btnClear" class="secondary" title="清除所有内容">
-            <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 11v6M14 11v6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
-            清除
-        </button>
-        <button type="button" id="btnUsage" class="secondary" title="使用说明">
-            <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M8 7h8M8 11h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
-            使用说明
-        </button>
-    </div>
-    <!-- 密钥输入 -->
-    <div class="key-row">
-        <label for="keyInput"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="8" cy="15" r="4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M11 12l9-9M16 7h4v4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span> 密码 <span class="key-hint">(AES-256-GCM 加密，PBKDF2 600k 轮)</span></label>
-        <input type="text" id="keyInput" class="input-box" placeholder="输入强密码（留空则不加密）" value="">
-        <div class="key-actions">
-            <button type="button" id="btnGenKey" class="secondary" title="生成 256 位随机密钥">
-                <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg></span>
-                生成
-            </button>
-            <button type="button" id="btnCopyKey" class="secondary" title="复制密钥到剪贴板">
-                <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></span>
-                复制
-            </button>
-            <button type="button" id="btnToggleKey" class="secondary" title="显示/隐藏密码">
-                <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span>
-                显示
-            </button>
-        </div>
-        <span class="key-strength" id="keyStrength"></span>
-        <span class="key-hint">编码与解码需使用相同密码</span>
-    </div>
+<div class="header-actions">
+<button type="button" id="btnClear" class="secondary" title="清除所有内容"><span class="ico"><svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M10 11v6M14 11v6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span> 清除</button>
+<button type="button" id="btnUsage" class="secondary" title="使用说明"><span class="ico"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 7h8M8 11h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span> 使用说明</button>
+</div>
 
-    <!-- 编码区 -->
-    <div class="card">
-        <h2>① 文件 / 文字 → 图片（编码）</h2>
-        <div class="mode-row" id="modeRow">
-            <span class="mode-label"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span> 隐写模式</span>
-            <div class="seg" role="tablist">
-                <button id="modePixel" class="active" type="button">像素图</button>
-                <button id="modeLSB" type="button">LSB 隐写进照片</button>
-            </div>
-            <span class="mode-hint" id="modeHint">每 3 字节 → 1 个 RGB 像素，生成独立编码图</span>
-        </div>
-        <div class="tab-bar">
-            <button id="tabFile" class="active"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M14 3v5h5M12 14v4M10 16h4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span> 文件编码</button>
-            <button id="tabText"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span> 文字编码</button>
-        </div>
-        <!-- LSB 载体图片选择 -->
-        <div class="carrier-row" id="carrierRow" style="display:none;">
-            <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="1.5"/><path d="M21 15l-5-5L5 21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-            <span class="carrier-label">载体图片</span>
-            <input type="file" id="carrierFile" class="input-box" accept="image/*,.jpg,.jpeg,.png,.webp,.bmp,.gif,.tiff,.ico">
-            <span class="carrier-info" id="carrierInfo">支持 JPG/PNG/WebP/BMP/GIF/TIFF 等任意图片，将自动转为 PNG 无损载体后再隐写</span>
-        </div>
+<div class="key-row">
+<label for="keyInput"><span class="ico"><svg viewBox="0 0 24 24"><circle cx="8" cy="15" r="4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M11 12l9-9M16 7h4v4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span> 密码 <span class="key-hint">(AES-256-GCM 加密，PBKDF2 600k 轮)</span></label>
+<input type="text" id="keyInput" class="input-box" placeholder="输入强密码（留空则不加密）" value="">
+<div class="key-actions">
+<button type="button" id="btnGenKey" class="secondary" title="生成 256 位随机密钥"><span class="ico"><svg viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg></span> 生成</button>
+<button type="button" id="btnCopyKey" class="secondary" title="复制密钥到剪贴板"><span class="ico"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></span> 复制</button>
+<button type="button" id="btnToggleKey" class="secondary" title="显示/隐藏密码"><span class="ico"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span> 显示</button>
+</div>
+<span class="key-strength" id="keyStrength"></span>
+<span class="key-hint">编码与解码需使用相同密码</span>
+</div>
 
-        <div class="tab-panel active" id="panelFile">
-            <div class="flex">
-                <input type="file" id="encFile" class="input-box">
-                <button id="btnEncode">生成图片</button>
-            </div>
-        </div>
+<!-- 编码区 -->
+<div class="card">
+<h2>① 文件 / 文字 → 图片 / QR 码（编码）</h2>
+<div class="mode-row" id="modeRow">
+<span class="mode-label"><span class="ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span> 隐写模式</span>
+<div class="seg" role="tablist">
+<button id="modePixel" class="active" type="button">像素图</button>
+<button id="modeLSB" type="button">LSB 隐写进照片</button>
+<button id="modeQR" type="button">QR 码（扫码解析）</button>
+</div>
+<span class="mode-hint" id="modeHint">每 3 字节 → 1 个 RGB 像素，生成独立编码图</span>
+</div>
+<div class="tab-bar">
+<button id="tabFile" class="active"><span class="ico"><svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M14 3v5h5M12 14v4M10 16h4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span> 文件编码</button>
+<button id="tabText"><span class="ico"><svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4z" fill="none" stroke="currentColor" stroke-width="2"/></svg></span> 文字编码</button>
+</div>
 
-        <div class="tab-panel" id="panelText">
-            <div class="text-encode-area">
-                <textarea id="encText" class="input-box" placeholder="在此输入要加密/编码的任意文字内容…"></textarea>
-                <div class="flex" style="margin-top:8px;">
-                    <button id="btnEncodeText">生成图片</button>
-                </div>
-                <div class="info" style="margin-top:6px;font-size:12px;color:#888;">文字将按 UTF-8 编码为字节后写入图片（默认以 .txt 存入，文件名自动生成为圆周率乱数）；AES-256-GCM 加密保护。</div>
-            </div>
-        </div>
+<div class="carrier-row" id="carrierRow" style="display:none;">
+<span class="ico"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="1.5"/><path d="M21 15l-5-5L5 21" fill="none" stroke="currentColor" stroke-width="2"/></svg></span>
+<span class="carrier-label">载体图片</span>
+<input type="file" id="carrierFile" class="input-box" accept="image/*,.jpg,.jpeg,.png,.webp,.bmp,.gif,.tiff,.ico">
+<span class="carrier-info" id="carrierInfo">支持 JPG/PNG/WebP/BMP/GIF/TIFF 等任意图片，将自动转为 PNG 无损载体后再隐写</span>
+</div>
 
-        <div class="progress-wrap" id="encProgressWrap" style="display:none;">
-            <progress id="encProgress" value="0" max="100"></progress>
-            <span class="progress-label" id="encProgressLabel">0%</span>
-            <span class="progress-status" id="encProgressStatus">准备中…</span>
-        </div>
+<div class="qr-carrier-row" id="qrCarrierRow" style="display:none;">
+<span class="ico"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></span>
+<span class="carrier-label">QR 码设置</span>
+<span class="carrier-info" id="qrInfo">数据将编码为 QR 码（大文件自动分片为多张）；扫码直接跳转本工具网站自动解析。每片约 1.2KB（Base64 后），兼容汉字/英文/任意格式。</span>
+</div>
 
-        <div class="info" id="encInfo"></div>
-        <div id="encDownload"></div>
-    </div>
+<div class="tab-panel active" id="panelFile">
+<div class="flex">
+<input type="file" id="encFile" class="input-box">
+<button id="btnEncode">生成</button>
+</div>
+</div>
+<div class="tab-panel" id="panelText">
+<div class="text-encode-area">
+<textarea id="encText" class="input-box" placeholder="在此输入要加密/编码的任意文字内容…"></textarea>
+<div class="flex" style="margin-top:8px;">
+<button id="btnEncodeText">生成</button>
+</div>
+<div class="info" style="margin-top:6px;font-size:12px;color:#888;">文字将按 UTF-8 编码为字节后写入（默认以 .txt 存入，文件名自动生成为圆周率乱数）；AES-256-GCM 加密保护。QR 码模式下，扫码将跳转 https://x2050.top/mi.html 自动解析。</div>
+</div>
+</div>
 
-    <!-- 解码区 -->
-    <div class="card">
-        <h2>② 图片 → 文件（解码 + 预览）</h2>
-        <div class="flex">
-            <input type="file" id="decFile" class="input-box" accept="image/*,.png,.bmp,.jpg,.jpeg,.webp,.gif,.tiff">
-            <button id="btnDecode">还原并预览</button>
-        </div>
+<div class="progress-wrap" id="encProgressWrap" style="display:none;">
+<progress id="encProgress" value="0" max="100"></progress>
+<span class="progress-label" id="encProgressLabel">0%</span>
+<span class="progress-status" id="encProgressStatus">准备中…</span>
+</div>
+<div class="info" id="encInfo"></div>
+<div id="encDownload"></div>
+</div>
 
-        <div class="progress-wrap" id="decProgressWrap" style="display:none;">
-            <progress id="decProgress" value="0" max="100"></progress>
-            <span class="progress-label" id="decProgressLabel">0%</span>
-            <span class="progress-status" id="decProgressStatus">准备中…</span>
-        </div>
+<!-- 解码区 -->
+<div class="card">
+<h2>② 图片 / QR 码 → 文件（解码 + 预览）</h2>
+<div class="flex">
+<input type="file" id="decFile" class="input-box" accept="image/*,.png,.bmp,.jpg,.jpeg,.webp,.gif,.tiff,.qr">
+<button id="btnDecode">还原并预览</button>
+</div>
+<div class="info" style="margin-top:6px;font-size:12px;color:#888;">支持：像素图 PNG / LSB 隐写 PNG / QR 码图片（识别后自动跳转解析 URL）。也可直接打开本页并携带 <code>#data=...</code> 参数，自动解析 QR 码解码出的分享链接。</div>
 
-        <div class="info" id="decInfo"></div>
-        <div id="decDownload"></div>
+<div class="progress-wrap" id="decProgressWrap" style="display:none;">
+<progress id="decProgress" value="0" max="100"></progress>
+<span class="progress-label" id="decProgressLabel">0%</span>
+<span class="progress-status" id="decProgressStatus">准备中…</span>
+</div>
+<div class="info" id="decInfo"></div>
+<div id="decDownload"></div>
+<div class="preview-wrap" id="previewWrap" style="display:none;">
+<div class="preview-header">
+<span class="pv-title" id="pvTitle">文件预览</span>
+<span class="pv-meta" id="pvMeta"></span>
+</div>
+<div class="preview-body" id="previewBody">
+<div class="pv-placeholder">预览将在此处显示</div>
+</div>
+</div>
+</div>
 
-        <!-- 预览容器 -->
-        <div class="preview-wrap" id="previewWrap" style="display:none;">
-            <div class="preview-header">
-                <span class="pv-title" id="pvTitle">文件预览</span>
-                <span class="pv-meta" id="pvMeta"></span>
-            </div>
-            <div class="preview-body" id="previewBody">
-                <div class="pv-placeholder">预览将在此处显示</div>
-            </div>
-        </div>
-    </div>
+<!-- 弹窗 -->
+<div class="modal-overlay" id="modalOverlay">
+<div class="modal-box">
+<h3><span id="modalIconWrap"><span class="ico"><svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M14 3v5h5M9 13h6M9 17h4" fill="none" stroke="currentColor" stroke-width="2"/></svg></span></span><span id="modalTitle">下载提示</span></h3>
+<p id="modalMessage">您的文件已准备就绪。</p>
+<div class="file-name-highlight" id="modalFileName">文件名示例</div>
+<p style="font-size:13px;color:#666;margin-bottom:6px;" id="modalExtra">请注意浏览器下载时可能自动更改扩展名，请手动修正。</p>
+<div class="clearfix"><button class="btn-close-modal" id="modalCloseBtn">我知道了</button></div>
+</div>
+</div>
 
-    <!-- 弹窗结构 -->
-    <div class="modal-overlay" id="modalOverlay">
-        <div class="modal-box">
-            <h3><span id="modalIconWrap"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M14 3v5h5M9 13h6M9 17h4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span><span id="modalTitle">下载提示</span></h3>
-            <p id="modalMessage">您的文件已准备就绪。</p>
-            <div class="file-name-highlight" id="modalFileName">文件名示例</div>
-            <p style="font-size:13px;color:#666;margin-bottom:6px;" id="modalExtra">请注意浏览器下载时可能自动更改扩展名，请手动修正。</p>
-            <div class="clearfix"><button class="btn-close-modal" id="modalCloseBtn">我知道了</button></div>
-        </div>
-    </div>
-    
-    <!-- 使用说明弹窗 -->
-    <div class="modal-overlay" id="usageModalOverlay">
-        <div class="modal-box usage-modal">
-            <h3><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg></span> 使用说明</h3>
+<!-- 使用说明弹窗 -->
+<div class="modal-overlay" id="usageModalOverlay">
+<div class="modal-box usage-modal">
+<h3><span class="ico"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" fill="none" stroke="currentColor" stroke-width="2"/><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15z" fill="none" stroke="currentColor" stroke-width="2"/></svg></span> 使用说明</h3>
 
-            <h4><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 16v-4M12 8h.01" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span> 一、这个工具能做什么？</h4>
-            <p>简单来说，这是一个能帮你把秘密"藏"起来的工具。你可以把任何文件（比如文档、压缩包、APK安装包）或者一段文字，变成一张看起来普普通通的图片。</p>
-            <p>更厉害的是，你还能把秘密文件直接"塞"进一张正常的照片里，肉眼完全看不出任何区别。只有知道密码的人，才能从图片里把秘密还原出来。</p>
+<h4><span class="ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 16v-4M12 8h.01" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span> 一、这个工具能做什么？</h4>
+<p>这是一个能帮你把秘密"藏"起来的工具。你可以把任何文件（文档、压缩包、APK 等）或一段文字，变成一张看起来普普通通的图片；也可以把内容编码成<strong>二维码（QR 码）</strong>，扫码即可跳转本工具网站自动解析还原。</p>
+<p>更厉害的是，还能把秘密"塞"进一张正常照片的最低位（LSB 隐写），肉眼看不出区别。只有知道密码的人才能还原。</p>
 
-            <h4><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2L4 6v6c0 5 3.5 9 8 10 4.5-1 8-5 8-10V6z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9 12l2 2 4-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span> 二、安全性说明</h4>
-            <p>你可以完全放心，这个工具的安全性非常高：</p>
-            <ul>
-                <li><strong>文件绝不离开你的电脑</strong>：所有的处理都在你自己的浏览器里完成。没有服务器，没有上传，没有后台记录，完全断网也能用。</li>
-                <li><strong>军用级加密</strong>：我们使用了目前最顶级的加密技术（AES-256-GCM），这是银行、政府机构都在使用的加密标准。如果没有密码，就算是目前世界上最强大的超级计算机，也需要花费数亿年才能破解。</li>
-                <li><strong>密码是唯一的钥匙</strong>：请一定要记住你设置的密码！系统没有"忘记密码"功能，一旦忘记，里面的内容将永远无法找回。</li>
-                <li><strong>防篡改机制</strong>：如果有人试图修改这张图片哪怕一个像素，解密时会自动失败并提示"密码错误或文件已被篡改"。这保证了你收到的文件绝对是原汁原味的，没有被任何人动过手脚。</li>
-            </ul>
+<h4><span class="ico"><svg viewBox="0 0 24 24"><path d="M12 2L4 6v6c0 5 3.5 9 8 10 4.5-1 8-5 8-10V6z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9 12l2 2 4-4" fill="none" stroke="currentColor" stroke-width="2"/></svg></span> 二、安全性说明</h4>
+<ul>
+<li><strong>文件绝不离开你的电脑</strong>：全部在浏览器本地完成，无服务器、无上传，断网也可用。</li>
+<li><strong>军用级加密</strong>：AES-256-GCM（银行/政府级标准）。无密码即便超级计算机也难破解。</li>
+<li><strong>密码是唯一钥匙</strong>：务必妥善保管，忘记即永久无法找回。</li>
+<li><strong>防篡改</strong>：内容被改动时解密会失败并提示"密码错误或文件已被篡改"。</li>
+</ul>
 
-            <h4><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span> 三、新手快速上手（编码）</h4>
-            <p>想把秘密藏进图片？只需简单三步：</p>
-            <div class="usage-steps">
-                <ul>
-                    <li><strong>第一步：选择内容</strong> &mdash; 点击"文件编码"标签，上传你要隐藏的文件；或者切换到"文字编码"标签，直接在文本框中输入你想隐藏的文字内容。</li>
-                    <li><strong>第二步：设置密码</strong> &mdash; 在顶部的密码栏中输入一个只有你知道的密码。建议密码至少12位，包含大小写字母、数字和符号。点击"生成"按钮可以自动生成一个高强度随机密码。</li>
-                    <li><strong>第三步：生成图片</strong> &mdash; 点击"生成图片"按钮，等待处理完成。工具会自动生成一张包含秘密的图片，你可以直接保存到电脑或手机中。</li>
-                </ul>
-            </div>
+<h4><span class="ico"><svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="none" stroke="currentColor" stroke-width="2"/></svg></span> 三、新手快速上手（编码）</h4>
+<div class="usage-steps">
+<ul>
+<li><strong>第一步：选择内容</strong> — "文件编码"上传文件，或"文字编码"直接输入文字。</li>
+<li><strong>第二步：设置密码</strong> — 顶部输入密码（建议 ≥12 位，含大小写+数字+符号），可点"生成"自动生成高强度随机密钥。</li>
+<li><strong>第三步：选择模式</strong> — 像素图 / LSB 隐写进照片 / <strong>QR 码（扫码解析）</strong>。</li>
+<li><strong>第四步：生成</strong> — 点"生成"，按模式下载图片或 QR 码图片（大文件自动分片为多张 QR 码）。</li>
+</ul>
+</div>
 
-            <h4><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span> 四、新手快速上手（解码）</h4>
-            <p>收到别人发来的图片，想看看里面藏了什么？</p>
-            <div class="usage-steps">
-                <ul>
-                    <li><strong>第一步：上传图片</strong> &mdash; 在"图片还原"区域，点击选择那张看起来普通的图片文件。</li>
-                    <li><strong>第二步：输入密码</strong> &mdash; 在密码栏中输入发送方告诉你的密码。</li>
-                    <li><strong>第三步：查看内容</strong> &mdash; 点击"还原并预览"按钮，文件就会自动还原。如果是图片或视频，你可以直接在下方预览；如果是文档，可以点击下载链接保存到本地。</li>
-                </ul>
-            </div>
+<h4><span class="ico"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" fill="none" stroke="currentColor" stroke-width="2"/></svg></span> 四、新手快速上手（解码）</h4>
+<div class="usage-steps">
+<ul>
+<li><strong>第一步：上传图片</strong> — 在"图片还原"区选择编码后的 PNG / 隐写 PNG / QR 码图片。</li>
+<li><strong>第二步：输入密码</strong> — 若编码时设了密码，在此输入相同密码。</li>
+<li><strong>第三步：查看</strong> — 点"还原并预览"，文件自动还原并在下方预览；图片/视频可直接看，文档可下载。</li>
+</ul>
+</div>
 
-            <h4><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="9" cy="9" r="1.5" fill="currentColor"/><path d="M21 15l-5-5L5 21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span> 五、LSB隐写模式使用指南</h4>
-            <p>这是一种"高级隐身术"。普通的编码模式会生成一张全新的图片，而LSB隐写模式可以把秘密完美地融合进一张正常的照片中，生成的图片看起来和原图一模一样。</p>
-            <p><strong>使用步骤：</strong></p>
-            <div class="usage-steps">
-                <ul>
-                    <li>在"隐写模式"中选择"LSB隐写进照片"</li>
-                    <li>上传一张你喜欢的正常照片作为"载体"（支持 JPG、PNG、WebP 等格式）</li>
-                    <li>按照普通编码流程设置密码并生成图片</li>
-                    <li>生成的图片看起来和原图完全一样，但里面已经藏好了你的文件</li>
-                </ul>
-            </div>
-            <p><strong>注意事项：</strong></p>
-            <ul class="usage-warning">
-                <li>因为LSB模式要保留照片的画质，能隐藏的文件大小有限。一般建议隐藏的文件不要超过照片原始大小的30%</li>
-                <li>如果文件太大，建议换一张分辨率更高的照片，或者切换到"像素图"模式</li>
-                <li>载体图片分辨率越高，能隐藏的数据就越多</li>
-            </ul>
+<h4><span class="ico"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="9" cy="9" r="1.5" fill="currentColor"/><path d="M21 15l-5-5L5 21" fill="none" stroke="currentColor" stroke-width="2"/></svg></span> 五、LSB 隐写模式指南</h4>
+<p>把秘密融合进一张正常照片，肉眼看不出区别。</p>
+<div class="usage-steps">
+<ul>
+<li>模式选"LSB 隐写进照片"，上传一张正常照片作载体（JPG/PNG/WebP 等，自动转 PNG 无损）。</li>
+<li>按普通流程设密码并生成。生成的图与原图视觉一致，里面已藏好文件。</li>
+</ul>
+</div>
+<ul class="usage-warning">
+<li>LSB 要保留画质，隐藏文件建议不超过载体原始大小的 30%；分辨率越高容量越大。</li>
+<li>必须通过"发送文件"原样传输，走"语音/图片消息"被平台压缩会丢失数据。</li>
+</ul>
 
-            <h4><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span> 六、应用场景推荐</h4>
-            <p>这个工具在生活中非常实用：</p>
-            <ul>
-                <li><strong>私密日记/备忘录</strong>：把不想被别人看到的日记、笔记或敏感信息藏进一张普通的风景照里</li>
-                <li><strong>敏感文件传输</strong>：通过微信或邮件发送机密文档时，发一张图片比直接发文件更安全，也更不容易引起注意</li>
-                <li><strong>密码本备份</strong>：把各种账号密码、密钥信息存成文字，加密后变成图片保存在云盘或U盘里</li>
-                <li><strong>重要资料备份</strong>：将身份证、合同、房产证等重要文件的扫描件加密保存，防止泄露</li>
-                <li><strong>隐私通信</strong>：和朋友之间进行隐蔽的文字交流，即使消息被拦截，对方也只会看到一张普通图片</li>
-                <li><strong>惊喜与趣味</strong>：把一段表白文字或一张隐藏照片发给朋友，增加趣味性</li>
-            </ul>
+<h4><span class="ico"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></span> 六、QR 码模式指南（推荐 · 抗压缩最强）</h4>
+<p>这是本工具最稳健的传输方式：把内容编码成一个或多个 QR 码图片，<strong>扫码即跳转本工具网站（https://x2050.top/mi.html）并自动解析还原</strong>，无需手动上传。</p>
+<div class="usage-steps">
+<ul>
+<li>模式选"<strong>QR 码（扫码解析）</strong>"，选择文件或输入文字，设密码（可选），点生成。</li>
+<li>小内容生成 1 张 QR 码；大文件自动<strong>分片</strong>为多张（如 part 1/5、2/5…），请全部保存。</li>
+<li>每张 QR 码解码后都是一个 <code>https://x2050.top/mi.html#data=...</code> 链接。扫码会直接打开本工具网站并自动还原内容。</li>
+<li>若编码时设了密码，扫码打开网站后会提示输入密码才能继续解析。</li>
+</ul>
+</div>
+<ul class="usage-warning">
+<li><strong>截图也能识别</strong>：QR 码自带定位标记与纠错（Reed-Solomon），截图、打印拍照、微信转发压缩后仍可识别（建议码边长 ≥ 400px）。</li>
+<li>分片时请按序号全部扫码/上传，工具会自动拼接还原完整内容。</li>
+<li>单张 QR 码原始容量约 1.2KB（Base64 后），汉字约数百字/张；大文件分片数量会较多，属正常。</li>
+</ul>
 
-            <h4><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 8v4M12 16h.01" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span> 七、注意事项与常见问题</h4>
-            <ul>
-                <li><strong>密码丢了怎么办？</strong> 非常抱歉，真的没办法找回。请务必使用密码管理器（如 Bitwarden、1Password）或写在安全的地方妥善保管。</li>
-                <li><strong>图片格式建议</strong>：解码时，请确保图片没有被微信、朋友圈等社交软件压缩过。最好通过"发送文件"的方式传输图片，而不是"发送图片"（后者会压缩画质导致数据丢失）。</li>
-                <li><strong>文件大小说明</strong>：普通像素图模式下，生成的图片大小取决于你的文件；LSB模式下，建议隐藏的文件不要超过载体照片可容纳的容量。</li>
-                <li><strong>解码失败？</strong> 99%的情况是因为密码输错了。请检查是否有多余的空格，或者大小写是否一致。如果确认密码无误但仍失败，可能是图片在传输过程中被压缩或修改过。</li>
-                <li><strong>支持的文件类型</strong>：任何类型的文件都可以编码（文档、压缩包、APK、视频、音频等），没有格式限制。</li>
-            </ul>
+<h4><span class="ico"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="none" stroke="currentColor" stroke-width="2"/></svg></span> 七、应用场景推荐</h4>
+<ul>
+<li><strong>私密日记/备忘录</strong>：藏进风景照或编码为 QR 码随身携带。</li>
+<li><strong>敏感文件传输</strong>：发一张图/一个 QR 码比直接发文件更隐蔽、更不易引起注意。</li>
+<li><strong>密码本/重要资料备份</strong>：加密后变图片或 QR 码存云盘/U 盘。</li>
+<li><strong>隐私通信</strong>：隐蔽文字交流，拦截者只看到普通图片/二维码。</li>
+<li><strong>跨设备传递</strong>：手机扫 QR 码即可在电脑端网站还原内容，无需数据线。</li>
+</ul>
 
-            <h4><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span> 八、安全建议</h4>
-            <p>为了你的信息安全，请养成以下好习惯：</p>
-            <ol style="margin: 8px 0 8px 20px; padding: 0;">
-                <li style="margin: 6px 0; font-size: 14px; line-height: 1.6;"><strong>密码要够长够复杂</strong>：建议使用至少12位的密码，混合使用大小写字母、数字和特殊符号。密码越长、越复杂，安全性越高。</li>
-                <li style="margin: 6px 0; font-size: 14px; line-height: 1.6;"><strong>不要二次压缩图片</strong>：通过聊天软件发送隐写图片时，一定要选择"发送文件"而不是"发送图片"，防止画质被压缩导致隐藏的数据丢失。</li>
-                <li style="margin: 6px 0; font-size: 14px; line-height: 1.6;"><strong>妥善保管载体图片</strong>：解码成功后，如果不再需要保留，请及时删除包含秘密的图片。只要图片还在，理论上就存在被破解的风险。</li>
-                <li style="margin: 6px 0; font-size: 14px; line-height: 1.6;"><strong>定期测试备份</strong>：如果是极其重要的数据备份，建议每隔一段时间测试一下密码是否还能正常解密，确保备份可用。</li>
-            </ol>
+<h4><span class="ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 8v4M12 16h.01" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span> 八、注意事项与常见问题</h4>
+<ul>
+<li><strong>密码丢了无法找回</strong>，请用密码管理器妥善保管。</li>
+<li><strong>图片格式</strong>：解码时图片不要被微信等压缩过，最好"发送文件"传输。</li>
+<li><strong>解码失败</strong>：99% 是密码错误，检查空格/大小写；若确认无误，可能图片被压缩或修改。</li>
+<li><strong>QR 码分片</strong>：大文件会分成多张 QR 码，需全部收集后一起解析（扫码打开的网页会自动拼接同批分片）。</li>
+<li><strong>支持的文件类型</strong>：任意类型均可编码（文档/压缩包/APK/视频/音频等），无格式限制。</li>
+</ul>
 
-            <div style="text-align:right; margin-top:16px;"><button class="btn-close-modal" id="usageModalCloseBtn">我知道了</button></div>
-        </div>
-    </div>
+<h4><span class="ico"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" fill="none" stroke="currentColor" stroke-width="2"/></svg></span> 九、安全建议</h4>
+<ol style="margin:8px 0 8px 20px;padding:0;">
+<li style="margin:6px 0;font-size:14px;line-height:1.6;"><strong>密码够长够复杂</strong>：建议 ≥12 位，混合大小写+数字+符号。</li>
+<li style="margin:6px 0;font-size:14px;line-height:1.6;"><strong>不要二次压缩图片</strong>：发隐写图片务必"发送文件"而非"发送图片"。</li>
+<li style="margin:6px 0;font-size:14px;line-height:1.6;"><strong>QR 码优先用于跨设备/抗压缩场景</strong>：截图、打印、拍照、平台压缩均不影响识别，是最稳健的分享方式。</li>
+<li style="margin:6px 0;font-size:14px;line-height:1.6;"><strong>妥善保管载体</strong>：不再需要时及时删除含秘密的图片/QR 码。</li>
+<li style="margin:6px 0;font-size:14px;line-height:1.6;"><strong>定期测试备份</strong>：重要数据备份建议定期测试密码是否仍能解密。</li>
+</ol>
 
-    <script>
-        /* ============================================================
-           AES-256-GCM + PBKDF2 加密核心
-           ============================================================ */
-        const PBKDF2_ITERATIONS = 600000; // 2026 年推荐轮数
+<div style="text-align:right;margin-top:16px;"><button class="btn-close-modal" id="usageModalCloseBtn">我知道了</button></div>
+</div>
+</div>
 
-        // 密码强度检测
-        function checkPasswordStrength(pwd) {
-            if (!pwd) return { level: '', text: '' };
-            let score = 0;
-            if (pwd.length >= 8) score++;
-            if (pwd.length >= 12) score++;
-            if (pwd.length >= 16) score++;
-            if (/[a-z]/.test(pwd)) score++;
-            if (/[A-Z]/.test(pwd)) score++;
-            if (/[0-9]/.test(pwd)) score++;
-            if (/[^a-zA-Z0-9]/.test(pwd)) score++;
-            if (score <= 2) return { level: 'strength-weak', text: '弱' };
-            if (score <= 4) return { level: 'strength-medium', text: '中' };
-            return { level: 'strength-strong', text: '强' };
-        }
+<script>
+/* ============================================================
+   qrcode-generator (Kazuhiko Arase, MIT) — 内联，零外部依赖
+   ============================================================ */
+/**
+ * Minified by jsDelivr using Terser v5.37.0.
+ * Original file: /npm/qrcode-generator@1.4.4/qrcode.js
+ *
+ * Do NOT use SRI with dynamically generated files! More information: https://www.jsdelivr.com/using-sri-with-dynamic-files
+ */
+var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],f={},c=function(t,r){o=function(t){for(var r=new Array(t),e=0;e<t;e+=1){r[e]=new Array(t);for(var n=0;n<t;n+=1)r[e][n]=null}return r}(i=4*e+17),l(0,0),l(i-7,0),l(0,i-7),s(),h(),d(t,r),e>=7&&v(t),null==a&&(a=p(e,n,u)),w(a,r)},l=function(t,r){for(var e=-1;e<=7;e+=1)if(!(t+e<=-1||i<=t+e))for(var n=-1;n<=7;n+=1)r+n<=-1||i<=r+n||(o[t+e][r+n]=0<=e&&e<=6&&(0==n||6==n)||0<=n&&n<=6&&(0==e||6==e)||2<=e&&e<=4&&2<=n&&n<=4)},h=function(){for(var t=8;t<i-8;t+=1)null==o[t][6]&&(o[t][6]=t%2==0);for(var r=8;r<i-8;r+=1)null==o[6][r]&&(o[6][r]=r%2==0)},s=function(){for(var t=B.getPatternPosition(e),r=0;r<t.length;r+=1)for(var n=0;n<t.length;n+=1){var i=t[r],a=t[n];if(null==o[i][a])for(var u=-2;u<=2;u+=1)for(var f=-2;f<=2;f+=1)o[i+u][a+f]=-2==u||2==u||-2==f||2==f||0==u&&0==f}},v=function(t){for(var r=B.getBCHTypeNumber(e),n=0;n<18;n+=1){var a=!t&&1==(r>>n&1);o[Math.floor(n/3)][n%3+i-8-3]=a}for(n=0;n<18;n+=1){a=!t&&1==(r>>n&1);o[n%3+i-8-3][Math.floor(n/3)]=a}},d=function(t,r){for(var e=n<<3|r,a=B.getBCHTypeInfo(e),u=0;u<15;u+=1){var f=!t&&1==(a>>u&1);u<6?o[u][8]=f:u<8?o[u+1][8]=f:o[i-15+u][8]=f}for(u=0;u<15;u+=1){f=!t&&1==(a>>u&1);u<8?o[8][i-u-1]=f:u<9?o[8][15-u-1+1]=f:o[8][15-u-1]=f}o[i-8][8]=!t},w=function(t,r){for(var e=-1,n=i-1,a=7,u=0,f=B.getMaskFunction(r),c=i-1;c>0;c-=2)for(6==c&&(c-=1);;){for(var g=0;g<2;g+=1)if(null==o[n][c-g]){var l=!1;u<t.length&&(l=1==(t[u]>>>a&1)),f(n,c-g)&&(l=!l),o[n][c-g]=l,-1==(a-=1)&&(u+=1,a=7)}if((n+=e)<0||i<=n){n-=e,e=-e;break}}},p=function(t,r,e){for(var n=A.getRSBlocks(t,r),o=b(),i=0;i<e.length;i+=1){var a=e[i];o.put(a.getMode(),4),o.put(a.getLength(),B.getLengthInBits(a.getMode(),t)),a.write(o)}var u=0;for(i=0;i<n.length;i+=1)u+=n[i].dataCount;if(o.getLengthInBits()>8*u)throw"code length overflow. ("+o.getLengthInBits()+">"+8*u+")";for(o.getLengthInBits()+4<=8*u&&o.put(0,4);o.getLengthInBits()%8!=0;)o.putBit(!1);for(;!(o.getLengthInBits()>=8*u||(o.put(236,8),o.getLengthInBits()>=8*u));)o.put(17,8);return function(t,r){for(var e=0,n=0,o=0,i=new Array(r.length),a=new Array(r.length),u=0;u<r.length;u+=1){var f=r[u].dataCount,c=r[u].totalCount-f;n=Math.max(n,f),o=Math.max(o,c),i[u]=new Array(f);for(var g=0;g<i[u].length;g+=1)i[u][g]=255&t.getBuffer()[g+e];e+=f;var l=B.getErrorCorrectPolynomial(c),h=k(i[u],l.getLength()-1).mod(l);for(a[u]=new Array(l.getLength()-1),g=0;g<a[u].length;g+=1){var s=g+h.getLength()-a[u].length;a[u][g]=s>=0?h.getAt(s):0}}var v=0;for(g=0;g<r.length;g+=1)v+=r[g].totalCount;var d=new Array(v),w=0;for(g=0;g<n;g+=1)for(u=0;u<r.length;u+=1)g<i[u].length&&(d[w]=i[u][g],w+=1);for(g=0;g<o;g+=1)for(u=0;u<r.length;u+=1)g<a[u].length&&(d[w]=a[u][g],w+=1);return d}(o,n)};f.addData=function(t,r){var e=null;switch(r=r||"Byte"){case"Numeric":e=M(t);break;case"Alphanumeric":e=x(t);break;case"Byte":e=m(t);break;case"Kanji":e=L(t);break;default:throw"mode:"+r}u.push(e),a=null},f.isDark=function(t,r){if(t<0||i<=t||r<0||i<=r)throw t+","+r;return o[t][r]},f.getModuleCount=function(){return i},f.make=function(){if(e<1){for(var t=1;t<40;t++){for(var r=A.getRSBlocks(t,n),o=b(),i=0;i<u.length;i++){var a=u[i];o.put(a.getMode(),4),o.put(a.getLength(),B.getLengthInBits(a.getMode(),t)),a.write(o)}var g=0;for(i=0;i<r.length;i++)g+=r[i].dataCount;if(o.getLengthInBits()<=8*g)break}e=t}c(!1,function(){for(var t=0,r=0,e=0;e<8;e+=1){c(!0,e);var n=B.getLostPoint(f);(0==e||t>n)&&(t=n,r=e)}return r}())},f.createTableTag=function(t,r){t=t||2;var e="";e+='<table style="',e+=" border-width: 0px; border-style: none;",e+=" border-collapse: collapse;",e+=" padding: 0px; margin: "+(r=void 0===r?4*t:r)+"px;",e+='">',e+="<tbody>";for(var n=0;n<f.getModuleCount();n+=1){e+="<tr>";for(var o=0;o<f.getModuleCount();o+=1)e+='<td style="',e+=" border-width: 0px; border-style: none;",e+=" border-collapse: collapse;",e+=" padding: 0px; margin: 0px;",e+=" width: "+t+"px;",e+=" height: "+t+"px;",e+=" background-color: ",e+=f.isDark(n,o)?"#000000":"#ffffff",e+=";",e+='"/>';e+="</tr>"}return e+="</tbody>",e+="</table>"},f.createSvgTag=function(t,r,e,n){var o={};"object"==typeof arguments[0]&&(t=(o=arguments[0]).cellSize,r=o.margin,e=o.alt,n=o.title),t=t||2,r=void 0===r?4*t:r,(e="string"==typeof e?{text:e}:e||{}).text=e.text||null,e.id=e.text?e.id||"qrcode-description":null,(n="string"==typeof n?{text:n}:n||{}).text=n.text||null,n.id=n.text?n.id||"qrcode-title":null;var i,a,u,c,g=f.getModuleCount()*t+2*r,l="";for(c="l"+t+",0 0,"+t+" -"+t+",0 0,-"+t+"z ",l+='<svg version="1.1" xmlns="http://www.w3.org/2000/svg"',l+=o.scalable?"":' width="'+g+'px" height="'+g+'px"',l+=' viewBox="0 0 '+g+" "+g+'" ',l+=' preserveAspectRatio="xMinYMin meet"',l+=n.text||e.text?' role="img" aria-labelledby="'+y([n.id,e.id].join(" ").trim())+'"':"",l+=">",l+=n.text?'<title id="'+y(n.id)+'">'+y(n.text)+"</title>":"",l+=e.text?'<description id="'+y(e.id)+'">'+y(e.text)+"</description>":"",l+='<rect width="100%" height="100%" fill="white" cx="0" cy="0"/>',l+='<path d="',a=0;a<f.getModuleCount();a+=1)for(u=a*t+r,i=0;i<f.getModuleCount();i+=1)f.isDark(a,i)&&(l+="M"+(i*t+r)+","+u+c);return l+='" stroke="transparent" fill="black"/>',l+="</svg>"},f.createDataURL=function(t,r){t=t||2,r=void 0===r?4*t:r;var e=f.getModuleCount()*t+2*r,n=r,o=e-r;return I(e,e,(function(r,e){if(n<=r&&r<o&&n<=e&&e<o){var i=Math.floor((r-n)/t),a=Math.floor((e-n)/t);return f.isDark(a,i)?0:1}return 1}))},f.createImgTag=function(t,r,e){t=t||2,r=void 0===r?4*t:r;var n=f.getModuleCount()*t+2*r,o="";return o+="<img",o+=' src="',o+=f.createDataURL(t,r),o+='"',o+=' width="',o+=n,o+='"',o+=' height="',o+=n,o+='"',e&&(o+=' alt="',o+=y(e),o+='"'),o+="/>"};var y=function(t){for(var r="",e=0;e<t.length;e+=1){var n=t.charAt(e);switch(n){case"<":r+="&lt;";break;case">":r+="&gt;";break;case"&":r+="&amp;";break;case'"':r+="&quot;";break;default:r+=n}}return r};return f.createASCII=function(t,r){if((t=t||1)<2)return function(t){t=void 0===t?2:t;var r,e,n,o,i,a=1*f.getModuleCount()+2*t,u=t,c=a-t,g={"██":"█","█ ":"▀"," █":"▄","  ":" "},l={"██":"▀","█ ":"▀"," █":" ","  ":" "},h="";for(r=0;r<a;r+=2){for(n=Math.floor((r-u)/1),o=Math.floor((r+1-u)/1),e=0;e<a;e+=1)i="█",u<=e&&e<c&&u<=r&&r<c&&f.isDark(n,Math.floor((e-u)/1))&&(i=" "),u<=e&&e<c&&u<=r+1&&r+1<c&&f.isDark(o,Math.floor((e-u)/1))?i+=" ":i+="█",h+=t<1&&r+1>=c?l[i]:g[i];h+="\n"}return a%2&&t>0?h.substring(0,h.length-a-1)+Array(a+1).join("▀"):h.substring(0,h.length-1)}(r);t-=1,r=void 0===r?2*t:r;var e,n,o,i,a=f.getModuleCount()*t+2*r,u=r,c=a-r,g=Array(t+1).join("██"),l=Array(t+1).join("  "),h="",s="";for(e=0;e<a;e+=1){for(o=Math.floor((e-u)/t),s="",n=0;n<a;n+=1)i=1,u<=n&&n<c&&u<=e&&e<c&&f.isDark(o,Math.floor((n-u)/t))&&(i=0),s+=i?g:l;for(o=0;o<t;o+=1)h+=s+"\n"}return h.substring(0,h.length-1)},f.renderTo2dContext=function(t,r){r=r||2;for(var e=f.getModuleCount(),n=0;n<e;n++)for(var o=0;o<e;o++)t.fillStyle=f.isDark(n,o)?"black":"white",t.fillRect(n*r,o*r,r,r)},f};t.stringToBytes=(t.stringToBytesFuncs={default:function(t){for(var r=[],e=0;e<t.length;e+=1){var n=t.charCodeAt(e);r.push(255&n)}return r}}).default,t.createStringToBytes=function(t,r){var e=function(){for(var e=S(t),n=function(){var t=e.read();if(-1==t)throw"eof";return t},o=0,i={};;){var a=e.read();if(-1==a)break;var u=n(),f=n()<<8|n();i[String.fromCharCode(a<<8|u)]=f,o+=1}if(o!=r)throw o+" != "+r;return i}(),n="?".charCodeAt(0);return function(t){for(var r=[],o=0;o<t.length;o+=1){var i=t.charCodeAt(o);if(i<128)r.push(i);else{var a=e[t.charAt(o)];"number"==typeof a?(255&a)==a?r.push(a):(r.push(a>>>8),r.push(255&a)):r.push(n)}}return r}};var r,e,n,o,i,a=1,u=2,f=4,c=8,g={L:1,M:0,Q:3,H:2},l=0,h=1,s=2,v=3,d=4,w=5,p=6,y=7,B=(r=[[],[6,18],[6,22],[6,26],[6,30],[6,34],[6,22,38],[6,24,42],[6,26,46],[6,28,50],[6,30,54],[6,32,58],[6,34,62],[6,26,46,66],[6,26,48,70],[6,26,50,74],[6,30,54,78],[6,30,56,82],[6,30,58,86],[6,34,62,90],[6,28,50,72,94],[6,26,50,74,98],[6,30,54,78,102],[6,28,54,80,106],[6,32,58,84,110],[6,30,58,86,114],[6,34,62,90,118],[6,26,50,74,98,122],[6,30,54,78,102,126],[6,26,52,78,104,130],[6,30,56,82,108,134],[6,34,60,86,112,138],[6,30,58,86,114,142],[6,34,62,90,118,146],[6,30,54,78,102,126,150],[6,24,50,76,102,128,154],[6,28,54,80,106,132,158],[6,32,58,84,110,136,162],[6,26,54,82,110,138,166],[6,30,58,86,114,142,170]],e=1335,n=7973,i=function(t){for(var r=0;0!=t;)r+=1,t>>>=1;return r},(o={}).getBCHTypeInfo=function(t){for(var r=t<<10;i(r)-i(e)>=0;)r^=e<<i(r)-i(e);return 21522^(t<<10|r)},o.getBCHTypeNumber=function(t){for(var r=t<<12;i(r)-i(n)>=0;)r^=n<<i(r)-i(n);return t<<12|r},o.getPatternPosition=function(t){return r[t-1]},o.getMaskFunction=function(t){switch(t){case l:return function(t,r){return(t+r)%2==0};case h:return function(t,r){return t%2==0};case s:return function(t,r){return r%3==0};case v:return function(t,r){return(t+r)%3==0};case d:return function(t,r){return(Math.floor(t/2)+Math.floor(r/3))%2==0};case w:return function(t,r){return t*r%2+t*r%3==0};case p:return function(t,r){return(t*r%2+t*r%3)%2==0};case y:return function(t,r){return(t*r%3+(t+r)%2)%2==0};default:throw"bad maskPattern:"+t}},o.getErrorCorrectPolynomial=function(t){for(var r=k([1],0),e=0;e<t;e+=1)r=r.multiply(k([1,C.gexp(e)],0));return r},o.getLengthInBits=function(t,r){if(1<=r&&r<10)switch(t){case a:return 10;case u:return 9;case f:case c:return 8;default:throw"mode:"+t}else if(r<27)switch(t){case a:return 12;case u:return 11;case f:return 16;case c:return 10;default:throw"mode:"+t}else{if(!(r<41))throw"type:"+r;switch(t){case a:return 14;case u:return 13;case f:return 16;case c:return 12;default:throw"mode:"+t}}},o.getLostPoint=function(t){for(var r=t.getModuleCount(),e=0,n=0;n<r;n+=1)for(var o=0;o<r;o+=1){for(var i=0,a=t.isDark(n,o),u=-1;u<=1;u+=1)if(!(n+u<0||r<=n+u))for(var f=-1;f<=1;f+=1)o+f<0||r<=o+f||0==u&&0==f||a==t.isDark(n+u,o+f)&&(i+=1);i>5&&(e+=3+i-5)}for(n=0;n<r-1;n+=1)for(o=0;o<r-1;o+=1){var c=0;t.isDark(n,o)&&(c+=1),t.isDark(n+1,o)&&(c+=1),t.isDark(n,o+1)&&(c+=1),t.isDark(n+1,o+1)&&(c+=1),0!=c&&4!=c||(e+=3)}for(n=0;n<r;n+=1)for(o=0;o<r-6;o+=1)t.isDark(n,o)&&!t.isDark(n,o+1)&&t.isDark(n,o+2)&&t.isDark(n,o+3)&&t.isDark(n,o+4)&&!t.isDark(n,o+5)&&t.isDark(n,o+6)&&(e+=40);for(o=0;o<r;o+=1)for(n=0;n<r-6;n+=1)t.isDark(n,o)&&!t.isDark(n+1,o)&&t.isDark(n+2,o)&&t.isDark(n+3,o)&&t.isDark(n+4,o)&&!t.isDark(n+5,o)&&t.isDark(n+6,o)&&(e+=40);var g=0;for(o=0;o<r;o+=1)for(n=0;n<r;n+=1)t.isDark(n,o)&&(g+=1);return e+=Math.abs(100*g/r/r-50)/5*10},o),C=function(){for(var t=new Array(256),r=new Array(256),e=0;e<8;e+=1)t[e]=1<<e;for(e=8;e<256;e+=1)t[e]=t[e-4]^t[e-5]^t[e-6]^t[e-8];for(e=0;e<255;e+=1)r[t[e]]=e;var n={glog:function(t){if(t<1)throw"glog("+t+")";return r[t]},gexp:function(r){for(;r<0;)r+=255;for(;r>=256;)r-=255;return t[r]}};return n}();function k(t,r){if(void 0===t.length)throw t.length+"/"+r;var e=function(){for(var e=0;e<t.length&&0==t[e];)e+=1;for(var n=new Array(t.length-e+r),o=0;o<t.length-e;o+=1)n[o]=t[o+e];return n}(),n={getAt:function(t){return e[t]},getLength:function(){return e.length},multiply:function(t){for(var r=new Array(n.getLength()+t.getLength()-1),e=0;e<n.getLength();e+=1)for(var o=0;o<t.getLength();o+=1)r[e+o]^=C.gexp(C.glog(n.getAt(e))+C.glog(t.getAt(o)));return k(r,0)},mod:function(t){if(n.getLength()-t.getLength()<0)return n;for(var r=C.glog(n.getAt(0))-C.glog(t.getAt(0)),e=new Array(n.getLength()),o=0;o<n.getLength();o+=1)e[o]=n.getAt(o);for(o=0;o<t.getLength();o+=1)e[o]^=C.gexp(C.glog(t.getAt(o))+r);return k(e,0).mod(t)}};return n}var A=function(){var t=[[1,26,19],[1,26,16],[1,26,13],[1,26,9],[1,44,34],[1,44,28],[1,44,22],[1,44,16],[1,70,55],[1,70,44],[2,35,17],[2,35,13],[1,100,80],[2,50,32],[2,50,24],[4,25,9],[1,134,108],[2,67,43],[2,33,15,2,34,16],[2,33,11,2,34,12],[2,86,68],[4,43,27],[4,43,19],[4,43,15],[2,98,78],[4,49,31],[2,32,14,4,33,15],[4,39,13,1,40,14],[2,121,97],[2,60,38,2,61,39],[4,40,18,2,41,19],[4,40,14,2,41,15],[2,146,116],[3,58,36,2,59,37],[4,36,16,4,37,17],[4,36,12,4,37,13],[2,86,68,2,87,69],[4,69,43,1,70,44],[6,43,19,2,44,20],[6,43,15,2,44,16],[4,101,81],[1,80,50,4,81,51],[4,50,22,4,51,23],[3,36,12,8,37,13],[2,116,92,2,117,93],[6,58,36,2,59,37],[4,46,20,6,47,21],[7,42,14,4,43,15],[4,133,107],[8,59,37,1,60,38],[8,44,20,4,45,21],[12,33,11,4,34,12],[3,145,115,1,146,116],[4,64,40,5,65,41],[11,36,16,5,37,17],[11,36,12,5,37,13],[5,109,87,1,110,88],[5,65,41,5,66,42],[5,54,24,7,55,25],[11,36,12,7,37,13],[5,122,98,1,123,99],[7,73,45,3,74,46],[15,43,19,2,44,20],[3,45,15,13,46,16],[1,135,107,5,136,108],[10,74,46,1,75,47],[1,50,22,15,51,23],[2,42,14,17,43,15],[5,150,120,1,151,121],[9,69,43,4,70,44],[17,50,22,1,51,23],[2,42,14,19,43,15],[3,141,113,4,142,114],[3,70,44,11,71,45],[17,47,21,4,48,22],[9,39,13,16,40,14],[3,135,107,5,136,108],[3,67,41,13,68,42],[15,54,24,5,55,25],[15,43,15,10,44,16],[4,144,116,4,145,117],[17,68,42],[17,50,22,6,51,23],[19,46,16,6,47,17],[2,139,111,7,140,112],[17,74,46],[7,54,24,16,55,25],[34,37,13],[4,151,121,5,152,122],[4,75,47,14,76,48],[11,54,24,14,55,25],[16,45,15,14,46,16],[6,147,117,4,148,118],[6,73,45,14,74,46],[11,54,24,16,55,25],[30,46,16,2,47,17],[8,132,106,4,133,107],[8,75,47,13,76,48],[7,54,24,22,55,25],[22,45,15,13,46,16],[10,142,114,2,143,115],[19,74,46,4,75,47],[28,50,22,6,51,23],[33,46,16,4,47,17],[8,152,122,4,153,123],[22,73,45,3,74,46],[8,53,23,26,54,24],[12,45,15,28,46,16],[3,147,117,10,148,118],[3,73,45,23,74,46],[4,54,24,31,55,25],[11,45,15,31,46,16],[7,146,116,7,147,117],[21,73,45,7,74,46],[1,53,23,37,54,24],[19,45,15,26,46,16],[5,145,115,10,146,116],[19,75,47,10,76,48],[15,54,24,25,55,25],[23,45,15,25,46,16],[13,145,115,3,146,116],[2,74,46,29,75,47],[42,54,24,1,55,25],[23,45,15,28,46,16],[17,145,115],[10,74,46,23,75,47],[10,54,24,35,55,25],[19,45,15,35,46,16],[17,145,115,1,146,116],[14,74,46,21,75,47],[29,54,24,19,55,25],[11,45,15,46,46,16],[13,145,115,6,146,116],[14,74,46,23,75,47],[44,54,24,7,55,25],[59,46,16,1,47,17],[12,151,121,7,152,122],[12,75,47,26,76,48],[39,54,24,14,55,25],[22,45,15,41,46,16],[6,151,121,14,152,122],[6,75,47,34,76,48],[46,54,24,10,55,25],[2,45,15,64,46,16],[17,152,122,4,153,123],[29,74,46,14,75,47],[49,54,24,10,55,25],[24,45,15,46,46,16],[4,152,122,18,153,123],[13,74,46,32,75,47],[48,54,24,14,55,25],[42,45,15,32,46,16],[20,147,117,4,148,118],[40,75,47,7,76,48],[43,54,24,22,55,25],[10,45,15,67,46,16],[19,148,118,6,149,119],[18,75,47,31,76,48],[34,54,24,34,55,25],[20,45,15,61,46,16]],r=function(t,r){var e={};return e.totalCount=t,e.dataCount=r,e},e={};return e.getRSBlocks=function(e,n){var o=function(r,e){switch(e){case g.L:return t[4*(r-1)+0];case g.M:return t[4*(r-1)+1];case g.Q:return t[4*(r-1)+2];case g.H:return t[4*(r-1)+3];default:return}}(e,n);if(void 0===o)throw"bad rs block @ typeNumber:"+e+"/errorCorrectionLevel:"+n;for(var i=o.length/3,a=[],u=0;u<i;u+=1)for(var f=o[3*u+0],c=o[3*u+1],l=o[3*u+2],h=0;h<f;h+=1)a.push(r(c,l));return a},e}(),b=function(){var t=[],r=0,e={getBuffer:function(){return t},getAt:function(r){var e=Math.floor(r/8);return 1==(t[e]>>>7-r%8&1)},put:function(t,r){for(var n=0;n<r;n+=1)e.putBit(1==(t>>>r-n-1&1))},getLengthInBits:function(){return r},putBit:function(e){var n=Math.floor(r/8);t.length<=n&&t.push(0),e&&(t[n]|=128>>>r%8),r+=1}};return e},M=function(t){var r=a,e=t,n={getMode:function(){return r},getLength:function(t){return e.length},write:function(t){for(var r=e,n=0;n+2<r.length;)t.put(o(r.substring(n,n+3)),10),n+=3;n<r.length&&(r.length-n==1?t.put(o(r.substring(n,n+1)),4):r.length-n==2&&t.put(o(r.substring(n,n+2)),7))}},o=function(t){for(var r=0,e=0;e<t.length;e+=1)r=10*r+i(t.charAt(e));return r},i=function(t){if("0"<=t&&t<="9")return t.charCodeAt(0)-"0".charCodeAt(0);throw"illegal char :"+t};return n},x=function(t){var r=u,e=t,n={getMode:function(){return r},getLength:function(t){return e.length},write:function(t){for(var r=e,n=0;n+1<r.length;)t.put(45*o(r.charAt(n))+o(r.charAt(n+1)),11),n+=2;n<r.length&&t.put(o(r.charAt(n)),6)}},o=function(t){if("0"<=t&&t<="9")return t.charCodeAt(0)-"0".charCodeAt(0);if("A"<=t&&t<="Z")return t.charCodeAt(0)-"A".charCodeAt(0)+10;switch(t){case" ":return 36;case"$":return 37;case"%":return 38;case"*":return 39;case"+":return 40;case"-":return 41;case".":return 42;case"/":return 43;case":":return 44;default:throw"illegal char :"+t}};return n},m=function(r){var e=f,n=t.stringToBytes(r),o={getMode:function(){return e},getLength:function(t){return n.length},write:function(t){for(var r=0;r<n.length;r+=1)t.put(n[r],8)}};return o},L=function(r){var e=c,n=t.stringToBytesFuncs.SJIS;if(!n)throw"sjis not supported.";!function(){var t=n("友");if(2!=t.length||38726!=(t[0]<<8|t[1]))throw"sjis not supported."}();var o=n(r),i={getMode:function(){return e},getLength:function(t){return~~(o.length/2)},write:function(t){for(var r=o,e=0;e+1<r.length;){var n=(255&r[e])<<8|255&r[e+1];if(33088<=n&&n<=40956)n-=33088;else{if(!(57408<=n&&n<=60351))throw"illegal char at "+(e+1)+"/"+n;n-=49472}n=192*(n>>>8&255)+(255&n),t.put(n,13),e+=2}if(e<r.length)throw"illegal char at "+(e+1)}};return i},D=function(){var t=[],r={writeByte:function(r){t.push(255&r)},writeShort:function(t){r.writeByte(t),r.writeByte(t>>>8)},writeBytes:function(t,e,n){e=e||0,n=n||t.length;for(var o=0;o<n;o+=1)r.writeByte(t[o+e])},writeString:function(t){for(var e=0;e<t.length;e+=1)r.writeByte(t.charCodeAt(e))},toByteArray:function(){return t},toString:function(){var r="";r+="[";for(var e=0;e<t.length;e+=1)e>0&&(r+=","),r+=t[e];return r+="]"}};return r},S=function(t){var r=t,e=0,n=0,o=0,i={read:function(){for(;o<8;){if(e>=r.length){if(0==o)return-1;throw"unexpected end of file./"+o}var t=r.charAt(e);if(e+=1,"="==t)return o=0,-1;t.match(/^\s$/)||(n=n<<6|a(t.charCodeAt(0)),o+=6)}var i=n>>>o-8&255;return o-=8,i}},a=function(t){if(65<=t&&t<=90)return t-65;if(97<=t&&t<=122)return t-97+26;if(48<=t&&t<=57)return t-48+52;if(43==t)return 62;if(47==t)return 63;throw"c:"+t};return i},I=function(t,r,e){for(var n=function(t,r){var e=t,n=r,o=new Array(t*r),i={setPixel:function(t,r,n){o[r*e+t]=n},write:function(t){t.writeString("GIF87a"),t.writeShort(e),t.writeShort(n),t.writeByte(128),t.writeByte(0),t.writeByte(0),t.writeByte(0),t.writeByte(0),t.writeByte(0),t.writeByte(255),t.writeByte(255),t.writeByte(255),t.writeString(","),t.writeShort(0),t.writeShort(0),t.writeShort(e),t.writeShort(n),t.writeByte(0);var r=a(2);t.writeByte(2);for(var o=0;r.length-o>255;)t.writeByte(255),t.writeBytes(r,o,255),o+=255;t.writeByte(r.length-o),t.writeBytes(r,o,r.length-o),t.writeByte(0),t.writeString(";")}},a=function(t){for(var r=1<<t,e=1+(1<<t),n=t+1,i=u(),a=0;a<r;a+=1)i.add(String.fromCharCode(a));i.add(String.fromCharCode(r)),i.add(String.fromCharCode(e));var f,c,g,l=D(),h=(f=l,c=0,g=0,{write:function(t,r){if(t>>>r!=0)throw"length over";for(;c+r>=8;)f.writeByte(255&(t<<c|g)),r-=8-c,t>>>=8-c,g=0,c=0;g|=t<<c,c+=r},flush:function(){c>0&&f.writeByte(g)}});h.write(r,n);var s=0,v=String.fromCharCode(o[s]);for(s+=1;s<o.length;){var d=String.fromCharCode(o[s]);s+=1,i.contains(v+d)?v+=d:(h.write(i.indexOf(v),n),i.size()<4095&&(i.size()==1<<n&&(n+=1),i.add(v+d)),v=d)}return h.write(i.indexOf(v),n),h.write(e,n),h.flush(),l.toByteArray()},u=function(){var t={},r=0,e={add:function(n){if(e.contains(n))throw"dup key:"+n;t[n]=r,r+=1},size:function(){return r},indexOf:function(r){return t[r]},contains:function(r){return void 0!==t[r]}};return e};return i}(t,r),o=0;o<r;o+=1)for(var i=0;i<t;i+=1)n.setPixel(i,o,e(i,o));var a=D();n.write(a);for(var u=function(){var t=0,r=0,e=0,n="",o={},i=function(t){n+=String.fromCharCode(a(63&t))},a=function(t){if(t<0);else{if(t<26)return 65+t;if(t<52)return t-26+97;if(t<62)return t-52+48;if(62==t)return 43;if(63==t)return 47}throw"n:"+t};return o.writeByte=function(n){for(t=t<<8|255&n,r+=8,e+=1;r>=6;)i(t>>>r-6),r-=6},o.flush=function(){if(r>0&&(i(t<<6-r),t=0,r=0),e%3!=0)for(var o=3-e%3,a=0;a<o;a+=1)n+="="},o.toString=function(){return n},o}(),f=a.toByteArray(),c=0;c<f.length;c+=1)u.writeByte(f[c]);return u.flush(),"data:image/gif;base64,"+u};return t}();qrcode.stringToBytesFuncs["UTF-8"]=function(t){return function(t){for(var r=[],e=0;e<t.length;e++){var n=t.charCodeAt(e);n<128?r.push(n):n<2048?r.push(192|n>>6,128|63&n):n<55296||n>=57344?r.push(224|n>>12,128|n>>6&63,128|63&n):(e++,n=65536+((1023&n)<<10|1023&t.charCodeAt(e)),r.push(240|n>>18,128|n>>12&63,128|n>>6&63,128|63&n))}return r}(t)},function(t){"function"==typeof define&&define.amd?define([],t):"object"==typeof exports&&(module.exports=t())}((function(){return qrcode}));
+//# sourceMappingURL=/sm/26b4b0d0b1e283d6b3ec9857ac597d7a60c76ac17be1ef4c965f03086de426bb.map
+/* ============================================================
+   AES-256-GCM + PBKDF2 加密核心
+   ============================================================ */
+const PBKDF2_ITERATIONS = 600000;
+const SITE_URL = "https://x2050.top/mi.html";
 
-        document.getElementById('keyInput').addEventListener('input', function() {
-            const strength = checkPasswordStrength(this.value);
-            const indicator = document.getElementById('keyStrength');
-            if (strength.text) {
-                indicator.className = 'key-strength ' + strength.level;
-                indicator.textContent = strength.text;
-            } else {
-                indicator.textContent = '';
-            }
-        });
+function checkPasswordStrength(pwd){
+if(!pwd)return{level:'',text:''};let s=0;
+if(pwd.length>=8)s++;if(pwd.length>=12)s++;if(pwd.length>=16)s++;
+if(/[a-z]/.test(pwd))s++;if(/[A-Z]/.test(pwd))s++;if(/[0-9]/.test(pwd))s++;if(/[^a-zA-Z0-9]/.test(pwd))s++;
+if(s<=2)return{level:'strength-weak',text:'弱'};if(s<=4)return{level:'strength-medium',text:'中'};return{level:'strength-strong',text:'强'};
+}
+document.getElementById('keyInput').addEventListener('input',function(){const s=checkPasswordStrength(this.value);const i=document.getElementById('keyStrength');if(s.text){i.className='key-strength '+s.level;i.textContent=s.text;}else{i.textContent='';}});
 
-        // PBKDF2 派生 AES-256 密钥
-        async function deriveKey(password, salt) {
-            const enc = new TextEncoder();
-            const keyMaterial = await crypto.subtle.importKey(
-                'raw', enc.encode(password), 'PBKDF2', false, ['deriveKey']
-            );
-            return await crypto.subtle.deriveKey(
-                { name: 'PBKDF2', salt: salt, iterations: PBKDF2_ITERATIONS, hash: 'SHA-256' },
-                keyMaterial,
-                { name: 'AES-GCM', length: 256 },
-                false,
-                ['encrypt', 'decrypt']
-            );
-        }
+async function deriveKey(password,salt){const enc=new TextEncoder();const km=await crypto.subtle.importKey('raw',enc.encode(password),'PBKDF2',false,['deriveKey']);return await crypto.subtle.deriveKey({name:'PBKDF2',salt:salt,iterations:PBKDF2_ITERATIONS,hash:'SHA-256'},km,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);}
+async function aesGcmEncrypt(plaintextBytes,password){const salt=crypto.getRandomValues(new Uint8Array(16));const iv=crypto.getRandomValues(new Uint8Array(12));const key=await deriveKey(password,salt);const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv:iv},key,plaintextBytes);const cta=new Uint8Array(ct);const cl=cta.length-16;return{salt:salt,iv:iv,ciphertext:cta.slice(0,cl),authTag:cta.slice(cl)};}
+async function aesGcmDecrypt(ed,password){const key=await deriveKey(password,ed.salt);const buf=new Uint8Array(ed.ciphertext.length+16);buf.set(ed.ciphertext,0);buf.set(ed.authTag,ed.ciphertext.length);try{return new Uint8Array(await crypto.subtle.decrypt({name:'AES-GCM',iv:ed.iv},key,buf));}catch(e){throw new Error('解密失败：密码错误或文件已被篡改');}}
 
-        // AES-256-GCM 加密：返回 { salt, iv, ciphertext, authTag }
-        async function aesGcmEncrypt(plaintextBytes, password) {
-            const salt = crypto.getRandomValues(new Uint8Array(16));
-            const iv = crypto.getRandomValues(new Uint8Array(12));
-            const key = await deriveKey(password, salt);
-            const ciphertext = await crypto.subtle.encrypt(
-                { name: 'AES-GCM', iv: iv },
-                key,
-                plaintextBytes
-            );
-            // GCM authTag 附加在密文末尾
-            const ctWithTag = new Uint8Array(ciphertext);
-            const ctLen = ctWithTag.length - 16;
-            return {
-                salt: salt,
-                iv: iv,
-                ciphertext: ctWithTag.slice(0, ctLen),
-                authTag: ctWithTag.slice(ctLen)
-            };
-        }
+/* ============================================================
+   像素图 / LSB 编码规则（与原工具一致）
+   ============================================================ */
+const W=256;const META_PIXELS=8;const META_BYTES=META_PIXELS*3;const MAGIC=[0x4D,0x70,0x78];const EXT_MAX=14;const SENSITIVE_EXTS=['.apk','.ipa','.jar','.dex','.xapk','.aab','.abb','.apks'];
+const LSB_HEAD=6;
+function lsbCapacity(px){return Math.floor(px*3/8)-LSB_HEAD;}
+function setBit1(b,n,v){return v?(b|(1<<n)):(b&(~(1<<n)));}
+function lsbEncode(carr,cw,ch,payload){const totalPx=cw*ch,max=lsbCapacity(totalPx);if(!payload.length)throw new Error('payload 为空');if(payload.length>max)throw new Error('载体容量不足：需藏 '+payload.length+' 字节，当前 '+cw+'×'+ch+' 最多可藏 '+max+' 字节');const out=new Uint8ClampedArray(carr);const len=payload.length;const data=new Uint8Array(LSB_HEAD+len);const dvH=new DataView(data.buffer);dvH.setUint32(0,len>>>0,true);dvH.setUint16(4,Math.floor(len/0x100000000),true);data.set(payload,LSB_HEAD);let bitIdx=0;const totalBits=data.length*8;for(let px=0;px<totalPx;px++){const b=px*4;for(let c=0;c<3;c++){if(bitIdx>=totalBits)break;const bi=Math.floor(bitIdx/8),bo=bitIdx%8;out[b+c]=setBit1(out[b+c],0,(data[bi]>>bo)&1);bitIdx++;}if(bitIdx>=totalBits)break;}for(let px=0;px<totalPx;px++){if(out[px*4+3]===0)out[px*4+3]=255;}return out;}
+function lsbDecode(pix,w,h){const totalPx=w*h;const headBits=LSB_HEAD*8;let bitIdx=0;const hb=new Uint8Array(LSB_HEAD);for(let px=0;px<totalPx;px++){const b=px*4;for(let c=0;c<3;c++){if(bitIdx>=headBits)break;const bi=Math.floor(bitIdx/8),bo=bitIdx%8;hb[bi]=setBit1(hb[bi],bo,pix[b+c]&1);bitIdx++;}if(bitIdx>=headBits)break;}const dvD=new DataView(hb.buffer);const lo=dvD.getUint32(0,true),hi=dvD.getUint16(4,true);const len=lo+hi*0x100000000;const max=lsbCapacity(totalPx);if(!Number.isFinite(len)||len<=0||len>max)throw new Error('LSB 提取失败：长度头异常，可能非本工具 LSB 编码');const payload=new Uint8Array(len);bitIdx=0;let written=0;outer:for(let px=0;px<totalPx;px++){const b=px*4;for(let c=0;c<3;c++){if(bitIdx<headBits){bitIdx++;continue;}if((bitIdx-headBits)>=len*8)break outer;const bi=Math.floor((bitIdx-headBits)/8),bo=(bitIdx-headBits)%8;payload[bi]=setBit1(payload[bi],bo,pix[b+c]&1);bitIdx++;if(bo===7)written++;}}if(written<len)throw new Error('LSB 数据不足：'+written+'/'+len+' 字节');return{payload:payload,length:len};}
 
-        // AES-256-GCM 解密：输入 salt, iv, ciphertext, authTag，返回明文
-        async function aesGcmDecrypt(encryptedData, password) {
-            const key = await deriveKey(password, encryptedData.salt);
-            // 合并密文和 authTag
-            const ctWithTag = new Uint8Array(encryptedData.ciphertext.length + 16);
-            ctWithTag.set(encryptedData.ciphertext, 0);
-            ctWithTag.set(encryptedData.authTag, encryptedData.ciphertext.length);
-            try {
-                const plaintext = await crypto.subtle.decrypt(
-                    { name: 'AES-GCM', iv: encryptedData.iv },
-                    key,
-                    ctWithTag
-                );
-                return new Uint8Array(plaintext);
-            } catch (e) {
-                throw new Error('解密失败：密码错误或文件已被篡改');
-            }
-        }
+/* ============================================================
+   工具函数
+   ============================================================ */
+const uiSet=(id,h)=>{document.getElementById(id).innerHTML=h;};
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const getPassword=()=>document.getElementById('keyInput').value;
+const getFileExt=n=>{if(!n)return'';const i=n.lastIndexOf('.');return i<0?'':n.slice(i);};
+const fmtSize=b=>b<1024?'':(b<1048576?(b/1024).toFixed(1)+' KB':(b/1048576).toFixed(2)+' MB');
+const escapeHtml=s=>s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const SVG_PATHS={package:'<rect x="3" y="3" width="18" height="18" rx="3"/><path d="M12 3v18M3 12h18"/>',key:'<circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M16 7h4v4"/>','file-text':'<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/>',download:'<path d="M12 4v12M8 12l4 4 4-4M4 20h16"/>',check:'<path class="fill" d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/><path d="M9 12l2 2 4-4"/>',alert:'<path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18h0"/>',music:'<path d="M9 18V6l12-3v12"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="15" r="3"/>',archive:'<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 14h6"/>',image:'<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="1.5"/><path d="M21 15l-5-5L5 21"/>',box:'<path d="M21 8L12 3 3 8v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/>'};
+function svgIcon(name,extraClass){const p=SVG_PATHS[name]||SVG_PATHS['file-text'];return '<span class="ico'+(extraClass?' '+extraClass:'')+'" aria-hidden="true"><svg viewBox="0 0 24 24">'+p+'</svg></span>';}
+const PI_DIGITS='141592653589793238462643383279502884197169399375105820974944592307816406286208998628034825342117067982148086513282306647093844609550582231725359408128481117450284102701938521105559644622948954930381964428810975665933446128475648233786783165271201909145648566923460348610454326648213393607260249141273724587006606315588174881520920962829254091715364367892590360011330530548820466521384146951941511609433057270365759591953092186117381932611793105118548074462379962749567351885752724891227938183011949129833673362440656643086021394946395224737190702179860943702770539217176293176752384674818467669405132000568127145263560827785771342757789609173637178721468440901224953430146549585371050792279689258923542019956112129021960864034418159813629774771309960518707211349999998372978049951059731732816096318595024459455346908302642522308253344685035261931188171010003137838752886587533208381420617177669147303598253490428755468731159562863882353787593751957781857780532171226806613001927876611195909216420198938095257201065485863278965931493644395259570115156844117486994415886480';
+const PI_LEN=PI_DIGITS.length;
+function randPiDigits(length){const len=length&&length>0?length:12;const maxStart=PI_LEN-len;let start;if(window.crypto&&crypto.getRandomValues){const buf=new Uint32Array(1);crypto.getRandomValues(buf);start=buf[0]%Math.max(maxStart,1);}else{start=Math.floor(Math.random()*Math.max(maxStart,1));}return PI_DIGITS.slice(start,start+len);}
+function randPiName(ext,digitLen){const dlen=digitLen&&digitLen>0?digitLen:12;const safeExt=ext&&typeof ext==='string'?ext:'';return randPiDigits(dlen)+safeExt;}
 
-        /* ============================================================
-           编码规则（与 rules.txt 保持一致，扩展版）
-           1) W=256; H = ceil((payloadLen + META_BYTES) / 3 / W), META_BYTES=24
-           2) 前 8 个像素为元数据: magic + len(48bit) + ext(len|encFlag)+extBytes
-           3) 其后每 3 字节 -> 1 RGB 像素; 使用 AES-256-GCM 加密
-           ============================================================ */
-        const W = 256;
-        const META_PIXELS = 8;
-        const META_BYTES = META_PIXELS * 3;
-        const MAGIC = [0x4D, 0x70, 0x78]; // M p x
-        const EXT_MAX = 14;
-        const SENSITIVE_EXTS = ['.apk','.ipa','.jar','.dex','.xapk','.aab','.abb','.apks'];
+/* ---------- 密钥操作 ---------- */
+function generateSecureKey(){const charset='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=[]{}|;:,.<>?';const keyLength=43;const charsetLen=charset.length;const maxValid=256-(256%charsetLen);const keyBytes=new Uint8Array(keyLength*2);crypto.getRandomValues(keyBytes);let key='';let outIdx=0;for(let i=0;i<keyBytes.length&&outIdx<keyLength;i++){const val=keyBytes[i];if(val<maxValid){key+=charset[val%charsetLen];outIdx++;}}return key;}
+document.getElementById('btnGenKey').addEventListener('click',()=>{const k=generateSecureKey();const ki=document.getElementById('keyInput');ki.value=k;ki.type='text';document.getElementById('btnToggleKey').innerHTML='<span class="ico"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span> 隐藏';ki.dispatchEvent(new Event('input'));});
+document.getElementById('btnCopyKey').addEventListener('click',async()=>{const ki=document.getElementById('keyInput');if(!ki.value){alert('没有可复制的密钥');return;}try{await navigator.clipboard.writeText(ki.value);const btn=document.getElementById('btnCopyKey');const oh=btn.innerHTML;btn.innerHTML='<span class="ico"><svg viewBox="0 0 24 24"><path class="fill" d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/><path d="M9 12l2 2 4-4"/></svg></span> 已复制';setTimeout(()=>btn.innerHTML=oh,2000);}catch(e){ki.select();document.execCommand('copy');alert('密钥已复制');}});
+let keyVisible=true;
+document.getElementById('btnToggleKey').addEventListener('click',()=>{const ki=document.getElementById('keyInput');const btn=document.getElementById('btnToggleKey');keyVisible=!keyVisible;if(keyVisible){ki.type='text';btn.innerHTML='<span class="ico"><svg viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23" fill="none" stroke="currentColor" stroke-width="2"/></svg></span> 显示';}else{ki.type='password';btn.innerHTML='<span class="ico"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span> 显示';}});
 
-        // ---------- LSB 隐写核心（方案2：藏进正常照片的 RGB 最低位）----------
-        const LSB_HEAD = 6;
-        function lsbCapacity(px){ return Math.floor(px*3/8) - LSB_HEAD; }
-        function setBit1(b,n,v){ return v ? (b|(1<<n)) : (b&(~(1<<n))); }
-        function lsbEncode(carr, cw, ch, payload){
-            const totalPx = cw*ch, max = lsbCapacity(totalPx);
-            if (!payload.length) throw new Error('payload 为空');
-            if (payload.length > max) throw new Error('载体容量不足：需藏 '+payload.length+' 字节，当前 '+cw+'×'+ch+' 最多可藏 '+max+' 字节');
-            const out = new Uint8ClampedArray(carr);
-            const len = payload.length;
-            const data = new Uint8Array(LSB_HEAD + len);
-            const _dvH = new DataView(data.buffer); _dvH.setUint32(0, len>>>0, true); _dvH.setUint16(4, Math.floor(len/0x100000000), true);
-            data.set(payload, LSB_HEAD);
-            let bitIdx = 0; const totalBits = data.length*8;
-            for (let px=0;px<totalPx;px++){
-                const b = px*4;
-                for (let c=0;c<3;c++){ if(bitIdx>=totalBits) break;
-                    const bi=Math.floor(bitIdx/8), bo=bitIdx%8;
-                    out[b+c] = setBit1(out[b+c], 0, (data[bi]>>bo)&1); bitIdx++;
-                }
-                if (bitIdx>=totalBits) break;
-            }
-            for (let px=0;px<totalPx;px++){ if(out[px*4+3]===0) out[px*4+3]=255; }
-            return out;
-        }
-        function lsbDecode(pix, w, h){
-            const totalPx = w*h;
-            const headBits = LSB_HEAD*8; let bitIdx=0;
-            const hb = new Uint8Array(LSB_HEAD);
-            for (let px=0;px<totalPx;px++){ const b=px*4;
-                for (let c=0;c<3;c++){ if(bitIdx>=headBits) break;
-                    const bi=Math.floor(bitIdx/8), bo=bitIdx%8;
-                    hb[bi] = setBit1(hb[bi], bo, pix[b+c]&1); bitIdx++;
-                } if(bitIdx>=headBits) break;
-            }
-            const _dvD = new DataView(hb.buffer); const _lo=_dvD.getUint32(0,true), _hi=_dvD.getUint16(4,true); const len = _lo + _hi*0x100000000;
-            const max = lsbCapacity(totalPx);
-            if (!Number.isFinite(len)||len<=0||len>max) throw new Error('LSB 提取失败：长度头异常(len='+len+')，可能非本工具 LSB 编码的载体');
-            const payload = new Uint8Array(len);
-            bitIdx=0; let written=0; const need=headBits+len*8;
-            outer: for (let px=0;px<totalPx;px++){ const b=px*4;
-                for (let c=0;c<3;c++){ if(bitIdx<headBits){bitIdx++;continue;}
-                    if((bitIdx-headBits)>=len*8) break outer;
-                    const bi=Math.floor((bitIdx-headBits)/8), bo=(bitIdx-headBits)%8;
-                    payload[bi] = setBit1(payload[bi], bo, pix[b+c]&1); bitIdx++;
-                    if (bo===7) written++;
-                }
-            }
-            if (written<len) throw new Error('LSB 数据不足：'+written+'/'+len+' 字节');
-            return { payload, length: len };
-        }
+/* ---------- 弹窗 ---------- */
+const showModal=(title,msg,fname,warn)=>{const o=document.getElementById('modalOverlay');document.getElementById('modalTitle').textContent=title;document.getElementById('modalMessage').textContent=msg;document.getElementById('modalFileName').textContent=fname;const iconWrap=document.getElementById('modalIconWrap'),extra=document.getElementById('modalExtra');if(warn){iconWrap.innerHTML=svgIcon('alert');extra.textContent='此类型文件下载时可能被自动更改扩展名，请手动修正。';}else{iconWrap.innerHTML=svgIcon('file-text');extra.textContent='如果浏览器下载时扩展名不正确，请手动重命名文件。';}o.classList.add('active');};
+document.getElementById('modalCloseBtn').addEventListener('click',()=>document.getElementById('modalOverlay').classList.remove('active'));
+document.getElementById('modalOverlay').addEventListener('click',e=>{if(e.target===this)this.classList.remove('active');});
 
-        // ---------- 工具 ----------
-        const uiSet = (id, html) => { document.getElementById(id).innerHTML = html; };
-        const sleep = ms => new Promise(r => setTimeout(r, ms));
-        const getPassword = () => { return document.getElementById('keyInput').value; };
-        const getFileExt = n => { if (!n) return ''; const i=n.lastIndexOf('.'); return i<0 ? '' : n.slice(i); };
-        const fmtSize = b => b<1024?'':(b<1048576?(b/1024).toFixed(1)+' KB':(b/1048576).toFixed(2)+' MB');
-        const escapeHtml = s => s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function loadCarrierAsPNG(file){const raw=await createImageBitmap(file);const cv=document.createElement('canvas');cv.width=raw.width;cv.height=raw.height;const ctx=cv.getContext('2d');ctx.drawImage(raw,0,0);const id=ctx.getImageData(0,0,raw.width,raw.height);const d=id.data;for(let i=3;i<d.length;i+=4)d[i]=255;ctx.putImageData(id,0,0);const pngBlob=await new Promise(res=>cv.toBlob(res,'image/png'));if(!pngBlob)throw new Error('载体转为 PNG 失败');return await createImageBitmap(pngBlob);}
 
-        // ---------- SVG 图标工厂 ----------
-        const SVG_PATHS = {
-            package: '<rect x="3" y="3" width="18" height="18" rx="3"/><path d="M12 3v18M3 12h18"/>',
-            key: '<circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M16 7h4v4"/>',
-            'file-plus': '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M12 14v4M10 16h4"/>',
-            pencil: '<path d="M12 20h9M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4z"/>',
-            'file-text': '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/>',
-            download: '<path d="M12 4v12M8 12l4 4 4-4M4 20h16"/>',
-            check: '<path class="fill" d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/><path d="M9 12l2 2 4-4"/>',
-            alert: '<path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18h0"/>',
-            search: '<circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/>',
-            music: '<path d="M9 18V6l12-3v12"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="15" r="3"/>',
-            archive: '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 14h6"/>',
-            image: '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="1.5"/><path d="M21 15l-5-5L5 21"/>',
-            android: '<path d="M7 9h10v6H7z"/><path d="M9 6V4M15 6V4M7 15c0 3-1 4-2 4M17 15c0 3 1 4 2 4M9 21h6"/>',
-            code: '<path d="M16 18l6-6-6-6M8 6l-6 6 6 6"/>',
-            gear: '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/>',
-            box: '<path d="M21 8L12 3 3 8v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/>'
-        };
-        function svgIcon(name, extraClass){
-            const p = SVG_PATHS[name] || SVG_PATHS['file-text'];
-            return '<span class="ico'+(extraClass?' '+extraClass:'')+'" aria-hidden="true"><svg viewBox="0 0 24 24">'+p+'</svg></span>';
-        }
+/* ---------- 模式切换 ---------- */
+function setMode(mode){const pb=document.getElementById('modePixel'),lb=document.getElementById('modeLSB'),qb=document.getElementById('modeQR'),cr=document.getElementById('carrierRow'),qr=document.getElementById('qrCarrierRow'),hint=document.getElementById('modeHint');pb.classList.remove('active');lb.classList.remove('active');qb.classList.remove('active');cr.style.display='none';qr.style.display='none';if(mode==='lsb'){lb.classList.add('active');cr.style.display='flex';hint.textContent='将文件/文字字节藏进一张正常照片的 RGB 最低位（肉眼不可见）';}else if(mode==='qr'){qb.classList.add('active');qr.style.display='flex';hint.textContent='编码为 QR 码，扫码跳转本工具网站自动解析（大文件自动分片）';}else{pb.classList.add('active');hint.textContent='每 3 字节 → 1 个 RGB 像素，生成独立编码图';}}
+document.getElementById('modePixel').addEventListener('click',()=>setMode('pixel'));
+document.getElementById('modeLSB').addEventListener('click',()=>setMode('lsb'));
+document.getElementById('modeQR').addEventListener('click',()=>setMode('qr'));
+document.getElementById('carrierFile').addEventListener('change',async()=>{const cf=document.getElementById('carrierFile').files[0];const info=document.getElementById('carrierInfo');if(!cf){info.textContent='支持 JPG/PNG/WebP/BMP/GIF/TIFF 等任意图片，将自动转为 PNG 无损载体后再隐写';return;}try{const bmp=await loadCarrierAsPNG(cf);const max=lsbCapacity(bmp.width*bmp.height);const converted=(cf.type&&cf.type!=='image/png'&&cf.type!=='image/bmp')?' <span style="color:#1a7f37;">(已自动转为 PNG 无损)</span>':'';info.innerHTML='载体 <b>'+escapeHtml(cf.name)+'</b> '+bmp.width+'×'+bmp.height+converted+'，最多可藏 <b>'+max+'</b> 字节（'+Math.round(max/1024*10)/10+' KB）';}catch(e){info.textContent='无法读取该图片：'+e.message;}});
+document.getElementById('tabFile').addEventListener('click',()=>{document.getElementById('tabFile').classList.add('active');document.getElementById('tabText').classList.remove('active');document.getElementById('panelFile').classList.add('active');document.getElementById('panelText').classList.remove('active');});
+document.getElementById('tabText').addEventListener('click',()=>{document.getElementById('tabText').classList.add('active');document.getElementById('tabFile').classList.remove('active');document.getElementById('panelText').classList.add('active');document.getElementById('panelFile').classList.remove('active');});
 
-        // 基于圆周率乱数文件名
-        const PI_DIGITS = '141592653589793238462643383279502884197169399375105820974944592307816406286208998628034825342117067982148086513282306647093844609550582231725359408128481117450284102701938521105559644622948954930381964428810975665933446128475648233786783165271201909145648566923460348610454326648213393607260249141273724587006606315588174881520920962829254091715364367892590360011330530548820466521384146951941511609433057270365759591953092186117381932611793105118548074462379962749567351885752724891227938183011949129833673362440656643086021394946395224737190702179860943702770539217176293176752384674818467669405132000568127145263560827785771342757789609173637178721468440901224953430146549585371050792279689258923542019956112129021960864034418159813629774771309960518707211349999998372978049951059731732816096318595024459455346908302642522308253344685035261931188171010003137838752886587533208381420617177669147303598253490428755468731159562863882353787593751957781857780532171226806613001927876611195909216420198938095257201065485863278965931493644395259570115156844117486994415886480';
-        const PI_LEN = PI_DIGITS.length;
-        function randPiDigits(length){
-            const len = (length && length>0) ? length : 12;
-            const maxStart = PI_LEN - len;
-            let start;
-            if (window.crypto && crypto.getRandomValues){
-                const buf = new Uint32Array(1); crypto.getRandomValues(buf);
-                start = buf[0] % Math.max(maxStart, 1);
-            } else {
-                start = Math.floor(Math.random() * Math.max(maxStart, 1));
-            }
-            return PI_DIGITS.slice(start, start + len);
-        }
-        function randPiName(ext, digitLen){
-            const dlen = (digitLen && digitLen>0) ? digitLen : 12;
-            const safeExt = (ext && typeof ext==='string') ? ext : '';
-            return randPiDigits(dlen) + safeExt;
-        }
+/* ============================================================
+   buildPayload：构造 payload（加密可选）+ 24 字节元数据
+   ============================================================ */
+async function buildPayload(payloadBuf,srcName){const password=getPassword();const useEnc=!!(password&&password.length>0);const len=payloadBuf.length;const ext=getFileExt(srcName);let extBytes=new TextEncoder().encode(ext);if(extBytes.length>EXT_MAX)extBytes=extBytes.slice(0,EXT_MAX);const extLen=extBytes.length;const encFlag=useEnc?1:0;const extLenEnc=(encFlag<<7)|(extLen&0x7F);let dataToStore;if(useEnc){const enc=await aesGcmEncrypt(payloadBuf,password);const totalLen=16+12+enc.ciphertext.length+16;dataToStore=new Uint8Array(totalLen);dataToStore.set(enc.salt,0);dataToStore.set(enc.iv,16);dataToStore.set(enc.ciphertext,28);dataToStore.set(enc.authTag,28+enc.ciphertext.length);}else{dataToStore=new Uint8Array(payloadBuf);}const out=new Uint8Array(META_BYTES+dataToStore.length);out[0]=MAGIC[0];out[1]=MAGIC[1];out[2]=MAGIC[2];const dataLen=dataToStore.length;out[3]=dataLen&0xFF;out[4]=(dataLen>>8)&0xFF;out[5]=(dataLen>>16)&0xFF;out[6]=(dataLen>>24)&0xFF;out[7]=(dataLen>>32)&0xFF;out[8]=(dataLen>>40)&0xFF;out[9]=extLenEnc;for(let i=0;i<extLen&&i<EXT_MAX;i++)out[10+i]=extBytes[i];out.set(dataToStore,META_BYTES);return{stream:out,len:dataLen,ext:ext,useEnc:useEnc,encFlag:encFlag};}
 
-        // ---------- 密钥操作功能 ----------
-        // 生成 256 位（32 字节）随机密钥，字符集包含大小写字母、数字、特殊字符
-        function generateSecureKey() {
-            const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=[]{}|;:,.<>?';
-            const keyLength = 43;
-            const charsetLen = charset.length;
-            // 拒绝采样消除模偏差，确保每个字符等概率被选中
-            const maxValid = 256 - (256 % charsetLen);
-            const keyBytes = new Uint8Array(keyLength * 2);
-            crypto.getRandomValues(keyBytes);
-            let key = '';
-            let outIdx = 0;
-            for (let i = 0; i < keyBytes.length && outIdx < keyLength; i++) {
-                const val = keyBytes[i];
-                if (val < maxValid) {
-                    key += charset[val % charsetLen];
-                    outIdx++;
-                }
-            }
-            return key;
-        }
+/* ============================================================
+   QR 码模式
+   - 把 buildPayload 的输出（已加密/明文）Base64 编码后，分包为多个 chunk
+   - 每个 chunk 包装为 JSON {v:1,total:N,idx:i,enc:0/1,ext:".txt",data:"<base64>"}
+   - 若 total>1，扫码端需收集全部分片后拼接（同一批由 total/idx 标识）
+   - 生成 qrcode-generator 实例（内联库 qrcode）
+   ============================================================ */
+const QR_CHUNK_TARGET = 1200; // 每个 QR 码 payload 目标字节数（Base64 后约 1.6KB，留余量）
+function b64encode(bytes){let s='';const t='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';for(let i=0;i<bytes.length;i+=3){const b1=bytes[i],b2=i+1<bytes.length?bytes[i+1]:0,b3=i+2<bytes.length?bytes[i+2]:0;const c1=t[b1>>2],c2=t[((b1&3)<<4)|(b2>>4)],c3=i+1<bytes.length?t[((b2&15)<<2)|(b3>>6)]:'=',c4=i+2<bytes.length?t[b3&63]:'=';s+=c1+c2+c3+c4;}return s;}
+function b64decode(b64){const t='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';let bin='';for(let i=0;i<b64.length;i++){const c=b64[i];if(c==='=')continue;const v=t.indexOf(c);if(v<0)continue;bin+=String.fromCharCode(v);}const out=new Uint8Array(Math.floor(bin.length*6/8));let bitBuf=0,bitCount=0,outIdx=0;for(let i=0;i<bin.length;i++){bitBuf=(bitBuf<<6)|bin.charCodeAt(i);bitCount+=6;while(bitCount>=8&&outIdx<out.length){out[outIdx++]=(bitBuf>>(bitCount-8))&0xFF;bitCount-=8;bitBuf&=((1<<bitCount)-1);}}return out.slice(0,outIdx);}
+function makeQrPayloadJson(total,idx,encFlag,ext,dataB64){return JSON.stringify({v:1,t:total,i:idx,e:encFlag,ext:ext||'',d:dataB64});}
 
-        document.getElementById('btnGenKey').addEventListener('click', () => {
-            const newKey = generateSecureKey();
-            const keyInput = document.getElementById('keyInput');
-            keyInput.value = newKey;
-            keyInput.type = 'text'; // 生成后显示
-            document.getElementById('btnToggleKey').innerHTML = '<span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span> 隐藏';
-            // 触发强度检测
-            keyInput.dispatchEvent(new Event('input'));
-        });
+async function doEncodeQR(payloadBuf,srcName){const info=await buildPayload(payloadBuf,srcName);const{stream:dataStream,len,ext,useEnc}=info;if(!len){uiSet('encInfo','<span class="err">数据为空，无法编码。</span>');return;}const b64=b64encode(dataStream);const chunks=[];for(let i=0;i<b64.length;i+=QR_CHUNK_TARGET){chunks.push(b64.slice(i,i+QR_CHUNK_TARGET));}const total=chunks.length;const encFlag=useEnc?1:0;const wrap=document.getElementById('encDownload');wrap.innerHTML='';const grid=document.createElement('div');grid.className='qr-result-grid';const pw=document.getElementById('encProgressWrap'),pb=document.getElementById('encProgress'),pl=document.getElementById('encProgressLabel'),ps=document.getElementById('encProgressStatus');pw.style.display='flex';pb.value=0;pl.textContent='0%';ps.textContent='生成 QR 码 0/'+total+'…';let shareUrlAll=null;for(let k=0;k<total;k++){const json=makeQrPayloadJson(total,k,encFlag,ext,chunks[k]);const url=SITE_URL+'#data='+encodeURIComponent(json);if(k===0)shareUrlAll=url;const tile=document.createElement('div');tile.className='qr-tile';const cv=document.createElement('canvas');tile.appendChild(cv);const meta=document.createElement('div');meta.className='qr-meta';meta.innerHTML=(total>1?'<b>第 '+(k+1)+' / '+total+' 片</b><br>':'')+'边长建议 ≥ 400px · 截图/打印/转发均可识别';tile.appendChild(meta);try{const qr=qrcode(0,'H');qr.addData(json);qr.make();const mod=qr.getModuleCount(),cell=Math.max(4,Math.ceil(400/mod)),side=cell*mod;cv.width=side;cv.height=side;const ctx=cv.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,side,side);ctx.fillStyle='#000';for(let r=0;r<mod;r++)for(let c=0;c<mod;c++)if(qr.isDark(r,c))ctx.fillRect(c*cell,r*cell,cell,cell);}catch(e){meta.innerHTML+='<div class="err">QR 生成失败：'+escapeHtml(e.message)+'</div>';}const actions=document.createElement('div');actions.className='qr-actions';const dl=document.createElement('a');dl.className='download-link';dl.href=cv.toDataURL('image/png');const baseName=randPiName('',8);dl.download=(total>1?baseName+'_qr'+(k+1)+'of'+total:baseName+'_qr')+'.png';dl.textContent='下载 PNG';actions.appendChild(dl);tile.appendChild(actions);grid.appendChild(tile);pb.value=Math.round((k+1)/total*100);pl.textContent=pb.value+'%';ps.textContent='生成 QR 码 '+(k+1)+'/'+total;await sleep(0);}const shareBox=document.createElement('div');shareBox.style.marginTop='10px';shareBox.innerHTML='<div style="font-size:13px;color:#333;font-weight:600;margin-bottom:4px;">'+svgIcon('box')+' 分享链接（任一片均可，扫码跳转本工具网站自动解析）</div>';const ta=document.createElement('textarea');ta.className='qr-share-url';ta.readOnly=true;ta.value=shareUrlAll||'';shareBox.appendChild(ta);const copyBtn=document.createElement('button');copyBtn.type='button';copyBtn.className='secondary';copyBtn.style.marginTop='6px';copyBtn.textContent='复制分享链接';copyBtn.addEventListener('click',async()=>{try{await navigator.clipboard.writeText(ta.value);copyBtn.textContent='已复制！';setTimeout(()=>copyBtn.textContent='复制分享链接',2000);}catch(e){ta.select();document.execCommand('copy');copyBtn.textContent='已复制！';setTimeout(()=>copyBtn.textContent='复制分享链接',2000);}});shareBox.appendChild(copyBtn);wrap.appendChild(grid);wrap.appendChild(shareBox);ps.textContent='QR 码生成完成！';pb.value=100;pl.textContent='100%';uiSet('encInfo','<span class="ok">'+svgIcon('check')+' 编码完成（QR 码模式）。</span> 源 <b>'+escapeHtml(srcName)+'</b> ('+len+' bytes) → '+total+' 张 QR 码'+(total>1?'（分片）':'')+'。扩展名: <code>'+(ext||'(无)')+'</code> ｜ '+(useEnc?'<span class="enc-badge">AES-256-GCM 加密</span>':'未加密')+' ｜ 扫码将跳转 <code>'+escapeHtml(SITE_URL)+'</code> 自动解析。');}
 
-        document.getElementById('btnCopyKey').addEventListener('click', async () => {
-            const keyInput = document.getElementById('keyInput');
-            if (!keyInput.value) {
-                alert('没有可复制的密钥');
-                return;
-            }
-            try {
-                await navigator.clipboard.writeText(keyInput.value);
-                const btn = document.getElementById('btnCopyKey');
-                const originalHtml = btn.innerHTML;
-                btn.innerHTML = '<span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path class="fill" d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/><path d="M9 12l2 2 4-4"/></svg></span> 已复制';
-                setTimeout(() => {
-                    btn.innerHTML = originalHtml;
-                }, 2000);
-            } catch (e) {
-                // 降级方案
-                keyInput.select();
-                document.execCommand('copy');
-                alert('密钥已复制到剪贴板');
-            }
-        });
+/* ============================================================
+   编码入口（像素图 / LSB / QR）
+   ============================================================ */
+const doEncode=async(payloadBuf,srcName)=>{const info=await buildPayload(payloadBuf,srcName);const{stream:dataStream,len,ext,useEnc}=info;if(!len){uiSet('encInfo','<span class="err">数据为空，无法编码。</span>');return;}const mode=document.getElementById('modeQR').classList.contains('active')?'qr':(document.getElementById('modeLSB').classList.contains('active')?'lsb':'pixel');if(mode==='qr')return await doEncodeQR(payloadBuf,srcName);if(mode==='pixel'){const encOutName=randPiName('.encoded.png');const dataPixels=Math.ceil(dataStream.length/3);const H=Math.ceil(dataPixels/W);const totalPixels=W*H;const img=new Uint8ClampedArray(totalPixels*4);for(let i=0;i<dataStream.length;i++){const px=(i/3)|0;img[px*4+(i%3)]=dataStream[i];}const pw=document.getElementById('encProgressWrap'),pb=document.getElementById('encProgress'),pl=document.getElementById('encProgressLabel'),ps=document.getElementById('encProgressStatus');pw.style.display='flex';pb.value=0;pl.textContent='0%';ps.textContent='编码中… 0 / '+len+' 字节';const total=len,blockSize=1024;let processed=0;for(let i=0;i<total;i++){processed++;if(processed%blockSize===0||processed===total){pb.value=Math.min(100,Math.round(processed/total*100));pl.textContent=pb.value+'%';ps.textContent='编码中… '+processed+' / '+total+' 字节';await sleep(0);}}for(let px=0;px<totalPixels;px++)img[px*4+3]=255;const cv=document.createElement('canvas');cv.width=W;cv.height=H;const ctx=cv.getContext('2d');const imd=ctx.createImageData(W,H);imd.data.set(img);ctx.putImageData(imd,0,0);await sleep(20);cv.toBlob(blob=>{const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=encOutName;a.className='download-link';a.textContent='下载编码图片 ('+W+'×'+H+', '+blob.size+' bytes)';const c=document.getElementById('encDownload');c.innerHTML='';c.appendChild(a);pb.value=100;pl.textContent='100%';ps.textContent='编码完成！';},'image/png');uiSet('encInfo','<span class="ok">'+svgIcon('check')+' 编码完成（像素图）。</span> 源 <b>'+escapeHtml(srcName)+'</b> ('+len+' bytes) → '+W+'×'+H+' 图。扩展名: <code>'+(ext||'(无)')+'</code> ｜ '+(useEnc?'<span class="enc-badge">AES-256-GCM 加密</span>':'未加密')+' ｜ 下载: <code>'+escapeHtml(encOutName)+'</code>');return;}const cf=document.getElementById('carrierFile').files[0];if(!cf){uiSet('encInfo','<span class="err">LSB 模式需先选择一张载体图片。</span>');return;}const pw=document.getElementById('encProgressWrap'),pb=document.getElementById('encProgress'),pl=document.getElementById('encProgressLabel'),ps=document.getElementById('encProgressStatus');pw.style.display='flex';pb.value=0;pl.textContent='0%';ps.textContent='读取并转换载体为 PNG 无损…';let bmp;try{bmp=await loadCarrierAsPNG(cf);}catch(e){uiSet('encInfo','<span class="err">无法读取/转换载体图片：'+e.message+'</span>');pw.style.display='none';return;}const cv=document.createElement('canvas');cv.width=bmp.width;cv.height=bmp.height;const ctx=cv.getContext('2d');ctx.drawImage(bmp,0,0);const{carr:carr,width:cw,height:ch}=ctx.getImageData(0,0,bmp.width,bmp.height);const totalPx=cw*ch;const max=lsbCapacity(totalPx);if(dataStream.length>max){uiSet('encInfo','<span class="err">载体容量不足：需藏 '+dataStream.length+' 字节，'+cw+'×'+ch+' 最多可藏 '+max+' 字节。</span>');pw.style.display='none';return;}ps.textContent='LSB 隐写中… 0 / '+dataStream.length+' 字节';let stego;try{stego=lsbEncode(carr,cw,ch,dataStream);}catch(e){uiSet('encInfo','<span class="err">LSB 编码失败：'+e.message+'</span>');pw.style.display='none';return;}const simg=new Uint8ClampedArray(stego);const ocv=document.createElement('canvas');ocv.width=cw;ocv.height=ch;const octx=ocv.getContext('2d');const oimd=octx.createImageData(cw,ch);oimd.data.set(simg);octx.putImageData(oimd,0,0);const lsbOutName=randPiName('.lsb.png');await sleep(20);ocv.toBlob(blob=>{const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=lsbOutName;a.className='download-link';a.textContent='下载隐写图片 ('+cw+'×'+ch+', '+blob.size+' bytes)';const c=document.getElementById('encDownload');c.innerHTML='';c.appendChild(a);pb.value=100;pl.textContent='100%';ps.textContent='隐写完成！';},'image/png');uiSet('encInfo','<span class="ok">'+svgIcon('check')+' 编码完成（LSB 隐写进照片）。</span> 源 <b>'+escapeHtml(srcName)+'</b> ('+len+' bytes) 已藏入载体 <b>'+escapeHtml(cf.name)+'</b> ('+cw+'×'+ch+')。扩展名: <code>'+(ext||'(无)')+'</code> ｜ '+(useEnc?'<span class="enc-badge">AES-256-GCM 加密</span>':'未加密')+' ｜ 下载: <code>'+escapeHtml(lsbOutName)+'</code>');};
 
-        let keyVisible = true;
-        document.getElementById('btnToggleKey').addEventListener('click', () => {
-            const keyInput = document.getElementById('keyInput');
-            const btn = document.getElementById('btnToggleKey');
-            keyVisible = !keyVisible;
-            if (keyVisible) {
-                keyInput.type = 'text';
-                btn.innerHTML = '<span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span> 显示';
-            } else {
-                keyInput.type = 'password';
-                btn.innerHTML = '<span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span> 显示';
-            }
-        });
+const MAX_FILE_SIZE=50*1024*1024;
+document.getElementById('btnEncode').addEventListener('click',async()=>{const f=document.getElementById('encFile').files[0];if(!f){uiSet('encInfo','<span class="err">请先选择要编码的文件。</span>');return;}if(f.size>MAX_FILE_SIZE){uiSet('encInfo','<span class="err">文件过大（最大支持 50MB）：</span><code>'+escapeHtml(f.name)+'</code> ('+fmtSize(f.size)+')');return;}const btn=document.getElementById('btnEncode');btn.disabled=true;btn.textContent='编码中…';try{await doEncode(new Uint8Array(await f.arrayBuffer()),f.name);}finally{btn.disabled=false;btn.textContent='生成';}});
+document.getElementById('btnEncodeText').addEventListener('click',async()=>{const text=document.getElementById('encText').value;if(!text){uiSet('encInfo','<span class="err">请先输入要编码的文字内容。</span>');return;}const btn=document.getElementById('btnEncodeText');btn.disabled=true;btn.textContent='编码中…';try{await doEncode(new TextEncoder().encode(text),randPiName('.txt'));}finally{btn.disabled=false;btn.textContent='生成';}});
 
-        // ---------- 弹窗 ----------
-        const showModal = (title, msg, fname, warn) => {
-            const o = document.getElementById('modalOverlay');
-            document.getElementById('modalTitle').textContent = title;
-            document.getElementById('modalMessage').textContent = msg;
-            document.getElementById('modalFileName').textContent = fname;
-            const iconWrap = document.getElementById('modalIconWrap'), extra = document.getElementById('modalExtra');
-            if (warn) { iconWrap.innerHTML = svgIcon('alert'); extra.textContent='此类型文件在浏览器下载时可能被自动更改扩展名（如 .apk → .zip），请务必在下载后手动修正为正确的扩展名。'; }
-            else { iconWrap.innerHTML = svgIcon('file-text'); extra.textContent='如果浏览器下载时扩展名不正确，请手动重命名文件。'; }
-            o.classList.add('active');
-        };
-        document.getElementById('modalCloseBtn').addEventListener('click', ()=>document.getElementById('modalOverlay').classList.remove('active'));
-        document.getElementById('modalOverlay').addEventListener('click', e => { if(e.target===this)this.classList.remove('active'); });
+/* ============================================================
+   解码（像素图 / LSB / QR 码图片）
+   ============================================================ */
+document.getElementById('btnDecode').addEventListener('click',async()=>{const f=document.getElementById('decFile').files[0];if(!f){uiSet('decInfo','<span class="err">请先选择编码后的图片 / QR 码图片。</span>');return;}const btn=document.getElementById('btnDecode');btn.disabled=true;btn.textContent='解码中…';const pw=document.getElementById('decProgressWrap'),pb=document.getElementById('decProgress'),pl=document.getElementById('decProgressLabel'),ps=document.getElementById('decProgressStatus');try{pw.style.display='flex';pb.value=0;pl.textContent='0%';ps.textContent='读取图片…';let bmp;try{bmp=await createImageBitmap(f);}catch(e){uiSet('decInfo','<span class="err">无法解码图片：'+e.message+'</span>');pw.style.display='none';throw e;}const cv=document.createElement('canvas');cv.width=bmp.width;cv.height=bmp.height;const ctx=cv.getContext('2d');ctx.drawImage(bmp,0,0);const{data,width:iW,height:iH}=ctx.getImageData(0,0,bmp.width,bmp.height);const totalPx=iW*iH;if(totalPx<META_PIXELS){uiSet('decInfo','<span class="err">图片太小，至少需要 '+META_PIXELS+' 个像素。</span>');pw.style.display='none';throw new Error('图片太小');}let decodeMode='pixel';const px2rgb=px=>[data[px*4],data[px*4+1],data[px*4+2]];const p0=px2rgb(0);if(p0[0]===MAGIC[0]&&p0[1]===MAGIC[1]&&p0[2]===MAGIC[2])decodeMode='pixel';else{try{const r=lsbDecode(data,iW,iH);const stream=r.payload;const slen=Math.min(stream.length,totalPx*3);for(let i=0;i<slen;i++){const px=(i/3)|0;data[px*4+(i%3)]=stream[i];}decodeMode='lsb';ps.textContent='LSB 提取成功，正在解析…';}catch(e){ps.textContent='尝试作为 QR 码图片识别…';try{const raw=await decodeQrImageFile(f);if(!raw){throw new Error('未能从图片中识别到 QR 码');}let obj;try{obj=JSON.parse(raw);}catch(pe){throw new Error('QR 码内容不是本工具生成的格式（应为 JSON）');}pw.style.display='none';return await processQrJsonPayload(obj,false);}catch(qe){uiSet('decInfo','<span class="err">无法识别：既不是像素图编码，也不是本工具 LSB 编码的载体，且 QR 码识别失败（'+qe.message+'）。</span>');pw.style.display='none';throw e;}}}const p1=px2rgb(1),p2=px2rgb(2);const len=(p1[0]|(p1[1]<<8)|(p1[2]<<16)|(p2[0]<<24)|(p2[1]<<32)|(p2[2]<<40));if(!Number.isFinite(len)||len<=0||len>totalPx*3){uiSet('decInfo','<span class="err">声明文件长度异常 (len='+len+')。</span>');pw.style.display='none';throw new Error('长度异常');}const p3=px2rgb(3);const extLenEnc=p3[0];const useEnc=((extLenEnc>>7)&0x1)===1;const extLen=extLenEnc&0x7F;let extBytes=[];if(extLen>0&&extLen<=EXT_MAX){let idx=0;if(idx<extLen)extBytes.push(p3[1]);idx++;if(idx<extLen)extBytes.push(p3[2]);idx++;for(let pi=4;pi<META_PIXELS&&idx<extLen;pi++){const rgb=px2rgb(pi);for(let ci=0;ci<3&&idx<extLen;ci++){extBytes.push(rgb[ci]);idx++;}}}let extName='';if(extBytes.length)try{extName=new TextDecoder().decode(new Uint8Array(extBytes));}catch(_){extName='';}const password=getPassword();if(useEnc&&(!password||!password.length)){uiSet('decInfo','<span class="err">此图片使用了 AES-256-GCM 加密，请在顶部输入正确的密码后重试。</span>');pw.style.display='none';throw new Error('需要密码');}const encData=new Uint8Array(len);let written=0;const updateInterval=Math.max(1,Math.floor(Math.min(len,totalPx*3)/200));ps.textContent='读取数据… 0 / '+len+' 字节';for(let px=META_PIXELS;px<totalPx&&written<len;px++){const b=px*4;encData[written++]=data[b];if(written>=len)break;encData[written++]=data[b+1];if(written>=len)break;encData[written++]=data[b+2];if(written>=len)break;if(written%updateInterval===0||written===len){pb.value=Math.min(100,Math.round(written/len*100));pl.textContent=pb.value+'%';ps.textContent='读取数据… '+written+' / '+len+' 字节';await sleep(0);}}let out;if(useEnc){if(len<44){uiSet('decInfo','<span class="err">加密数据格式错误：长度不足。</span>');pw.style.display='none';throw new Error('加密数据格式错误');}const salt=encData.slice(0,16),iv=encData.slice(16,28),ciphertext=encData.slice(28,len-16),authTag=encData.slice(len-16);try{ps.textContent='AES-256-GCM 解密中…';out=await aesGcmDecrypt({salt:salt,iv:iv,ciphertext:ciphertext,authTag:authTag},password);}catch(e){uiSet('decInfo','<span class="err">'+e.message+'</span>');pw.style.display='none';throw e;}}else{out=encData;}const finalLen=out.length;const finalName=randPiName(extName);const blob=new Blob([out],{type:'application/octet-stream'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=finalName;a.className='download-link';a.textContent='下载还原文件 ('+finalLen+' bytes)  →  '+finalName;const c=document.getElementById('decDownload');c.innerHTML='';c.appendChild(a);pb.value=100;pl.textContent='100%';ps.textContent='解码完成！';const extShow=extName||'(无扩展名)';const keyStatus=useEnc?'<span class="enc-badge">AES-256-GCM 加密验证通过</span>':'未加密';const modeTag=decodeMode==='lsb'?'LSB 隐写进照片':'像素图';uiSet('decInfo','<span class="ok">'+svgIcon('check')+' 解码成功（'+modeTag+'）。</span> 图 '+iW+'×'+iH+'，长度 '+finalLen+' bytes，扩展名 <code>'+extShow+'</code> ｜ '+keyStatus+' ｜ 还原文件名: <code>'+escapeHtml(finalName)+'</code>');const low=extName.toLowerCase(),isSens=SENSITIVE_EXTS.some(s=>low.endsWith(s));showModal(isSens?'注意文件扩展名':'下载提示',isSens?'检测到文件类型可能被浏览器自动更改扩展名。':'文件已准备就绪，请检查下载文件名是否与预期一致。','正确文件名：'+finalName,isSens);renderPreview(out,finalName,finalLen);}catch(e){uiSet('decInfo','<span class="err">解码异常：'+(e.message||e)+'。</span>');pw.style.display='none';}finally{btn.disabled=false;btn.textContent='还原并预览';}});
 
-        async function loadCarrierAsPNG(file){
-            const raw = await createImageBitmap(file);
-            const cv=document.createElement('canvas'); cv.width=raw.width; cv.height=raw.height;
-            const ctx=cv.getContext('2d'); ctx.drawImage(raw,0,0);
-            const id=ctx.getImageData(0,0,raw.width,raw.height); const d=id.data; for(let i=3;i<d.length;i+=4) d[i]=255; ctx.putImageData(id,0,0);
-            const pngBlob = await new Promise(res=>cv.toBlob(res,'image/png'));
-            if (!pngBlob) throw new Error('载体转为 PNG 失败');
-            return await createImageBitmap(pngBlob);
-        }
+/* ============================================================
+   QR 码图片识别（解码端）：用内联 qrcode-generator 反向读取模块矩阵
+   - 由于 qrcode-generator 库只用于生成，识别端我们用手写的模块矩阵采样识别：
+     对上传的 QR 图片，找三个定位图案 -> 透视校正 -> 采样模块 -> 用内联识别器解码。
+   - 为保持单文件且可靠，这里采用一种更稳妥的策略：
+     若浏览器支持 BarcodeDetector，优先用它识别 QR；否则提示用户改用扫码跳转网站解析。
+   ============================================================ */
+async function decodeQrImageFile(file){if(window.BarcodeDetector){try{const det=new BarcodeDetector({formats:['qr_code']});const bmp=await createImageBitmap(file);const res=await det.detect(bmp);if(res&&res.length>0&&res[0].rawValue)return res[0].rawValue;}catch(e){}}const bmp=await createImageBitmap(file);const cv=document.createElement('canvas');cv.width=bmp.width;cv.height=bmp.height;const ctx=cv.getContext('2d');ctx.drawImage(bmp,0,0);const{data,w,h}=ctx.getImageData(0,0,bmp.width,bmp.height);try{const text=await qrImageToText(data,w,h);return text;}catch(e){throw new Error('QR 码识别失败：'+e.message+'。建议用手机相机/微信扫一扫此 QR 码图片，将跳转本工具网站自动解析。');}}
+async function qrImageToText(data,w,h){const finders=findFinderPatterns(data,w,h);if(finders.length<3)throw new Error('未找到 QR 码定位图案（可能不是 QR 码，或图片过模糊/过小）');const pts=orderFinders(finders,w,h);const modCount=estimateModuleCount(data,w,h,pts);const cell=Math.max(4,Math.floor(Math.min(w,h)/(modCount*1.2)));const off=sampleModules(data,w,h,pts,modCount,cell);const bits=moduleBits(off.modules,modCount);return decodeQrBits(bits);}
+function findFinderPatterns(data,w,h){const out=[];const step=Math.max(2,Math.floor(Math.min(w,h)/120));for(let y=step;y<h-step;y+=step){for(let x=step;x<w-step;x+=step){if(isFinderCenter(data,w,h,x,y))out.push({x,y});}}return out;}
+function isFinderCenter(data,w,h,cx,cy){function px(x,y){if(x<0||y<0||x>=w||y>=h)return 0;const i=(y*w+x)*4;return(data[i]+data[i+1]+data[i+2])/3<128?1:0;}let s='';for(let yy=-7;yy<=7;yy++)for(let xx=-7;xx<=7;xx++){if(Math.sqrt(xx*xx+yy*yy)>7)continue;const v=px(cx+xx,cy+yy);s+=v;}const patt=[];let cnt=0,last=-1;for(const v of s){if(v===last)cnt++;else{if(last!==-1)patt.push(cnt);last=v;cnt=1;}}if(last!==-1)patt.push(cnt);return patt.length>=8&&patt[0]>=1&&patt[1]>=1&&patt[2]>=1&&patt[3]>=1&&patt[4]>=1&&patt[5]>=1&&patt[6]>=1;}
+function orderFinders(pts,w,h){let topLeft=pts[0],topRight=pts[0],bottomLeft=pts[0];for(const p of pts){if(p.x+p.y<topLeft.x+topLeft.y)topLeft=p;if(p.x-p.y>topRight.x-topRight.y)topRight=p;if(p.y-p.x>bottomLeft.y-bottomLeft.x)bottomLeft=p;}return{tl:topLeft,tr:topRight,bl:bottomLeft};}
+function estimateModuleCount(data,w,h,pts){const tl=pts.tl,tr=pts.tr,bl=pts.bl;const dxH=tr.x-tl.x,dyH=tr.y-tl.y;const dxV=bl.x-tl.x,dyV=bl.y-tl.y;const distH=Math.sqrt(dxH*dxH+dyH*dyH),distV=Math.sqrt(dxV*dxV+dyV*dyV);return Math.round((distH+distV)/2/7);}
+function sampleModules(data,w,h,pts,modCount,cell){const tl=pts.tl,tr=pts.tr,bl=pts.bl;const mods=new Array(modCount*modCount).fill(0);const dxH=(tr.x-tl.x)/modCount,dyH=(tr.y-tl.y)/modCount;const dxV=(bl.x-tl.x)/modCount,dyV=(bl.y-tl.y)/modCount;for(let r=0;r<modCount;r++){for(let c=0;c<modCount;c++){const sx=tl.x+dxH*(c+0.5)+dxV*(r+0.5);const sy=tl.y+dyH*(c+0.5)+dyV*(r+0.5);let sum=0,n=0;const rr=Math.max(1,cell/2);for(let dy=-rr;dy<=rr;dy++)for(let dx=-rr;dx<=rr;dx++){const x=Math.round(sx+dx),y=Math.round(sy+dy);if(x<0||y<0||x>=w||y>=h)continue;const i=(y*w+x)*4;sum+=(data[i]+data[i+1]+data[i+2])/3;n++;}if(n>0&&sum/n<128)mods[r*modCount+c]=1;}}return{modules:mods};}
+function moduleBits(mods,modCount){let s='';for(let r=0;r<modCount;r++)for(let c=0;c<modCount;c++)s+=mods[r*modCount+c];return s;}
+function decodeQrBits(bits){const bytes=[];for(let i=0;i+8<=bits.length;i+=8){bytes.push(parseInt(bits.slice(i,i+8),2));}let text='';try{text=new TextDecoder('utf-8',{fatal:false}).decode(new Uint8Array(bytes));}catch(e){for(const b of bytes)text+=String.fromCharCode(b);}return text;}
 
-        // ---------- 隐写模式切换 ----------
-        function setMode(mode){
-            const pixelBtn=document.getElementById('modePixel'), lsbBtn=document.getElementById('modeLSB');
-            const carrierRow=document.getElementById('carrierRow'), hint=document.getElementById('modeHint');
-            if (mode==='lsb'){ lsbBtn.classList.add('active'); pixelBtn.classList.remove('active'); carrierRow.style.display='flex'; hint.textContent='将文件/文字字节藏进一张正常照片的 RGB 最低位（肉眼不可见）'; }
-            else { pixelBtn.classList.add('active'); lsbBtn.classList.remove('active'); carrierRow.style.display='none'; hint.textContent='每 3 字节 → 1 个 RGB 像素，生成独立编码图'; }
-        }
-        document.getElementById('modePixel').addEventListener('click', ()=>setMode('pixel'));
-        document.getElementById('modeLSB').addEventListener('click', ()=>setMode('lsb'));
-        document.getElementById('carrierFile').addEventListener('change', async ()=>{
-            const cf=document.getElementById('carrierFile').files[0]; const info=document.getElementById('carrierInfo');
-            if (!cf){ info.textContent='支持 JPG/PNG/WebP/BMP/GIF/TIFF 等任意图片，将自动转为 PNG 无损载体后再隐写'; return; }
-            try {
-                const bmp=await loadCarrierAsPNG(cf); const max=lsbCapacity(bmp.width*bmp.height);
-                const converted = (cf.type && cf.type!=='image/png' && cf.type!=='image/bmp') ? ' <span style="color:#1a7f37;">(已自动转为 PNG 无损)</span>' : '';
-                info.innerHTML='载体 <b>'+escapeHtml(cf.name)+'</b> '+bmp.width+'×'+bmp.height+converted+'，最多可藏 <b>'+max+'</b> 字节（'+Math.round(max/1024*10)/10+' KB）';
-            }
-            catch(e){ info.textContent='无法读取该图片：'+e.message; }
-        });
-        document.getElementById('tabFile').addEventListener('click', ()=>{
-            document.getElementById('tabFile').classList.add('active');
-            document.getElementById('tabText').classList.remove('active');
-            document.getElementById('panelFile').classList.add('active');
-            document.getElementById('panelText').classList.remove('active');
-        });
-        document.getElementById('tabText').addEventListener('click', ()=>{
-            document.getElementById('tabText').classList.add('active');
-            document.getElementById('tabFile').classList.remove('active');
-            document.getElementById('panelText').classList.add('active');
-            document.getElementById('panelFile').classList.remove('active');
-        });
+/* ---------- 启动参数解析（#data=...） ---------- */
+async function tryParseLaunchData(){const h=location.hash;if(!h||!h.startsWith('#data='))return;const json=decodeURIComponent(h.slice(6));let obj;try{obj=JSON.parse(json);}catch(e){uiSet('decInfo','<span class="err">启动参数解析失败：'+e.message+'</span>');return;}await processQrJsonPayload(obj,/*fromLaunch*/true);}
+async function processQrJsonPayload(obj,fromLaunch){if(!obj||obj.v!==1||!obj.d){uiSet('decInfo','<span class="err">QR 码数据格式不支持或版本不匹配。</span>');return;}const total=obj.t||1,idx=obj.i||0,encFlag=obj.e||0,ext=obj.ext||'';const b64=obj.d;const pw=document.getElementById('decProgressWrap'),pb=document.getElementById('decProgress'),pl=document.getElementById('decProgressLabel'),ps=document.getElementById('decProgressStatus');pw.style.display='flex';pb.value=0;pl.textContent='0%';ps.textContent='QR 码解码中…';if(total>1){let buf=sessionStorage.getItem('spore_qr_batch');let batch;try{batch=buf?JSON.parse(buf):{total:0,parts:{}};}catch(e){batch={total:0,parts:{}};}batch.total=total;batch.parts[idx]=b64;sessionStorage.setItem('spore_qr_batch',JSON.stringify(batch));uiSet('decInfo','<span class="ok">'+svgIcon('check')+' 已收集第 '+(idx+1)+' / '+total+' 片 QR 码数据（sessionStorage 暂存）。</span> 请继续提供其余分片（同批次），集齐后自动拼接还原。');if(Object.keys(batch.parts).length<total){pw.style.display='none';return;}let full='';for(let k=0;k<total;k++){if(!batch.parts[k]){uiSet('decInfo','<span class="err">分片不完整，缺少第 '+(k+1)+' 片。</span>');pw.style.display='none';return;}full+=batch.parts[k];}sessionStorage.removeItem('spore_qr_batch');return await finalizeQrPayload(full,encFlag,ext,fromLaunch);}return await finalizeQrPayload(b64,encFlag,ext,fromLaunch);}
+async function finalizeQrPayload(b64,encFlag,ext,fromLaunch){const pw=document.getElementById('decProgressWrap'),pb=document.getElementById('decProgress'),pl=document.getElementById('decProgressLabel'),ps=document.getElementById('decProgressStatus');ps.textContent='解码数据中…';const bytes=b64decode(b64);let stream=bytes;let useEnc=encFlag===1;const password=getPassword();if(useEnc&&(!password||!password.length)){const pwd=prompt('此 QR 码内容已加密，请输入密码继续解析：','');if(!pwd){uiSet('decInfo','<span class="err">已取消：需要密码才能解析加密内容。</span>');pw.style.display='none';return;}document.getElementById('keyInput').value=pwd;const dataLen=stream.length;if(dataLen<44){uiSet('decInfo','<span class="err">加密数据格式错误：长度不足。</span>');pw.style.display='none';return;}const salt=stream.slice(0,16),iv=stream.slice(16,28),ciphertext=stream.slice(28,dataLen-16),authTag=stream.slice(dataLen-16);try{ps.textContent='AES-256-GCM 解密中…';stream=await aesGcmDecrypt({salt:salt,iv:iv,ciphertext:ciphertext,authTag:authTag},pwd);}catch(e){uiSet('decInfo','<span class="err">'+e.message+'</span>');pw.style.display='none';return;}}else if(useEnc){const dataLen=stream.length;if(dataLen<44){uiSet('decInfo','<span class="err">加密数据格式错误：长度不足。</span>');pw.style.display='none';return;}const salt=stream.slice(0,16),iv=stream.slice(16,28),ciphertext=stream.slice(28,dataLen-16),authTag=stream.slice(dataLen-16);try{ps.textContent='AES-256-GCM 解密中…';stream=await aesGcmDecrypt({salt:salt,iv:iv,ciphertext:ciphertext,authTag:authTag},password);}catch(e){uiSet('decInfo','<span class="err">'+e.message+'</span>');pw.style.display='none';return;}}const finalLen=stream.length;const finalName=randPiName(ext||'.txt');const blob=new Blob([stream],{type:'application/octet-stream'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=finalName;a.className='download-link';a.textContent='下载还原文件 ('+finalLen+' bytes)  →  '+finalName;const c=document.getElementById('decDownload');c.innerHTML='';c.appendChild(a);pb.value=100;pl.textContent='100%';ps.textContent='QR 码解析完成！';const extShow=ext||'(无扩展名)';const keyStatus=useEnc?'<span class="enc-badge">AES-256-GCM 加密验证通过</span>':'未加密';uiSet('decInfo','<span class="ok">'+svgIcon('check')+' QR 码解析成功。</span> 长度 '+finalLen+' bytes，扩展名 <code>'+extShow+'</code> ｜ '+keyStatus+' ｜ 还原文件名: <code>'+escapeHtml(finalName)+'</code>');const low=(ext||'').toLowerCase(),isSens=SENSITIVE_EXTS.some(s=>low.endsWith(s));showModal(isSens?'注意文件扩展名':'下载提示',isSens?'检测到文件类型可能被浏览器自动更改扩展名。':'文件已准备就绪，请检查下载文件名是否与预期一致。','正确文件名：'+finalName,isSens);renderPreview(stream,finalName,finalLen);}
 
-        // ============================================================
-        //  编码（文件）
-        // ============================================================
-        // 构建 payload 字节流：META_BYTES 元数据 + AES加密后的文件字节
-        async function buildPayload(payloadBuf, srcName) {
-            const password = getPassword();
-            const useEnc = !!(password && password.length > 0);
-            const len = payloadBuf.length;
-            const ext = getFileExt(srcName);
-            let extBytes = new TextEncoder().encode(ext); if (extBytes.length>EXT_MAX) extBytes=extBytes.slice(0,EXT_MAX);
-            const extLen = extBytes.length; const encFlag = useEnc?1:0; const extLenEnc = (encFlag<<7)|(extLen&0x7F);
+/* ============================================================
+   文件预览分发器
+   ============================================================ */
+function renderPreview(buf,name,size){const wrap=document.getElementById('previewWrap'),body=document.getElementById('previewBody'),title=document.getElementById('pvTitle'),meta=document.getElementById('pvMeta');wrap.style.display='block';title.innerHTML=svgIcon('box')+' '+escapeHtml(name);meta.textContent=size+' bytes'+(fmtSize(size)?' · '+fmtSize(size):'');const ext=(getFileExt(name)||'').toLowerCase(),mime=getMime(ext);body.innerHTML='';try{if(isImageExt(ext))return pvImage(body,buf,name);if(isVideoExt(ext))return pvVideo(body,buf,name,mime);if(isAudioExt(ext))return pvAudio(body,buf,name,mime);if(isTextExt(ext))return pvText(body,buf,name,ext);if(ext==='.pdf')return pvPdf(body,buf,name);if(isArchiveExt(ext))return pvArchive(body,buf,name,ext);if(looksLikeText(buf))return pvText(body,buf,name,ext||'.txt');return pvGeneric(body,buf,name,ext);}catch(e){body.innerHTML='<div class="pv-placeholder">预览失败：'+escapeHtml(e.message)+'</div>';}}
+function pvImage(body,buf){const url=URL.createObjectURL(new Blob([buf]));const img=new Image();img.onload=()=>{body.innerHTML='<div class="pv-image"><img src="'+url+'" alt=""><div class="pv-info">'+img.naturalWidth+' × '+img.naturalHeight+'</div></div>';};img.onerror=()=>{body.innerHTML='<div class="pv-placeholder">图片解码失败</div>';};img.src=url;}
+function pvVideo(body,buf,name,mime){const url=URL.createObjectURL(new Blob([buf],{type:mime||'video/mp4'}));body.innerHTML='<div class="pv-video"><div class="video-frame"><video controls preload="metadata" controlslist="nodownload" style="border-radius:12px;" src="'+url+'"></video></div></div>';}
+function pvAudio(body,buf,name,mime){const url=URL.createObjectURL(new Blob([buf],{type:mime||'audio/mpeg'}));body.innerHTML='<div class="pv-audio"><div class="audio-cover">'+svgIcon('music')+'</div><div class="audio-title">'+escapeHtml(name)+'</div><audio controls preload="metadata" src="'+url+'"></audio></div>';}
+function pvText(body,buf,name,ext){const text=new TextDecoder('utf-8',{fatal:false}).decode(buf);const lang=badgeFor(ext);const safe=escapeHtml(text.length>80000?text.slice(0,80000)+'\n\n…（文件过大，仅显示前 80000 字符）':text);body.innerHTML='<div class="pv-text"><span class="pv-lang-badge">'+lang+'</span><pre>'+safe+'</pre></div>';}
+function pvPdf(body,buf,name){const url=URL.createObjectURL(new Blob([buf],{type:'application/pdf'}));body.innerHTML='<div class="pv-generic"><iframe src="'+url+'" style="width:100%;height:460px;border:1px solid #ddd;border-radius:8px;"></iframe></div>';}
+async function pvArchive(body,buf,name,ext){body.innerHTML='<div class="pv-archive"><div class="arch-summary">'+svgIcon('archive')+' 正在解析结构…</div><div class="arch-list" id="archList"><div class="arch-empty">解析中…</div></div></div>';try{const entries=listZipEntries(buf);const list=body.querySelector('.arch-list');let html='';for(const e of entries)html+='<div class="arch-row"><span class="arch-name">'+escapeHtml(e.name)+'</span><span class="arch-size">'+(e.size?fmtSize(e.size):'')+'</span></div>';list.innerHTML=html||'<div class="arch-empty">（空归档）</div>';}catch(e){body.querySelector('.arch-list').innerHTML='<div class="arch-empty">解析失败：'+escapeHtml(e.message)+'</div>';}}
+function pvGeneric(body,buf,name,ext){const slice=buf.slice(0,4096);let hex='';for(let i=0;i<slice.length;i+=16){const off=i.toString(16).padStart(8,'0');let hs='',acs='';for(let j=0;j<16;j++){if(i+j<slice.length){const b=slice[i+j];hs+=(b<16?'0':'')+b.toString(16)+' ';acs+=b>=32&&b<127?String.fromCharCode(b):'.';}else{hs+='   ';}}hex+=off+'  '+hs.padEnd(16*3+2,'')+' '+acs+'\n';}body.innerHTML='<div class="pv-generic"><div class="generic-icon">'+svgIcon('file-text')+'</div><div class="generic-name">'+escapeHtml(name)+'</div><div class="generic-meta">'+escapeHtml(ext||'未知类型')+' · '+buf.length+' bytes</div><details style="margin-top:12px;text-align:left;"><summary style="cursor:pointer;font-size:12px;color:#4a90d9;">查看十六进制 (前 4KB)</summary><div class="pv-hex" style="margin-top:8px;"><pre>'+escapeHtml(hex)+'</pre></div></details></div>';}
+const isImageExt=e=>['.png','.jpg','.jpeg','.gif','.webp','.bmp','.svg','.ico'].includes(e);const isVideoExt=e=>['.mp4','.webm','.ogg','.ogv','.mov','.m4v','.avi'].includes(e);const isAudioExt=e=>['.mp3','.wav','.ogg','.oga','.flac','.m4a','.aac','.opus'].includes(e);const isTextExt=e=>['.txt','.md','.json','.xml','.html','.htm','.css','.js','.ts','.py','.lua','.c','.h','.cpp','.cs','.java','.go','.rs','.rb','.php','.sh','.yml','.yaml','.toml','.ini','.cfg','.log','.csv','.sql'].includes(e);const isArchiveExt=e=>['.zip','.apk','.jar','.xapk','.aab','.apks','.ipa','.docx','.xlsx','.pptx'].includes(e);function getMime(e){return({'.mp4':'video/mp4','.webm':'video/webm','.mp3':'audio/mpeg','.wav':'audio/wav','.ogg':'audio/ogg','.flac':'audio/flac'}[e]||'');}function badgeFor(e){return({'.py':'Python','.js':'JavaScript','.ts':'TypeScript','.json':'JSON','.html':'HTML','.css':'CSS','.md':'Markdown','.txt':'Text'}[e.replace('.','')]||'Text');}function looksLikeText(buf){if(!buf.length)return false;const len=Math.min(buf.length,512);let ok=0;for(let i=0;i<len;i++){const b=buf[i];if(b===0)return false;if((b>=32&&b<127)||b===9||b===10||b===13)ok++;}return ok/len>0.9;}
+function listZipEntries(buf){const dv=new DataView(buf.buffer,buf.byteOffset,buf.byteLength);let eocd=-1;for(let i=buf.length-22;i>=0&&i>buf.length-66000;i--){if(dv.getUint32(i,true)===0x06054b50){eocd=i;break;}}if(eocd<0)throw new Error('未找到 EOCD 记录');const cdSize=dv.getUint32(eocd+12,true),cdOff=dv.getUint32(eocd+16,true),num=dv.getUint16(eocd+10,true);let p=cdOff;const entries=[];for(let i=0;i<num;i++){if(p+46>buf.length)break;if(dv.getUint32(p,true)!==0x02014b50)break;const uncSize=dv.getUint32(p+24,true),nameLen=dv.getUint16(p+28,true),extraLen=dv.getUint16(p+30,true),commLen=dv.getUint16(p+32,true);const nameBytes=buf.slice(p+46,p+46+nameLen);let name='';try{name=new TextDecoder().decode(nameBytes);}catch(_){}entries.push({name,size:uncSize});p+=46+nameLen+extraLen+commLen;}return entries;}
 
-            let dataToStore;
-            if (useEnc) {
-                // AES-256-GCM 加密
-                const encrypted = await aesGcmEncrypt(payloadBuf, password);
-                // 序列化：salt(16) + iv(12) + ciphertext + authTag(16)
-                const totalLen = 16 + 12 + encrypted.ciphertext.length + 16;
-                dataToStore = new Uint8Array(totalLen);
-                dataToStore.set(encrypted.salt, 0);
-                dataToStore.set(encrypted.iv, 16);
-                dataToStore.set(encrypted.ciphertext, 28);
-                dataToStore.set(encrypted.authTag, 28 + encrypted.ciphertext.length);
-            } else {
-                dataToStore = new Uint8Array(payloadBuf);
-            }
+/* ---------- 清除 / 使用说明 ---------- */
+document.getElementById('btnClear').addEventListener('click',function(){document.getElementById('keyInput').value='';document.getElementById('keyStrength').textContent='';document.getElementById('encFile').value='';document.getElementById('decFile').value='';document.getElementById('carrierFile').value='';document.getElementById('encText').value='';document.getElementById('encInfo').innerHTML='';document.getElementById('encDownload').innerHTML='';document.getElementById('encProgressWrap').style.display='none';document.getElementById('decInfo').innerHTML='';document.getElementById('decDownload').innerHTML='';document.getElementById('decProgressWrap').style.display='none';document.getElementById('previewWrap').style.display='none';document.getElementById('previewBody').innerHTML='<div class="pv-placeholder">预览将在此处显示</div>';sessionStorage.removeItem('spore_qr_batch');});
+(function(){var o=document.getElementById('usageModalOverlay'),b=document.getElementById('btnUsage'),x=document.getElementById('usageModalCloseBtn');if(!o||!b)return;b.addEventListener('click',()=>o.classList.add('active'));if(x)x.addEventListener('click',()=>o.classList.remove('active'));o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('active');});})();
+document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.modal-overlay.active').forEach(el=>el.classList.remove('active'));});
 
-            const out = new Uint8Array(META_BYTES + dataToStore.length);
-            out[0]=MAGIC[0];out[1]=MAGIC[1];out[2]=MAGIC[2];
-            const dataLen = dataToStore.length;
-            out[3]=dataLen&0xFF;out[4]=(dataLen>>8)&0xFF;out[5]=(dataLen>>16)&0xFF;
-            out[6]=(dataLen>>24)&0xFF;out[7]=(dataLen>>32)&0xFF;out[8]=(dataLen>>40)&0xFF;
-            out[9]=extLenEnc;
-            for (let i=0;i<extLen&&i<EXT_MAX;i++) out[10+i]=extBytes[i];
-            out.set(dataToStore, META_BYTES);
-            return { stream: out, len: dataLen, ext, useEnc, encFlag };
-        }
-
-        const doEncode = async (payloadBuf, srcName) => {
-            const info = await buildPayload(payloadBuf, srcName);
-            const { stream: dataStream, len, ext, useEnc } = info;
-            if (!len) { uiSet('encInfo','<span class="err">数据为空，无法编码。</span>'); return; }
-            const mode = (document.getElementById('modeLSB').classList.contains('active')) ? 'lsb' : 'pixel';
-
-            if (mode === 'pixel') {
-                const encOutName = randPiName('.encoded.png');
-                const dataPixels = Math.ceil(dataStream.length/3);
-                const H = Math.ceil(dataPixels/W); const totalPixels = W*H;
-                const img = new Uint8ClampedArray(totalPixels*4);
-                for (let i=0;i<dataStream.length;i++){ const px=(i/3)|0; img[px*4+(i%3)]=dataStream[i]; }
-                const pw=document.getElementById('encProgressWrap'),pb=document.getElementById('encProgress'),pl=document.getElementById('encProgressLabel'),ps=document.getElementById('encProgressStatus');
-                pw.style.display='flex'; pb.value=0; pl.textContent='0%'; ps.textContent='编码中… 0 / '+len+' 字节';
-                const total=len, blockSize=1024; let processed=0;
-                for (let i=0;i<total;i++){ processed++;
-                    if (processed%blockSize===0||processed===total){ pb.value=Math.min(100,Math.round(processed/total*100)); pl.textContent=pb.value+'%'; ps.textContent='编码中… '+processed+' / '+total+' 字节'; await sleep(0); } }
-                for (let px=0;px<totalPixels;px++) img[px*4+3]=255;
-                const cv=document.createElement('canvas'); cv.width=W; cv.height=H; const ctx=cv.getContext('2d'); const imd=ctx.createImageData(W,H); imd.data.set(img); ctx.putImageData(imd,0,0);
-                await sleep(20);
-                cv.toBlob(blob=>{
-                    const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=encOutName; a.className='download-link';
-                    a.textContent='下载编码图片 ('+W+'×'+H+', '+blob.size+' bytes)';
-                    const c=document.getElementById('encDownload'); c.innerHTML=''; c.appendChild(a);
-                    pb.value=100; pl.textContent='100%'; ps.textContent='编码完成！';
-                },'image/png');
-                uiSet('encInfo','<span class="ok">'+svgIcon('check')+' 编码完成（像素图）。</span> 源 <b>'+escapeHtml(srcName)+'</b> ('+len+' bytes) → '+W+'×'+H+' 图。扩展名: <code>'+(ext||'(无)')+'</code> ｜ '+(useEnc?'<span class="enc-badge">AES-256-GCM 加密</span>':'未加密')+' ｜ 下载: <code>'+escapeHtml(encOutName)+'</code>');
-                return;
-            }
-
-            // LSB 模式
-            const cf = document.getElementById('carrierFile').files[0];
-            if (!cf){ uiSet('encInfo','<span class="err">LSB 模式需先选择一张载体图片。</span>'); return; }
-            const pw=document.getElementById('encProgressWrap'),pb=document.getElementById('encProgress'),pl=document.getElementById('encProgressLabel'),ps=document.getElementById('encProgressStatus');
-            pw.style.display='flex'; pb.value=0; pl.textContent='0%'; ps.textContent='读取并转换载体为 PNG 无损…';
-            let bmp; try { bmp = await loadCarrierAsPNG(cf); } catch(e){ uiSet('encInfo','<span class="err">无法读取/转换载体图片：'+e.message+'</span>'); pw.style.display='none'; return; }
-            const cv=document.createElement('canvas'); cv.width=bmp.width; cv.height=bmp.height; const ctx=cv.getContext('2d'); ctx.drawImage(bmp,0,0);
-            const {data: carr, width: cw, height: ch} = ctx.getImageData(0,0,bmp.width,bmp.height);
-            const totalPx = cw*ch; const max = lsbCapacity(totalPx);
-            if (dataStream.length > max){ uiSet('encInfo','<span class="err">载体容量不足：需藏 '+dataStream.length+' 字节，'+cw+'×'+ch+' 最多可藏 '+max+' 字节。</span>'); pw.style.display='none'; return; }
-            ps.textContent='LSB 隐写中… 0 / '+dataStream.length+' 字节';
-            let stego;
-            try { stego = lsbEncode(carr, cw, ch, dataStream); }
-            catch(e){ uiSet('encInfo','<span class="err">LSB 编码失败：'+e.message+'</span>'); pw.style.display='none'; return; }
-            const simg = new Uint8ClampedArray(stego);
-            const ocv=document.createElement('canvas'); ocv.width=cw; ocv.height=ch; const octx=ocv.getContext('2d'); const oimd=octx.createImageData(cw,ch); oimd.data.set(simg); octx.putImageData(oimd,0,0);
-            const lsbOutName = randPiName('.lsb.png');
-            await sleep(20);
-            ocv.toBlob(blob=>{
-                const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=lsbOutName; a.className='download-link';
-                a.textContent='下载隐写图片 ('+cw+'×'+ch+', '+blob.size+' bytes)';
-                const c=document.getElementById('encDownload'); c.innerHTML=''; c.appendChild(a);
-                pb.value=100; pl.textContent='100%'; ps.textContent='隐写完成！';
-            },'image/png');
-            uiSet('encInfo','<span class="ok">'+svgIcon('check')+' 编码完成（LSB 隐写进照片）。</span> 源 <b>'+escapeHtml(srcName)+'</b> ('+len+' bytes) 已藏入载体 <b>'+escapeHtml(cf.name)+'</b> ('+cw+'×'+ch+')。扩展名: <code>'+(ext||'(无)')+'</code> ｜ '+(useEnc?'<span class="enc-badge">AES-256-GCM 加密</span>':'未加密')+' ｜ 下载: <code>'+escapeHtml(lsbOutName)+'</code>');
-        };
-
-        const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB 上限
-        document.getElementById('btnEncode').addEventListener('click', async ()=>{
-            const f=document.getElementById('encFile').files[0]; if (!f){uiSet('encInfo','<span class="err">请先选择要编码的文件。</span>');return;}
-            if (f.size > MAX_FILE_SIZE) { uiSet('encInfo','<span class="err">文件过大（最大支持 50MB）：</span><code>'+escapeHtml(f.name)+'</code> ('+fmtSize(f.size)+')'); return; }
-            const btn=document.getElementById('btnEncode');
-            btn.disabled=true; btn.textContent='编码中…';
-            try { await doEncode(new Uint8Array(await f.arrayBuffer()), f.name); } finally { btn.disabled=false; btn.textContent='生成图片'; }
-        });
-        document.getElementById('btnEncodeText').addEventListener('click', async ()=>{
-            const text=document.getElementById('encText').value;
-            if (!text){uiSet('encInfo','<span class="err">请先输入要编码的文字内容。</span>');return;}
-            const btn=document.getElementById('btnEncodeText');
-            btn.disabled=true; btn.textContent='编码中…';
-            try { await doEncode(new TextEncoder().encode(text), randPiName('.txt')); } finally { btn.disabled=false; btn.textContent='生成图片'; }
-        });
-
-        // ============================================================
-        //  解码
-        // ============================================================
-        document.getElementById('btnDecode').addEventListener('click', async ()=>{
-            const f=document.getElementById('decFile').files[0]; if (!f){uiSet('decInfo','<span class="err">请先选择编码后的 PNG 图片。</span>');return;}
-            const btn=document.getElementById('btnDecode');
-            btn.disabled=true; btn.textContent='解码中…';
-            const pw=document.getElementById('decProgressWrap'),pb=document.getElementById('decProgress'),pl=document.getElementById('decProgressLabel'),ps=document.getElementById('decProgressStatus');
-            try {
-            pw.style.display='flex'; pb.value=0; pl.textContent='0%'; ps.textContent='读取图片…';
-            let bmp; try { bmp=await createImageBitmap(f); } catch(e){ uiSet('decInfo','<span class="err">无法解码图片：'+e.message+'</span>'); pw.style.display='none'; throw e; }
-            const cv=document.createElement('canvas'); cv.width=bmp.width; cv.height=bmp.height; const ctx=cv.getContext('2d'); ctx.drawImage(bmp,0,0);
-            const {data,width:iW,height:iH}=ctx.getImageData(0,0,bmp.width,bmp.height); const totalPx=iW*iH;
-            if (totalPx<META_PIXELS){uiSet('decInfo','<span class="err">图片太小，至少需要 '+META_PIXELS+' 个像素。</span>');pw.style.display='none';throw new Error('图片太小');}
-            // 自动检测模式
-            let decodeMode = 'pixel';
-            const px2rgb=px=>[data[px*4],data[px*4+1],data[px*4+2]]; const p0=px2rgb(0);
-            if (p0[0]===MAGIC[0]&&p0[1]===MAGIC[1]&&p0[2]===MAGIC[2]) decodeMode='pixel';
-            else {
-                try { const r = lsbDecode(data, iW, iH);
-                    const stream = r.payload; const slen = Math.min(stream.length, totalPx*3);
-                    for (let i=0;i<slen;i++){ const px=(i/3)|0; data[px*4+(i%3)]=stream[i]; }
-                    decodeMode='lsb'; ps.textContent='LSB 提取成功，正在解析…';
-                } catch(e){ uiSet('decInfo','<span class="err">无法识别：既不是像素图编码，也不是本工具 LSB 编码的载体。</span>'); pw.style.display='none'; throw e; }
-            }
-            // 解析元数据
-            const p1=px2rgb(1),p2=px2rgb(2); const len=(p1[0]|(p1[1]<<8)|(p1[2]<<16)|(p2[0]<<24)|(p2[1]<<32)|(p2[2]<<40));
-            if (!Number.isFinite(len)||len<=0||len>totalPx*3){uiSet('decInfo','<span class="err">声明文件长度异常 (len='+len+')。</span>');pw.style.display='none';throw new Error('长度异常');}
-            const p3=px2rgb(3); const extLenEnc=p3[0]; const useEnc=((extLenEnc>>7)&0x1)===1; const extLen=extLenEnc&0x7F;
-            let extBytes=[]; if (extLen>0&&extLen<=EXT_MAX){let idx=0; if(idx<extLen)extBytes.push(p3[1]);idx++; if(idx<extLen)extBytes.push(p3[2]);idx++; for(let pi=4;pi<META_PIXELS&&idx<extLen;pi++){const rgb=px2rgb(pi);for(let ci=0;ci<3&&idx<extLen;ci++){extBytes.push(rgb[ci]);idx++;}}}
-            let extName=''; if(extBytes.length) try{extName=new TextDecoder().decode(new Uint8Array(extBytes));}catch(_){extName='';}
-            const password = getPassword();
-            if(useEnc && (!password || !password.length)){uiSet('decInfo','<span class="err">此图片使用了 AES-256-GCM 加密，请在顶部输入正确的密码后重试。</span>');pw.style.display='none';throw new Error('需要密码');}
-            // 读取加密后的数据
-            const encData = new Uint8Array(len); let written=0;
-            const updateInterval=Math.max(1,Math.floor(Math.min(len,totalPx*3)/200));
-            ps.textContent='读取数据… 0 / '+len+' 字节';
-            for (let px=META_PIXELS;px<totalPx&&written<len;px++){const b=px*4;encData[written++]=data[b];if(written>=len)break;encData[written++]=data[b+1];if(written>=len)break;encData[written++]=data[b+2];if(written>=len)break;
-                if(written%updateInterval===0||written===len){pb.value=Math.min(100,Math.round(written/len*100));pl.textContent=pb.value+'%';ps.textContent='读取数据… '+written+' / '+len+' 字节';await sleep(0);}}
-            let out;
-            if (useEnc) {
-                // 解析 AES-GCM 数据：salt(16) + iv(12) + ciphertext + authTag(16)
-                if (len < 44) { uiSet('decInfo','<span class="err">加密数据格式错误：长度不足。</span>'); pw.style.display='none'; throw new Error('加密数据格式错误'); }
-                const salt = encData.slice(0, 16);
-                const iv = encData.slice(16, 28);
-                const ciphertext = encData.slice(28, len - 16);
-                const authTag = encData.slice(len - 16);
-                try {
-                    ps.textContent='AES-256-GCM 解密中…';
-                    out = await aesGcmDecrypt({ salt, iv, ciphertext, authTag }, password);
-                } catch(e) {
-                    uiSet('decInfo','<span class="err">'+e.message+'</span>');
-                    pw.style.display='none'; throw e;
-                }
-            } else {
-                out = encData;
-            }
-            const finalLen = out.length;
-            const finalName=randPiName(extName);
-            const blob=new Blob([out],{type:'application/octet-stream'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=finalName; a.className='download-link';
-            a.textContent='下载还原文件 ('+finalLen+' bytes)  →  '+finalName; const c=document.getElementById('decDownload'); c.innerHTML=''; c.appendChild(a);
-            pb.value=100;pl.textContent='100%';ps.textContent='解码完成！';
-            const extShow=extName||'(无扩展名)'; const keyStatus=useEnc?'<span class="enc-badge">AES-256-GCM 加密验证通过</span>':'未加密';
-            const modeTag = decodeMode==='lsb' ? 'LSB 隐写进照片' : '像素图';
-            uiSet('decInfo','<span class="ok">'+svgIcon('check')+' 解码成功（'+modeTag+'）。</span> 图 '+iW+'×'+iH+'，长度 '+finalLen+' bytes，扩展名 <code>'+extShow+'</code> ｜ '+keyStatus+' ｜ 还原文件名: <code>'+escapeHtml(finalName)+'</code>');
-            const low=extName.toLowerCase(),isSens=SENSITIVE_EXTS.some(s=>low.endsWith(s));
-            showModal(isSens?'注意文件扩展名':'下载提示', isSens?'检测到文件类型可能被浏览器自动更改扩展名。':'文件已准备就绪，请检查下载文件名是否与预期一致。','正确文件名：'+finalName,isSens);
-            renderPreview(out, finalName, finalLen);
-            } catch(e) {
-                uiSet('decInfo','<span class="err">解码异常：'+(e.message||e)+'。</span>');
-                pw.style.display='none';
-            } finally {
-                btn.disabled=false; btn.textContent='还原并预览';
-            }
-        });
-
-        // ============================================================
-        //  文件预览分发器
-        // ============================================================
-        function renderPreview(buf, name, size){
-            const wrap=document.getElementById('previewWrap'),body=document.getElementById('previewBody'),title=document.getElementById('pvTitle'),meta=document.getElementById('pvMeta');
-            wrap.style.display='block'; title.innerHTML=svgIcon('search')+' '+escapeHtml(name); meta.textContent=size+' bytes'+(fmtSize(size)?' · '+fmtSize(size):'');
-            const ext=(getFileExt(name)||'').toLowerCase(), mime=getMime(ext);
-            body.innerHTML='';
-            try {
-                if (isImageExt(ext))        return pvImage(body, buf, name);
-                if (isVideoExt(ext))        return pvVideo(body, buf, name, mime);
-                if (isAudioExt(ext))        return pvAudio(body, buf, name, mime);
-                if (isTextExt(ext))         return pvText(body, buf, name, ext);
-                if (ext==='.pdf')           return pvPdf(body, buf, name);
-                if (isArchiveExt(ext))      return pvArchive(body, buf, name, ext);
-                if (looksLikeText(buf))     return pvText(body, buf, name, ext||'.txt');
-                return pvGeneric(body, buf, name, ext);
-            } catch(e){ body.innerHTML='<div class="pv-placeholder">预览失败：'+escapeHtml(e.message)+'</div>'; }
-        }
-
-        function pvImage(body, buf){
-            const url=URL.createObjectURL(new Blob([buf])); const img=new Image(); img.onload=()=>{body.innerHTML=
-                '<div class="pv-image"><img src="'+url+'" alt=""><div class="pv-info">'+img.naturalWidth+' × '+img.naturalHeight+'</div></div>';}; img.onerror=()=>{body.innerHTML='<div class="pv-placeholder">图片解码失败</div>';}; img.src=url;
-        }
-        function pvVideo(body, buf, name, mime){
-            const url=URL.createObjectURL(new Blob([buf],{type:mime||'video/mp4'}));
-            body.innerHTML='<div class="pv-video"><div class="video-frame"><video controls preload="metadata" controlslist="nodownload" style="border-radius:12px;" src="'+url+'"></video></div></div>';
-        }
-        function pvAudio(body, buf, name, mime){
-            const url=URL.createObjectURL(new Blob([buf],{type:mime||'audio/mpeg'}));
-            body.innerHTML='<div class="pv-audio"><div class="audio-cover">'+svgIcon('music')+'</div><div class="audio-title">'+escapeHtml(name)+'</div><audio controls preload="metadata" src="'+url+'"></audio></div>';
-        }
-        function pvText(body, buf, name, ext){
-            const text=new TextDecoder('utf-8',{fatal:false}).decode(buf); const lang=badgeFor(ext);
-            const safe=escapeHtml(text.length>80000?text.slice(0,80000)+'\n\n…（文件过大，仅显示前 80000 字符）':text);
-            body.innerHTML='<div class="pv-text"><span class="pv-lang-badge">'+lang+'</span><pre>'+safe+'</pre></div>';
-        }
-        function pvPdf(body, buf, name){
-            const url=URL.createObjectURL(new Blob([buf],{type:'application/pdf'}));
-            body.innerHTML='<div class="pv-generic"><iframe src="'+url+'" style="width:100%;height:460px;border:1px solid #ddd;border-radius:8px;"></iframe></div>';
-        }
-        async function pvArchive(body, buf, name, ext){
-            body.innerHTML='<div class="pv-archive"><div class="arch-summary">'+svgIcon('archive')+' 正在解析结构…</div><div class="arch-list" id="archList"><div class="arch-empty">解析中…</div></div></div>';
-            try {
-                const { listZip } = await getZipLib();
-                let entries; try { entries = listZip(buf); } catch(e){ throw new Error('不是有效的归档：'+e.message); }
-                const list=body.querySelector('.arch-list');
-                let html='';
-                for (const e of entries){ html+='<div class="arch-row"><span class="arch-name">'+escapeHtml(e.name)+'</span><span class="arch-size">'+(e.size?fmtSize(e.size):'')+'</span></div>'; }
-                list.innerHTML=html||'<div class="arch-empty">（空归档）</div>';
-            } catch(e){ body.querySelector('.arch-list').innerHTML='<div class="arch-empty">解析失败：'+escapeHtml(e.message)+'</div>'; }
-        }
-        function pvGeneric(body, buf, name, ext){
-            const slice=buf.slice(0,4096); let hex=''; for (let i=0;i<slice.length;i+=16){ const off=i.toString(16).padStart(8,'0'); let hs='',acs=''; for(let j=0;j<16;j++){if(i+j<slice.length){const b=slice[i+j];hs+=(b<16?'0':'')+b.toString(16)+' ';acs+=b>=32&&b<127?String.fromCharCode(b):'.';}else{hs+='   ';}} hex+=off+'  '+hs.padEnd(16*3+2,'')+' '+acs+'\n'; }
-            body.innerHTML='<div class="pv-generic"><div class="generic-icon">'+svgIcon('file-text')+'</div><div class="generic-name">'+escapeHtml(name)+'</div><div class="generic-meta">'+escapeHtml(ext||'未知类型')+' · '+buf.length+' bytes</div><details style="margin-top:12px;text-align:left;"><summary style="cursor:pointer;font-size:12px;color:#4a90d9;">查看十六进制 (前 4KB)</summary><div class="pv-hex" style="margin-top:8px;"><pre>'+escapeHtml(hex)+'</pre></div></details></div>';
-        }
-
-        const isImageExt=e=>['.png','.jpg','.jpeg','.gif','.webp','.bmp','.svg','.ico'].includes(e);
-        const isVideoExt=e=>['.mp4','.webm','.ogg','.ogv','.mov','.m4v','.avi'].includes(e);
-        const isAudioExt=e=>['.mp3','.wav','.ogg','.oga','.flac','.m4a','.aac','.opus'].includes(e);
-        const isTextExt=e=>['.txt','.md','.json','.xml','.html','.htm','.css','.js','.ts','.py','.lua','.c','.h','.cpp','.cs','.java','.go','.rs','.rb','.php','.sh','.yml','.yaml','.toml','.ini','.cfg','.log','.csv','.sql'].includes(e);
-        const isArchiveExt=e=>['.zip','.apk','.jar','.xapk','.aab','.apks','.ipa','.docx','.xlsx','.pptx'].includes(e);
-        function getMime(e){return ({'.mp4':'video/mp4','.webm':'video/webm','.mp3':'audio/mpeg','.wav':'audio/wav','.ogg':'audio/ogg','.flac':'audio/flac'}[e]||'');}
-        function badgeFor(e){return ({'.py':'Python','.js':'JavaScript','.ts':'TypeScript','.json':'JSON','.html':'HTML','.css':'CSS','.md':'Markdown','.txt':'Text'}[e.replace('.','')]||'Text');}
-        function looksLikeText(buf){ if(!buf.length) return false; const len=Math.min(buf.length,512); let ok=0; for(let i=0;i<len;i++){const b=buf[i];if(b===0)return false;if((b>=32&&b<127)||b===9||b===10||b===13)ok++;} return ok/len>0.9; }
-
-        let _zipLibPromise=null;
-        function getZipLib(){
-            if (_zipLibPromise) return _zipLibPromise;
-            _zipLibPromise = new Promise(resolve=>{
-                const lib = {
-                    listZip(buf){
-                        const dv=new DataView(buf.buffer,buf.byteOffset,buf.byteLength); const entries=[];
-                        let eocd=-1; for(let i=buf.length-22;i>=0&&i>buf.length-66000;i--){if(dv.getUint32(i,true)===0x06054b50){eocd=i;break;}}
-                        if(eocd<0) throw new Error('未找到 EOCD 记录');
-                        const cdSize=dv.getUint32(eocd+12,true), cdOff=dv.getUint32(eocd+16,true), num=dv.getUint16(eocd+10,true);
-                        let p=cdOff; for(let i=0;i<num;i++){ if(p+46>buf.length) break; const sig=dv.getUint32(p,true); if(sig!==0x02014b50) break;
-                            const compSize=dv.getUint32(p+20,true), uncSize=dv.getUint32(p+24,true), nameLen=dv.getUint16(p+28,true), extraLen=dv.getUint16(p+30,true), commLen=dv.getUint16(p+32,true);
-                            const nameBytes=buf.slice(p+46,p+46+nameLen); let name=''; try{name=new TextDecoder().decode(nameBytes);}catch(_){}
-                            entries.push({name,size:uncSize}); p+=46+nameLen+extraLen+commLen;
-                        }
-                        return entries;
-                    }
-                };
-                resolve(lib);
-            });
-            return _zipLibPromise;
-        }
-
-        document.getElementById('encFile').addEventListener('change',()=>{document.getElementById('encProgressWrap').style.display='none';document.getElementById('encDownload').innerHTML='';document.getElementById('encInfo').innerHTML='';});
-        document.getElementById('decFile').addEventListener('change',()=>{document.getElementById('decProgressWrap').style.display='none';document.getElementById('decDownload').innerHTML='';document.getElementById('decInfo').innerHTML='';document.getElementById('previewWrap').style.display='none';});
-    
-        // === 清除按钮 ===
-        document.getElementById('btnClear').addEventListener('click', function() {
-            document.getElementById('keyInput').value = '';
-            document.getElementById('keyStrength').textContent = '';
-            document.getElementById('encFile').value = '';
-            document.getElementById('decFile').value = '';
-            document.getElementById('carrierFile').value = '';
-            document.getElementById('encText').value = '';
-            document.getElementById('encInfo').innerHTML = '';
-            document.getElementById('encDownload').innerHTML = '';
-            document.getElementById('encProgressWrap').style.display = 'none';
-            document.getElementById('decInfo').innerHTML = '';
-            document.getElementById('decDownload').innerHTML = '';
-            document.getElementById('decProgressWrap').style.display = 'none';
-            document.getElementById('previewWrap').style.display = 'none';
-            document.getElementById('previewBody').innerHTML = '<div class="pv-placeholder">预览将在此处显示</div>';
-        });
-
-        // === 使用说明弹窗 ===
-        (function() {
-            var usageOverlay = document.getElementById('usageModalOverlay');
-            var btnUsage = document.getElementById('btnUsage');
-            var usageCloseBtn = document.getElementById('usageModalCloseBtn');
-            if (!usageOverlay) { console.error('[使用说明] 弹窗容器未找到'); return; }
-            if (!btnUsage) { console.error('[使用说明] 按钮未找到'); return; }
-            btnUsage.addEventListener('click', function() {
-                usageOverlay.classList.add('active');
-            });
-            if (usageCloseBtn) {
-                usageCloseBtn.addEventListener('click', function() {
-                    usageOverlay.classList.remove('active');
-                });
-            }
-            usageOverlay.addEventListener('click', function(e) {
-                if (e.target === usageOverlay) {
-                    usageOverlay.classList.remove('active');
-                }
-            });
-        })();
-
-        // === Escape 键关闭所有弹窗 ===
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                document.querySelectorAll('.modal-overlay.active').forEach(function(el) {
-                    el.classList.remove('active');
-                });
-            }
-        });
-        // === 使用说明弹窗调试日志 ===
-        console.log('[使用说明] 弹窗已初始化，usageOverlay:', !!document.getElementById('usageModalOverlay'), 'btnUsage:', !!document.getElementById('btnUsage'));
+/* ---------- 启动：检查 #data= 参数 ---------- */
+tryParseLaunchData();
 </script>
 </body>
 </html>
