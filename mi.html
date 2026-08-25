@@ -190,6 +190,25 @@ button{padding:7px 14px;font-size:13px}
 h1{font-size:16px}
 .title-en{font-size:16px}
 }
+
+/* ===== QR 拼接大图 ===== */
+.qr-combined-wrap{margin-top:12px;border:1px solid #dce3ed;border-radius:10px;padding:12px;background:#f7f9fc}
+.qr-combined-wrap .cb-head{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:#333;margin-bottom:8px}
+.qr-combined-wrap canvas{width:100%;max-width:720px;height:auto;display:block;margin:0 auto 8px;background:#fff;border:1px solid #e5e9f0;border-radius:6px}
+.qr-combined-wrap .cb-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+/* ===== 扫码弹窗 ===== */
+.scan-modal{max-width:520px;width:92%}
+.scan-stage{position:relative;width:100%;aspect-ratio:1/1;background:#000;border-radius:10px;overflow:hidden;margin:10px 0}
+.scan-stage video{width:100%;height:100%;object-fit:cover;display:block}
+.scan-stage .scan-frame{position:absolute;left:50%;top:50%;width:62%;height:62%;transform:translate(-50%,-50%);border:3px solid #4a90d9;border-radius:12px;box-shadow:0 0 0 4000px rgba(0,0,0,.35);pointer-events:none}
+.scan-stage .scan-line{position:absolute;left:50%;top:50%;width:62%;height:3px;transform:translate(-50%,-50%);background:linear-gradient(90deg,transparent,#4a90d9,transparent);animation:scanMove 2.4s ease-in-out infinite;pointer-events:none}
+@keyframes scanMove{0%{top:24%}50%{top:76%}100%{top:24%}}
+.scan-result{margin-top:8px;font-size:13px;color:#333;word-break:break-all}
+.scan-result.ok{color:#1a7f37;font-weight:600}
+.scan-result.err{color:#c0392b}
+.scan-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:10px}
+.scan-actions button{padding:8px 14px;font-size:13px;margin:0}
+.scan-tip{font-size:12px;color:#888;margin-top:6px;text-align:center}
 </style>
 </head>
 <body>
@@ -207,6 +226,7 @@ h1{font-size:16px}
 <p class="info">将任意文件（或文字内容）编码为 PNG 图片（每 3 字节 → 1 个 RGB 像素），或从其生成的图片中还原原文件并即时预览。<strong>使用 AES-256-GCM + PBKDF2 加密，防篡改、抗审查</strong>。新增 <strong>QR 码模式</strong>：将内容编码为可扫码的 QR 码（大文件自动分片），扫码直接跳转本工具网站自动解析。</p>
 
 <div class="header-actions">
+<button type="button" id="btnScan" class="secondary" title="扫码识别 QR 码（相机 / 相册）"><span class="ico"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><rect x="7" y="7" width="10" height="10" rx="1" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 8h2M3 16h2M19 8h2M19 16h2M8 3v2M16 3v2M8 19v2M16 19v2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span> 扫码</button>
 <button type="button" id="btnClear" class="secondary" title="清除所有内容"><span class="ico"><svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M10 11v6M14 11v6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span> 清除</button>
 <button type="button" id="btnUsage" class="secondary" title="使用说明"><span class="ico"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 7h8M8 11h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span> 使用说明</button>
 </div>
@@ -285,7 +305,7 @@ h1{font-size:16px}
 <input type="file" id="decFile" class="input-box" accept="image/*,.png,.bmp,.jpg,.jpeg,.webp,.gif,.tiff,.qr">
 <button id="btnDecode">还原并预览</button>
 </div>
-<div class="info" style="margin-top:6px;font-size:12px;color:#888;">支持：像素图 PNG / LSB 隐写 PNG / QR 码图片（识别后自动跳转解析 URL）。也可直接打开本页并携带 <code>#data=...</code> 参数，自动解析 QR 码解码出的分享链接。</div>
+<div class="info" style="margin-top:6px;font-size:12px;color:#888;">支持：像素图 PNG / LSB 隐写 PNG / QR 码图片（识别后自动跳转解析 URL）。也可点击右上角"扫码"按钮调用相机或相册识别 QR 码。直接打开本页并携带 <code>#data=...</code> 参数亦可自动解析。</div>
 
 <div class="progress-wrap" id="decProgressWrap" style="display:none;">
 <progress id="decProgress" value="0" max="100"></progress>
@@ -381,6 +401,13 @@ h1{font-size:16px}
 <li>单张 QR 码原始容量约 1.2KB（Base64 后），汉字约数百字/张；大文件分片数量会较多，属正常。</li>
 </ul>
 
+
+<h4><span class="ico"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><rect x="7" y="7" width="10" height="10" rx="1" fill="none" stroke="currentColor" stroke-width="2"/></svg></span> 六-B、扫码识别 / 拼接大图</h4>
+<ul>
+<li><strong>右上角"扫码"按钮</strong>：点击可打开相机实时识别 QR 码；也可点"选择相册图片"从相册选取 QR 码图片识别。识别到内容后会自动在本工具内解析还原（加密内容会提示输入密码）。</li>
+<li><strong>多 QR 码拼接为一张大图</strong>：生成 QR 码时，工具会额外输出一张"拼接大图"——把所有分片 QR 码按网格排布到一张 PNG 中，方便一次保存/分享；本工具解码区上传该大图即可自动逐码识别并拼接还原。</li>
+<li><strong>只有本工具可解析</strong>：QR 码内容为加密后的自定义 JSON 协议（<code>#data=...</code>），未授权方即便扫码也只能看到一串无法解读的数据；设了密码后须凭密码才能还原明文。</li>
+</ul>
 <h4><span class="ico"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="none" stroke="currentColor" stroke-width="2"/></svg></span> 七、应用场景推荐</h4>
 <ul>
 <li><strong>私密日记/备忘录</strong>：藏进风景照或编码为 QR 码随身携带。</li>
@@ -508,7 +535,10 @@ function b64encode(bytes){let s='';const t='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghij
 function b64decode(b64){const t='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';let bin='';for(let i=0;i<b64.length;i++){const c=b64[i];if(c==='=')continue;const v=t.indexOf(c);if(v<0)continue;bin+=String.fromCharCode(v);}const out=new Uint8Array(Math.floor(bin.length*6/8));let bitBuf=0,bitCount=0,outIdx=0;for(let i=0;i<bin.length;i++){bitBuf=(bitBuf<<6)|bin.charCodeAt(i);bitCount+=6;while(bitCount>=8&&outIdx<out.length){out[outIdx++]=(bitBuf>>(bitCount-8))&0xFF;bitCount-=8;bitBuf&=((1<<bitCount)-1);}}return out.slice(0,outIdx);}
 function makeQrPayloadJson(total,idx,encFlag,ext,dataB64){return JSON.stringify({v:1,t:total,i:idx,e:encFlag,ext:ext||'',d:dataB64});}
 
-async function doEncodeQR(payloadBuf,srcName){const info=await buildPayload(payloadBuf,srcName);const{stream:dataStream,len,ext,useEnc}=info;if(!len){uiSet('encInfo','<span class="err">数据为空，无法编码。</span>');return;}const b64=b64encode(dataStream);const chunks=[];for(let i=0;i<b64.length;i+=QR_CHUNK_TARGET){chunks.push(b64.slice(i,i+QR_CHUNK_TARGET));}const total=chunks.length;const encFlag=useEnc?1:0;const wrap=document.getElementById('encDownload');wrap.innerHTML='';const grid=document.createElement('div');grid.className='qr-result-grid';const pw=document.getElementById('encProgressWrap'),pb=document.getElementById('encProgress'),pl=document.getElementById('encProgressLabel'),ps=document.getElementById('encProgressStatus');pw.style.display='flex';pb.value=0;pl.textContent='0%';ps.textContent='生成 QR 码 0/'+total+'…';let shareUrlAll=null;for(let k=0;k<total;k++){const json=makeQrPayloadJson(total,k,encFlag,ext,chunks[k]);const url=SITE_URL+'#data='+encodeURIComponent(json);if(k===0)shareUrlAll=url;const tile=document.createElement('div');tile.className='qr-tile';const cv=document.createElement('canvas');tile.appendChild(cv);const meta=document.createElement('div');meta.className='qr-meta';meta.innerHTML=(total>1?'<b>第 '+(k+1)+' / '+total+' 片</b><br>':'')+'边长建议 ≥ 400px · 截图/打印/转发均可识别';tile.appendChild(meta);try{const qr=qrcode(0,'H');qr.addData(json);qr.make();const mod=qr.getModuleCount(),cell=Math.max(4,Math.ceil(400/mod)),side=cell*mod;cv.width=side;cv.height=side;const ctx=cv.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,side,side);ctx.fillStyle='#000';for(let r=0;r<mod;r++)for(let c=0;c<mod;c++)if(qr.isDark(r,c))ctx.fillRect(c*cell,r*cell,cell,cell);}catch(e){meta.innerHTML+='<div class="err">QR 生成失败：'+escapeHtml(e.message)+'</div>';}const actions=document.createElement('div');actions.className='qr-actions';const dl=document.createElement('a');dl.className='download-link';dl.href=cv.toDataURL('image/png');const baseName=randPiName('',8);dl.download=(total>1?baseName+'_qr'+(k+1)+'of'+total:baseName+'_qr')+'.png';dl.textContent='下载 PNG';actions.appendChild(dl);tile.appendChild(actions);grid.appendChild(tile);pb.value=Math.round((k+1)/total*100);pl.textContent=pb.value+'%';ps.textContent='生成 QR 码 '+(k+1)+'/'+total;await sleep(0);}const shareBox=document.createElement('div');shareBox.style.marginTop='10px';shareBox.innerHTML='<div style="font-size:13px;color:#333;font-weight:600;margin-bottom:4px;">'+svgIcon('box')+' 分享链接（任一片均可，扫码跳转本工具网站自动解析）</div>';const ta=document.createElement('textarea');ta.className='qr-share-url';ta.readOnly=true;ta.value=shareUrlAll||'';shareBox.appendChild(ta);const copyBtn=document.createElement('button');copyBtn.type='button';copyBtn.className='secondary';copyBtn.style.marginTop='6px';copyBtn.textContent='复制分享链接';copyBtn.addEventListener('click',async()=>{try{await navigator.clipboard.writeText(ta.value);copyBtn.textContent='已复制！';setTimeout(()=>copyBtn.textContent='复制分享链接',2000);}catch(e){ta.select();document.execCommand('copy');copyBtn.textContent='已复制！';setTimeout(()=>copyBtn.textContent='复制分享链接',2000);}});shareBox.appendChild(copyBtn);wrap.appendChild(grid);wrap.appendChild(shareBox);ps.textContent='QR 码生成完成！';pb.value=100;pl.textContent='100%';uiSet('encInfo','<span class="ok">'+svgIcon('check')+' 编码完成（QR 码模式）。</span> 源 <b>'+escapeHtml(srcName)+'</b> ('+len+' bytes) → '+total+' 张 QR 码'+(total>1?'（分片）':'')+'。扩展名: <code>'+(ext||'(无)')+'</code> ｜ '+(useEnc?'<span class="enc-badge">AES-256-GCM 加密</span>':'未加密')+' ｜ 扫码将跳转 <code>'+escapeHtml(SITE_URL)+'</code> 自动解析。');}
+async function doEncodeQR(payloadBuf,srcName){const info=await buildPayload(payloadBuf,srcName);const{stream:dataStream,len,ext,useEnc}=info;if(!len){uiSet('encInfo','<span class="err">数据为空，无法编码。</span>');return;}const b64=b64encode(dataStream);const chunks=[];for(let i=0;i<b64.length;i+=QR_CHUNK_TARGET){chunks.push(b64.slice(i,i+QR_CHUNK_TARGET));}const total=chunks.length;const encFlag=useEnc?1:0;const wrap=document.getElementById('encDownload');wrap.innerHTML='';const grid=document.createElement('div');grid.className='qr-result-grid';const pw=document.getElementById('encProgressWrap'),pb=document.getElementById('encProgress'),pl=document.getElementById('encProgressLabel'),ps=document.getElementById('encProgressStatus');pw.style.display='flex';pb.value=0;pl.textContent='0%';ps.textContent='生成 QR 码 0/'+total+'…';let shareUrlAll=null;for(let k=0;k<total;k++){const json=makeQrPayloadJson(total,k,encFlag,ext,chunks[k]);const url=SITE_URL+'#data='+encodeURIComponent(json);if(k===0)shareUrlAll=url;const tile=document.createElement('div');tile.className='qr-tile';const cv=document.createElement('canvas');tile.appendChild(cv);const meta=document.createElement('div');meta.className='qr-meta';meta.innerHTML=(total>1?'<b>第 '+(k+1)+' / '+total+' 片</b><br>':'')+'边长建议 ≥ 400px · 截图/打印/转发均可识别';tile.appendChild(meta);try{const qr=qrcode(0,'H');qr.addData(json);qr.make();const mod=qr.getModuleCount(),cell=Math.max(4,Math.ceil(400/mod)),side=cell*mod;cv.width=side;cv.height=side;const ctx=cv.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,side,side);ctx.fillStyle='#000';for(let r=0;r<mod;r++)for(let c=0;c<mod;c++)if(qr.isDark(r,c))ctx.fillRect(c*cell,r*cell,cell,cell);}catch(e){meta.innerHTML+='<div class="err">QR 生成失败：'+escapeHtml(e.message)+'</div>';}const actions=document.createElement('div');actions.className='qr-actions';const dl=document.createElement('a');dl.className='download-link';dl.href=cv.toDataURL('image/png');const baseName=randPiName('',8);dl.download=(total>1?baseName+'_qr'+(k+1)+'of'+total:baseName+'_qr')+'.png';dl.textContent='下载 PNG';actions.appendChild(dl);tile.appendChild(actions);grid.appendChild(tile);pb.value=Math.round((k+1)/total*100);pl.textContent=pb.value+'%';ps.textContent='生成 QR 码 '+(k+1)+'/'+total;await sleep(0);}const shareBox=document.createElement('div');shareBox.style.marginTop='10px';shareBox.innerHTML='<div style="font-size:13px;color:#333;font-weight:600;margin-bottom:4px;">'+svgIcon('box')+' 分享链接（任一片均可，扫码跳转本工具网站自动解析）</div>';const ta=document.createElement('textarea');ta.className='qr-share-url';ta.readOnly=true;ta.value=shareUrlAll||'';shareBox.appendChild(ta);const copyBtn=document.createElement('button');copyBtn.type='button';copyBtn.className='secondary';copyBtn.style.marginTop='6px';copyBtn.textContent='复制分享链接';copyBtn.addEventListener('click',async()=>{try{await navigator.clipboard.writeText(ta.value);copyBtn.textContent='已复制！';setTimeout(()=>copyBtn.textContent='复制分享链接',2000);}catch(e){ta.select();document.execCommand('copy');copyBtn.textContent='已复制！';setTimeout(()=>copyBtn.textContent='复制分享链接',2000);}});shareBox.appendChild(copyBtn);wrap.appendChild(grid);
+/* 额外输出：把所有 QR 码拼接为一张大图（网格 PNG） */
+try{const tiles=grid.querySelectorAll('.qr-tile canvas');const tileCvs=Array.prototype.slice.call(tiles);if(tileCvs.length>1){const combined=combineQrTiles(tileCvs);const cb=document.createElement('div');cb.className='qr-combined-wrap';cb.innerHTML='<div class="cb-head">'+svgIcon('box')+' 拼接大图（'+tileCvs.length+' 张 QR 码网格排布，一次保存/分享；本工具解码区上传此图可自动逐码识别并拼接还原）</div>';const cbCv=document.createElement('canvas');cbCv.width=combined.width;cbCv.height=combined.height;cbCv.getContext('2d').drawImage(combined,0,0);cb.appendChild(cbCv);const cbActs=document.createElement('div');cbActs.className='cb-actions';const cbDl=document.createElement('a');cbDl.className='download-link';cbDl.href=combined.toDataURL('image/png');cbDl.download=randPiName('',8)+'_qr_combined.png';cbDl.textContent='下载拼接大图 ('+tileCvs.length+' 码 · '+combined.width+'×'+combined.height+')';cbActs.appendChild(cbDl);cb.appendChild(cbActs);wrap.appendChild(cb);}}catch(e){console.warn('拼接大图生成失败：',e);}
+wrap.appendChild(shareBox);ps.textContent='QR 码生成完成！';pb.value=100;pl.textContent='100%';uiSet('encInfo','<span class="ok">'+svgIcon('check')+' 编码完成（QR 码模式）。</span> 源 <b>'+escapeHtml(srcName)+'</b> ('+len+' bytes) → '+total+' 张 QR 码'+(total>1?'（分片）':'')+'。扩展名: <code>'+(ext||'(无)')+'</code> ｜ '+(useEnc?'<span class="enc-badge">AES-256-GCM 加密</span>':'未加密')+' ｜ 扫码将跳转 <code>'+escapeHtml(SITE_URL)+'</code> 自动解析。');}
 
 /* ============================================================
    编码入口（像素图 / LSB / QR）
@@ -522,7 +552,7 @@ document.getElementById('btnEncodeText').addEventListener('click',async()=>{cons
 /* ============================================================
    解码（像素图 / LSB / QR 码图片）
    ============================================================ */
-document.getElementById('btnDecode').addEventListener('click',async()=>{const f=document.getElementById('decFile').files[0];if(!f){uiSet('decInfo','<span class="err">请先选择编码后的图片 / QR 码图片。</span>');return;}const btn=document.getElementById('btnDecode');btn.disabled=true;btn.textContent='解码中…';const pw=document.getElementById('decProgressWrap'),pb=document.getElementById('decProgress'),pl=document.getElementById('decProgressLabel'),ps=document.getElementById('decProgressStatus');try{pw.style.display='flex';pb.value=0;pl.textContent='0%';ps.textContent='读取图片…';let bmp;try{bmp=await createImageBitmap(f);}catch(e){uiSet('decInfo','<span class="err">无法解码图片：'+e.message+'</span>');pw.style.display='none';throw e;}const cv=document.createElement('canvas');cv.width=bmp.width;cv.height=bmp.height;const ctx=cv.getContext('2d');ctx.drawImage(bmp,0,0);const{data,width:iW,height:iH}=ctx.getImageData(0,0,bmp.width,bmp.height);const totalPx=iW*iH;if(totalPx<META_PIXELS){uiSet('decInfo','<span class="err">图片太小，至少需要 '+META_PIXELS+' 个像素。</span>');pw.style.display='none';throw new Error('图片太小');}let decodeMode='pixel';const px2rgb=px=>[data[px*4],data[px*4+1],data[px*4+2]];const p0=px2rgb(0);if(p0[0]===MAGIC[0]&&p0[1]===MAGIC[1]&&p0[2]===MAGIC[2])decodeMode='pixel';else{try{const r=lsbDecode(data,iW,iH);const stream=r.payload;const slen=Math.min(stream.length,totalPx*3);for(let i=0;i<slen;i++){const px=(i/3)|0;data[px*4+(i%3)]=stream[i];}decodeMode='lsb';ps.textContent='LSB 提取成功，正在解析…';}catch(e){ps.textContent='尝试作为 QR 码图片识别…';try{const raw=await decodeQrImageFile(f);if(!raw){throw new Error('未能从图片中识别到 QR 码');}let obj;try{obj=JSON.parse(raw);}catch(pe){throw new Error('QR 码内容不是本工具生成的格式（应为 JSON）');}pw.style.display='none';return await processQrJsonPayload(obj,false);}catch(qe){uiSet('decInfo','<span class="err">无法识别：既不是像素图编码，也不是本工具 LSB 编码的载体，且 QR 码识别失败（'+qe.message+'）。</span>');pw.style.display='none';throw e;}}}const p1=px2rgb(1),p2=px2rgb(2);const len=(p1[0]|(p1[1]<<8)|(p1[2]<<16)|(p2[0]<<24)|(p2[1]<<32)|(p2[2]<<40));if(!Number.isFinite(len)||len<=0||len>totalPx*3){uiSet('decInfo','<span class="err">声明文件长度异常 (len='+len+')。</span>');pw.style.display='none';throw new Error('长度异常');}const p3=px2rgb(3);const extLenEnc=p3[0];const useEnc=((extLenEnc>>7)&0x1)===1;const extLen=extLenEnc&0x7F;let extBytes=[];if(extLen>0&&extLen<=EXT_MAX){let idx=0;if(idx<extLen)extBytes.push(p3[1]);idx++;if(idx<extLen)extBytes.push(p3[2]);idx++;for(let pi=4;pi<META_PIXELS&&idx<extLen;pi++){const rgb=px2rgb(pi);for(let ci=0;ci<3&&idx<extLen;ci++){extBytes.push(rgb[ci]);idx++;}}}let extName='';if(extBytes.length)try{extName=new TextDecoder().decode(new Uint8Array(extBytes));}catch(_){extName='';}const password=getPassword();if(useEnc&&(!password||!password.length)){uiSet('decInfo','<span class="err">此图片使用了 AES-256-GCM 加密，请在顶部输入正确的密码后重试。</span>');pw.style.display='none';throw new Error('需要密码');}const encData=new Uint8Array(len);let written=0;const updateInterval=Math.max(1,Math.floor(Math.min(len,totalPx*3)/200));ps.textContent='读取数据… 0 / '+len+' 字节';for(let px=META_PIXELS;px<totalPx&&written<len;px++){const b=px*4;encData[written++]=data[b];if(written>=len)break;encData[written++]=data[b+1];if(written>=len)break;encData[written++]=data[b+2];if(written>=len)break;if(written%updateInterval===0||written===len){pb.value=Math.min(100,Math.round(written/len*100));pl.textContent=pb.value+'%';ps.textContent='读取数据… '+written+' / '+len+' 字节';await sleep(0);}}let out;if(useEnc){if(len<44){uiSet('decInfo','<span class="err">加密数据格式错误：长度不足。</span>');pw.style.display='none';throw new Error('加密数据格式错误');}const salt=encData.slice(0,16),iv=encData.slice(16,28),ciphertext=encData.slice(28,len-16),authTag=encData.slice(len-16);try{ps.textContent='AES-256-GCM 解密中…';out=await aesGcmDecrypt({salt:salt,iv:iv,ciphertext:ciphertext,authTag:authTag},password);}catch(e){uiSet('decInfo','<span class="err">'+e.message+'</span>');pw.style.display='none';throw e;}}else{out=encData;}const finalLen=out.length;const finalName=randPiName(extName);const blob=new Blob([out],{type:'application/octet-stream'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=finalName;a.className='download-link';a.textContent='下载还原文件 ('+finalLen+' bytes)  →  '+finalName;const c=document.getElementById('decDownload');c.innerHTML='';c.appendChild(a);pb.value=100;pl.textContent='100%';ps.textContent='解码完成！';const extShow=extName||'(无扩展名)';const keyStatus=useEnc?'<span class="enc-badge">AES-256-GCM 加密验证通过</span>':'未加密';const modeTag=decodeMode==='lsb'?'LSB 隐写进照片':'像素图';uiSet('decInfo','<span class="ok">'+svgIcon('check')+' 解码成功（'+modeTag+'）。</span> 图 '+iW+'×'+iH+'，长度 '+finalLen+' bytes，扩展名 <code>'+extShow+'</code> ｜ '+keyStatus+' ｜ 还原文件名: <code>'+escapeHtml(finalName)+'</code>');const low=extName.toLowerCase(),isSens=SENSITIVE_EXTS.some(s=>low.endsWith(s));showModal(isSens?'注意文件扩展名':'下载提示',isSens?'检测到文件类型可能被浏览器自动更改扩展名。':'文件已准备就绪，请检查下载文件名是否与预期一致。','正确文件名：'+finalName,isSens);renderPreview(out,finalName,finalLen);}catch(e){uiSet('decInfo','<span class="err">解码异常：'+(e.message||e)+'。</span>');pw.style.display='none';}finally{btn.disabled=false;btn.textContent='还原并预览';}});
+document.getElementById('btnDecode').addEventListener('click',async()=>{const f=document.getElementById('decFile').files[0];if(!f){uiSet('decInfo','<span class="err">请先选择编码后的图片 / QR 码图片。</span>');return;}const btn=document.getElementById('btnDecode');btn.disabled=true;btn.textContent='解码中…';const pw=document.getElementById('decProgressWrap'),pb=document.getElementById('decProgress'),pl=document.getElementById('decProgressLabel'),ps=document.getElementById('decProgressStatus');try{pw.style.display='flex';pb.value=0;pl.textContent='0%';ps.textContent='读取图片…';let bmp;try{bmp=await createImageBitmap(f);}catch(e){uiSet('decInfo','<span class="err">无法解码图片：'+e.message+'</span>');pw.style.display='none';throw e;}const cv=document.createElement('canvas');cv.width=bmp.width;cv.height=bmp.height;const ctx=cv.getContext('2d');ctx.drawImage(bmp,0,0);const{data,width:iW,height:iH}=ctx.getImageData(0,0,bmp.width,bmp.height);const totalPx=iW*iH;if(totalPx<META_PIXELS){uiSet('decInfo','<span class="err">图片太小，至少需要 '+META_PIXELS+' 个像素。</span>');pw.style.display='none';throw new Error('图片太小');}let decodeMode='pixel';const px2rgb=px=>[data[px*4],data[px*4+1],data[px*4+2]];const p0=px2rgb(0);if(p0[0]===MAGIC[0]&&p0[1]===MAGIC[1]&&p0[2]===MAGIC[2])decodeMode='pixel';else{try{const r=lsbDecode(data,iW,iH);const stream=r.payload;const slen=Math.min(stream.length,totalPx*3);for(let i=0;i<slen;i++){const px=(i/3)|0;data[px*4+(i%3)]=stream[i];}decodeMode='lsb';ps.textContent='LSB 提取成功，正在解析…';}catch(e){ps.textContent='尝试作为 QR 码图片识别…';try{const raw=await decodeQrImageFile(f);if(!raw){throw new Error('未能从图片中识别到 QR 码');}let obj;try{obj=JSON.parse(raw);}catch(pe){throw new Error('QR 码内容不是本工具生成的格式（应为 JSON）');}pw.style.display='none';return await processQrJsonPayload(obj,false);}catch(qe){/* 单图识别失败，尝试作为拼接大图逐 tile 识别 */try{const parts=await decodeQrCombinedImageFile(f);if(parts&&parts.length){const total=parts[0].t||parts.length;let full='';for(let k=0;k<total;k++){if(!parts[k]||!parts[k].d)throw new Error('分片 '+k+' 缺失');full+=parts[k].d;}pw.style.display='none';return await processQrJsonPayload({v:1,t:total,i:0,e:parts[0].e||0,ext:parts[0].ext||'',d:full},false);}throw new Error('拼接大图无有效分片');}catch(ce){uiSet('decInfo','<span class="err">无法识别：既不是像素图编码，也不是本工具 LSB 编码的载体，且 QR 码识别失败（'+qe.message+'）。</span>');pw.style.display='none';throw e;}}}}const p1=px2rgb(1),p2=px2rgb(2);const len=(p1[0]|(p1[1]<<8)|(p1[2]<<16)|(p2[0]<<24)|(p2[1]<<32)|(p2[2]<<40));if(!Number.isFinite(len)||len<=0||len>totalPx*3){uiSet('decInfo','<span class="err">声明文件长度异常 (len='+len+')。</span>');pw.style.display='none';throw new Error('长度异常');}const p3=px2rgb(3);const extLenEnc=p3[0];const useEnc=((extLenEnc>>7)&0x1)===1;const extLen=extLenEnc&0x7F;let extBytes=[];if(extLen>0&&extLen<=EXT_MAX){let idx=0;if(idx<extLen)extBytes.push(p3[1]);idx++;if(idx<extLen)extBytes.push(p3[2]);idx++;for(let pi=4;pi<META_PIXELS&&idx<extLen;pi++){const rgb=px2rgb(pi);for(let ci=0;ci<3&&idx<extLen;ci++){extBytes.push(rgb[ci]);idx++;}}}let extName='';if(extBytes.length)try{extName=new TextDecoder().decode(new Uint8Array(extBytes));}catch(_){extName='';}const password=getPassword();if(useEnc&&(!password||!password.length)){uiSet('decInfo','<span class="err">此图片使用了 AES-256-GCM 加密，请在顶部输入正确的密码后重试。</span>');pw.style.display='none';throw new Error('需要密码');}const encData=new Uint8Array(len);let written=0;const updateInterval=Math.max(1,Math.floor(Math.min(len,totalPx*3)/200));ps.textContent='读取数据… 0 / '+len+' 字节';for(let px=META_PIXELS;px<totalPx&&written<len;px++){const b=px*4;encData[written++]=data[b];if(written>=len)break;encData[written++]=data[b+1];if(written>=len)break;encData[written++]=data[b+2];if(written>=len)break;if(written%updateInterval===0||written===len){pb.value=Math.min(100,Math.round(written/len*100));pl.textContent=pb.value+'%';ps.textContent='读取数据… '+written+' / '+len+' 字节';await sleep(0);}}let out;if(useEnc){if(len<44){uiSet('decInfo','<span class="err">加密数据格式错误：长度不足。</span>');pw.style.display='none';throw new Error('加密数据格式错误');}const salt=encData.slice(0,16),iv=encData.slice(16,28),ciphertext=encData.slice(28,len-16),authTag=encData.slice(len-16);try{ps.textContent='AES-256-GCM 解密中…';out=await aesGcmDecrypt({salt:salt,iv:iv,ciphertext:ciphertext,authTag:authTag},password);}catch(e){uiSet('decInfo','<span class="err">'+e.message+'</span>');pw.style.display='none';throw e;}}else{out=encData;}const finalLen=out.length;const finalName=randPiName(extName);const blob=new Blob([out],{type:'application/octet-stream'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=finalName;a.className='download-link';a.textContent='下载还原文件 ('+finalLen+' bytes)  →  '+finalName;const c=document.getElementById('decDownload');c.innerHTML='';c.appendChild(a);pb.value=100;pl.textContent='100%';ps.textContent='解码完成！';const extShow=extName||'(无扩展名)';const keyStatus=useEnc?'<span class="enc-badge">AES-256-GCM 加密验证通过</span>':'未加密';const modeTag=decodeMode==='lsb'?'LSB 隐写进照片':'像素图';uiSet('decInfo','<span class="ok">'+svgIcon('check')+' 解码成功（'+modeTag+'）。</span> 图 '+iW+'×'+iH+'，长度 '+finalLen+' bytes，扩展名 <code>'+extShow+'</code> ｜ '+keyStatus+' ｜ 还原文件名: <code>'+escapeHtml(finalName)+'</code>');const low=extName.toLowerCase(),isSens=SENSITIVE_EXTS.some(s=>low.endsWith(s));showModal(isSens?'注意文件扩展名':'下载提示',isSens?'检测到文件类型可能被浏览器自动更改扩展名。':'文件已准备就绪，请检查下载文件名是否与预期一致。','正确文件名：'+finalName,isSens);renderPreview(out,finalName,finalLen);}catch(e){uiSet('decInfo','<span class="err">解码异常：'+(e.message||e)+'。</span>');pw.style.display='none';}finally{btn.disabled=false;btn.textContent='还原并预览';}});
 
 /* ============================================================
    QR 码图片识别（解码端）：用内联 qrcode-generator 反向读取模块矩阵
@@ -531,6 +561,47 @@ document.getElementById('btnDecode').addEventListener('click',async()=>{const f=
    - 为保持单文件且可靠，这里采用一种更稳妥的策略：
      若浏览器支持 BarcodeDetector，优先用它识别 QR；否则提示用户改用扫码跳转网站解析。
    ============================================================ */
+
+/* 拼接大图识别：将上传图片按网格切分为若干 tile，逐 tile 用 BarcodeDetector/内置识别 */
+async function decodeQrCombinedImageFile(file){
+    const bmp = await createImageBitmap(file);
+    const cv = document.createElement('canvas'); cv.width = bmp.width; cv.height = bmp.height;
+    const ctx = cv.getContext('2d'); ctx.drawImage(bmp, 0, 0);
+    const { data, width: iW, height: iH } = ctx.getImageData(0, 0, bmp.width, bmp.height);
+    /* 用 finder 检测估算模块数，推断 tile 网格：先找所有 finder 中心 */
+    const finders = findFinderPatterns(data, iW, iH);
+    if (finders.length < 3) throw new Error('拼接大图中未找到足够的 QR 定位图案');
+    /* 按行列聚类 finder 中心，推断网格 */
+    const xs = finders.map(p => p.x).sort((a,b) => a - b);
+    const ys = finders.map(p => p.y).sort((a,b) => a - b);
+        const _xstep = Math.max(1, (xs[1] || xs[0]) - xs[0]);
+    const cols = Math.max(1, Math.round((xs[xs.length-1] - xs[0]) / _xstep) || 1);
+    const _ystep = Math.max(1, (ys[1] || ys[0]) - ys[0]);
+    const rows = Math.max(1, Math.round((ys[ys.length-1] - ys[0]) / _ystep) || 1);
+    const cellW = iW / cols, cellH = iH / rows;
+    const det = window.BarcodeDetector ? new BarcodeDetector({ formats: ['qr_code'] }) : null;
+    const results = [];
+    for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+            const sx = Math.round(c * cellW), sy = Math.round(r * cellH);
+            const sw = Math.round(cellW), sh = Math.round(cellH);
+            const tileCv = document.createElement('canvas'); tileCv.width = sw; tileCv.height = sh;
+            tileCv.getContext('2d').drawImage(cv, sx, sy, sw, sh, 0, 0, sw, sh);
+            let raw = null;
+            try {
+                if (det) { const b = await createImageBitmap(tileCv); const res = await det.detect(b); if (res && res[0] && res[0].rawValue) raw = res[0].rawValue; }
+                if (!raw) raw = await decodeQrImageFile(await new Promise(res => tileCv.toBlob(res, 'image/png')));
+            } catch(e) {}
+            if (raw) { try { results.push(JSON.parse(raw)); } catch(e) {} }
+        }
+    }
+    if (!results.length) throw new Error('拼接大图各分片均未识别成功');
+    /* 按 idx 排序并校验同批 */
+    results.sort((a,b) => (a.i||0) - (b.i||0));
+    const total = results[0].t || results.length;
+    if (results.length < total) throw new Error('拼接大图分片不完整：仅识别 ' + results.length + '/' + total);
+    return results;
+}
 async function decodeQrImageFile(file){if(window.BarcodeDetector){try{const det=new BarcodeDetector({formats:['qr_code']});const bmp=await createImageBitmap(file);const res=await det.detect(bmp);if(res&&res.length>0&&res[0].rawValue)return res[0].rawValue;}catch(e){}}const bmp=await createImageBitmap(file);const cv=document.createElement('canvas');cv.width=bmp.width;cv.height=bmp.height;const ctx=cv.getContext('2d');ctx.drawImage(bmp,0,0);const{data,w,h}=ctx.getImageData(0,0,bmp.width,bmp.height);try{const text=await qrImageToText(data,w,h);return text;}catch(e){throw new Error('QR 码识别失败：'+e.message+'。建议用手机相机/微信扫一扫此 QR 码图片，将跳转本工具网站自动解析。');}}
 async function qrImageToText(data,w,h){const finders=findFinderPatterns(data,w,h);if(finders.length<3)throw new Error('未找到 QR 码定位图案（可能不是 QR 码，或图片过模糊/过小）');const pts=orderFinders(finders,w,h);const modCount=estimateModuleCount(data,w,h,pts);const cell=Math.max(4,Math.floor(Math.min(w,h)/(modCount*1.2)));const off=sampleModules(data,w,h,pts,modCount,cell);const bits=moduleBits(off.modules,modCount);return decodeQrBits(bits);}
 function findFinderPatterns(data,w,h){const out=[];const step=Math.max(2,Math.floor(Math.min(w,h)/120));for(let y=step;y<h-step;y+=step){for(let x=step;x<w-step;x+=step){if(isFinderCenter(data,w,h,x,y))out.push({x,y});}}return out;}
@@ -565,8 +636,129 @@ document.getElementById('btnClear').addEventListener('click',function(){document
 (function(){var o=document.getElementById('usageModalOverlay'),b=document.getElementById('btnUsage'),x=document.getElementById('usageModalCloseBtn');if(!o||!b)return;b.addEventListener('click',()=>o.classList.add('active'));if(x)x.addEventListener('click',()=>o.classList.remove('active'));o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('active');});})();
 document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.modal-overlay.active').forEach(el=>el.classList.remove('active'));});
 
+
+/* ============================================================
+   多 QR 码 → 拼接大图（网格排布为一张 PNG，方便一次保存/分享）
+   ============================================================ */
+function combineQrTiles(canvases, cols){
+    cols = cols || Math.min(4, Math.max(1, Math.ceil(Math.sqrt(canvases.length))));
+    const rows = Math.ceil(canvases.length / cols);
+    const W = canvases[0].width, H = canvases[0].height;
+    const gap = Math.max(2, Math.floor(W * 0.02));
+    const pad = Math.max(8, Math.floor(W * 0.05));
+    const cW = cols * W + (cols - 1) * gap + pad * 2;
+    const cH = rows * H + (rows - 1) * gap + pad * 2;
+    const cv = document.createElement('canvas');
+    cv.width = cW; cv.height = cH;
+    const ctx = cv.getContext('2d');
+    ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, cW, cH);
+    canvases.forEach((c, k) => {
+        const r = Math.floor(k / cols), col = k % cols;
+        const x = pad + col * (W + gap), y = pad + r * (H + gap);
+        ctx.drawImage(c, x, y);
+    });
+    return cv;
+}
+
+/* ============================================================
+   扫码弹窗逻辑：相机(getUserMedia) + 相册(input) + BarcodeDetector
+   ============================================================ */
+const _scan = { stream: null, raf: null, det: null, running: false };
+async function scanStart(){
+    const result = document.getElementById('scanResult');
+    if (!window.BarcodeDetector) { result.className='scan-result err'; result.textContent='当前浏览器不支持 BarcodeDetector，请改用"选择相册图片"识别。'; return; }
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+        const video = document.getElementById('scanVideo');
+        video.srcObject = stream; await video.play();
+        _scan.stream = stream; _scan.running = true;
+        document.getElementById('btnScanStart').disabled = true;
+        document.getElementById('btnScanStop').disabled = false;
+        result.className='scan-result'; result.textContent='相机已开启，将自动识别画面中的 QR 码…';
+        _scan.det = new BarcodeDetector({ formats: ['qr_code'] });
+        scanTick(video, result);
+    } catch(e) { result.className='scan-result err'; result.textContent='无法打开相机：' + e.message; }
+}
+function scanStop(){
+    _scan.running = false;
+    if (_scan.raf) cancelAnimationFrame(_scan.raf);
+    if (_scan.stream) { _scan.stream.getTracks().forEach(t => t.stop()); _scan.stream = null; }
+    document.getElementById('scanVideo').srcObject = null;
+    document.getElementById('btnScanStart').disabled = false;
+    document.getElementById('btnScanStop').disabled = true;
+}
+async function scanTick(video, result){
+    if (!_scan.running) return;
+    try {
+        const det = _scan.det; const w = video.videoWidth, h = video.videoHeight;
+        if (w && h) {
+            const bmp = await createImageBitmap(video);
+            const res = await det.detect(bmp);
+            if (res && res.length > 0 && res[0].rawValue) { scanHandleResult(res[0].rawValue, result); scanStop(); return; }
+        }
+    } catch(e) {}
+    _scan.raf = requestAnimationFrame(() => scanTick(video, result));
+}
+async function scanFromFile(file, result){
+    try {
+        const bmp = await createImageBitmap(file);
+        let raw = null;
+        if (window.BarcodeDetector) { const det = new BarcodeDetector({ formats: ['qr_code'] }); const res = await det.detect(bmp); if (res && res[0] && res[0].rawValue) raw = res[0].rawValue; }
+        if (!raw) {
+            // 回退：尝试用内置 QR 识别（decodeQrImageFile 已存在）
+            raw = await decodeQrImageFile(file);
+        }
+        scanHandleResult(raw, result);
+    } catch(e) { result.className='scan-result err'; result.textContent='识别失败：' + e.message; }
+}
+function scanHandleResult(raw, result){
+    result.className='scan-result ok'; result.textContent='识别成功！正在解析…';
+    let obj; try { obj = JSON.parse(raw); } catch(e) { result.className='scan-result err'; result.textContent='QR 内容不是本工具格式（应为 JSON）。'; return; }
+    if (!obj || obj.v !== 1 || !obj.d) { result.className='scan-result err'; result.textContent='QR 数据版本/格式不支持。'; return; }
+    // 直接走 processQrJsonPayload；若是加密且缺密码，它会 prompt
+    processQrJsonPayload(obj, false).then(() => { result.textContent='解析完成，请查看下方还原结果。'; }).catch(e => { result.className='scan-result err'; result.textContent='解析失败：' + (e && e.message ? e.message : e); });
+}
+
+(function bindScanUI(){
+    const overlay = document.getElementById('scanModalOverlay');
+    if (!overlay) return;
+    document.getElementById('btnScan').addEventListener('click', () => overlay.classList.add('active'));
+    document.getElementById('scanModalCloseBtn').addEventListener('click', () => { scanStop(); overlay.classList.remove('active'); });
+    overlay.addEventListener('click', e => { if (e.target === overlay) { scanStop(); overlay.classList.remove('active'); } });
+    document.getElementById('btnScanStart').addEventListener('click', scanStart);
+    document.getElementById('btnScanStop').addEventListener('click', scanStop);
+    const fileInput = document.getElementById('scanFileInput');
+    document.getElementById('btnScanPick').addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', () => {
+        const f = fileInput.files && fileInput.files[0]; if (!f) return;
+        scanFromFile(f, document.getElementById('scanResult'));
+    });
+})();
+
 /* ---------- 启动：检查 #data= 参数 ---------- */
 tryParseLaunchData();
 </script>
+
+<!-- 扫码弹窗（相机 / 相册） -->
+<div class="modal-overlay" id="scanModalOverlay">
+<div class="modal-box scan-modal">
+<h3><span class="ico"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><rect x="7" y="7" width="10" height="10" rx="1" fill="none" stroke="currentColor" stroke-width="2"/></svg></span> 扫码识别 QR 码</h3>
+<p style="font-size:13px;color:#555;">允许使用摄像头实时扫码，或从相册选择 QR 码图片识别。识别成功后将自动跳转本工具网站解析。</p>
+<div class="scan-stage" id="scanStage">
+<video id="scanVideo" autoplay muted playsinline></video>
+<div class="scan-frame"></div>
+<div class="scan-line"></div>
+</div>
+<div class="scan-result" id="scanResult">点击"打开相机"开始扫码，或"选择相册图片"识别。</div>
+<div class="scan-actions">
+<button type="button" id="btnScanStart" class="secondary">打开相机</button>
+<button type="button" id="btnScanStop" class="secondary" disabled>关闭相机</button>
+<button type="button" id="btnScanPick">选择相册图片</button>
+<input type="file" id="scanFileInput" accept="image/*" style="display:none;">
+</div>
+<div class="scan-tip">提示：识别到 QR 码后会自动解析。若为加密内容，将提示输入密码。</div>
+<div class="clearfix"><button class="btn-close-modal" id="scanModalCloseBtn" style="float:right;">关闭</button></div>
+</div>
+</div>
 </body>
 </html>
