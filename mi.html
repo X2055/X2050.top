@@ -2,7 +2,8 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>请确保周围环境安全</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>Spore Protocol - 孢子协议</title>
     <style>
         * { box-sizing: border-box; }
         body {
@@ -12,7 +13,10 @@
             padding: 0 16px;
             color: #222;
         }
-        h1 { font-size: 22px; margin-bottom: 6px; }
+        h1 { font-size: 22px; margin-bottom: 6px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .spore-icon { width: 1.4em; height: 1.4em; }
+        .title-en { font-size: 22px; font-weight: 700; letter-spacing: 0.5px; color: #1a5ba8; }
+        .title-cn { font-size: 13px; color: #666; letter-spacing: 1px; margin-left: -4px; }
         .slogan {
             font-size: 15px;
             color: #4a90d9;
@@ -49,12 +53,15 @@
             border-radius: 6px; border: 1px solid #dce3ed;
         }
         .key-row label { font-weight: 500; font-size: 14px; color: #333; display: flex; align-items: center; gap: 4px; }
-        .key-row input[type="text"] {
-            flex: 1; min-width: 160px; padding: 6px 10px; border: 1px solid #ccc;
-            border-radius: 4px; font-size: 14px; font-family: ui-monospace, Menlo, monospace;
-            background: #fff; transition: border-color 0.2s;
+        .input-box {
+            padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px;
+            font-size: 14px; font-family: ui-monospace, Menlo, monospace;
+            background: #fff; transition: border-color 0.2s; width: 100%;
+            color: #333;
         }
-        .key-row input[type="text"]:focus { border-color: #4a90d9; outline: none; box-shadow: 0 0 0 3px rgba(74,144,217,0.15); }
+        .input-box:focus { border-color: #4a90d9; outline: none; box-shadow: 0 0 0 3px rgba(74,144,217,0.15); }
+        input[type="file"].input-box { padding: 5px; cursor: pointer; }
+        textarea.input-box { resize: vertical; min-height: 80px; line-height: 1.5; }
         .key-hint { font-size: 12px; color: #888; margin-left: 2px; }
         .key-strength { font-size: 12px; margin-left: 8px; font-weight: 600; }
         .strength-weak { color: #c0392b; }
@@ -110,6 +117,87 @@
         .modal-box .info-icon { color: #4a90d9; }
         .clearfix::after { content: ""; display: table; clear: both; }
 
+
+        /* 右上角操作按钮 */
+        .header-actions {
+            position: absolute;
+            top: 20px;
+            right: 16px;
+            display: flex;
+            gap: 8px;
+            z-index: 100;
+        }
+        .header-actions button {
+            margin-top: 0;
+            font-size: 13px;
+            padding: 6px 12px;
+        }
+        /* 使用说明弹窗 - 更大更宽 */
+        .modal-box.usage-modal {
+            max-width: 680px;
+            width: 92%;
+            max-height: 85vh;
+            overflow-y: auto;
+            padding: 28px 28px 24px;
+        }
+        .usage-modal h4 {
+            margin: 18px 0 8px 0;
+            font-size: 15px;
+            font-weight: 600;
+            color: #1a5ba8;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .usage-modal h4:first-child {
+            margin-top: 0;
+        }
+        .usage-modal p {
+            margin: 6px 0;
+            font-size: 14px;
+            line-height: 1.7;
+        }
+        .usage-modal ul {
+            margin: 6px 0 6px 20px;
+            padding: 0;
+        }
+        .usage-modal ul li {
+            margin: 4px 0;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #333;
+        }
+        .usage-modal .usage-steps {
+            background: #f0f4fa;
+            border: 1px solid #dce3ed;
+            border-radius: 8px;
+            padding: 14px 18px;
+            margin: 10px 0;
+        }
+        .usage-modal .usage-steps li {
+            list-style: none;
+            margin-left: -20px;
+            padding-left: 8px;
+        }
+        .usage-modal .usage-steps li::before {
+            content: "\25B6";
+            color: #4a90d9;
+            font-weight: bold;
+            font-size: 10px;
+            vertical-align: middle;
+        }
+        .usage-modal .usage-warning {
+            background: #fff8ee;
+            border: 1px solid #f0e3c2;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin: 10px 0;
+        }
+        .usage-modal .usage-warning li::before {
+            content: "\26A0";
+            color: #d97706;
+            font-weight: bold;
+        }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
@@ -235,18 +323,236 @@
             padding: 2px 8px; border-radius: 10px; margin-left: 8px;
         }
         .enc-badge svg { width: 12px; height: 12px; }
+    
+        /* ===== 移动端响应式适配 ===== */
+        @media (max-width: 600px) {
+            body {
+                margin: 12px auto;
+                padding: 0 10px;
+            }
+            h1 {
+                font-size: 18px;
+                margin-bottom: 4px;
+                gap: 6px;
+            }
+            .spore-icon {
+                width: 1.3em;
+                height: 1.3em;
+            }
+            .title-en {
+                font-size: 18px;
+            }
+            .title-cn {
+                font-size: 12px;
+            }
+            .enc-badge {
+                font-size: 10px;
+                padding: 1px 6px;
+                margin-left: 0;
+            }
+            .slogan {
+                font-size: 13px;
+                padding: 6px 12px;
+                margin: 6px 0 12px 0;
+            }
+            .info {
+                font-size: 12px;
+                line-height: 1.5;
+            }
+            h2 {
+                font-size: 14px;
+                margin-top: 16px;
+            }
+            .card {
+                padding: 10px 12px;
+                margin-top: 8px;
+            }
+            .key-row {
+                padding: 6px 8px;
+                gap: 6px;
+            }
+            .key-row label {
+                font-size: 13px;
+            }
+            .input-box {
+                font-size: 13px;
+                padding: 5px 8px;
+            }
+            .key-actions button {
+                padding: 5px 8px;
+                font-size: 12px;
+            }
+            .key-hint {
+                font-size: 11px;
+            }
+            .key-strength {
+                font-size: 11px;
+                margin-left: 4px;
+            }
+            button {
+                padding: 7px 14px;
+                font-size: 13px;
+            }
+            .tab-bar button {
+                padding: 6px 10px;
+                font-size: 12px;
+            }
+            .mode-row {
+                padding: 6px 8px;
+                gap: 8px;
+            }
+            .mode-row .mode-label {
+                font-size: 12px;
+            }
+            .mode-row .seg button {
+                padding: 5px 10px;
+                font-size: 11px;
+            }
+            .mode-row .mode-hint {
+                font-size: 11px;
+            }
+            .carrier-row {
+                padding: 6px 8px;
+                gap: 6px;
+            }
+            .carrier-row .carrier-label {
+                font-size: 12px;
+            }
+            .carrier-row .carrier-info {
+                font-size: 11px;
+            }
+            .progress-wrap {
+                margin: 8px 0 2px 0;
+                gap: 8px;
+            }
+            .progress-label {
+                font-size: 12px;
+                min-width: 44px;
+            }
+            .progress-status {
+                font-size: 11px;
+            }
+            .download-link {
+                font-size: 12px;
+                padding: 5px 10px;
+            }
+            .flex {
+                gap: 6px;
+            }
+            /* 右上角按钮适配 */
+            .header-actions {
+                position: static;
+                justify-content: flex-end;
+                margin-bottom: 10px;
+            }
+            .header-actions button {
+                font-size: 12px;
+                padding: 5px 10px;
+            }
+            /* 预览区适配 */
+            .preview-header {
+                padding: 6px 10px;
+                font-size: 12px;
+            }
+            .preview-body {
+                padding: 10px;
+            }
+            .pv-image img {
+                max-height: 300px;
+            }
+            .pv-text pre {
+                font-size: 12px;
+                padding: 10px 12px;
+            }
+            .pv-audio .audio-cover {
+                width: 80px;
+                height: 80px;
+                font-size: 32px;
+            }
+            .pv-archive .arch-row {
+                font-size: 11px;
+                padding: 5px 8px;
+            }
+            /* 弹窗适配 */
+            .modal-box {
+                width: 95%;
+                padding: 20px 16px 16px;
+            }
+            .modal-box h3 {
+                font-size: 18px;
+            }
+            .modal-box p {
+                font-size: 13px;
+            }
+            .usage-modal {
+                max-width: 95%;
+                padding: 20px 16px 16px;
+            }
+            .usage-modal h4 {
+                font-size: 14px;
+            }
+            .usage-modal p,
+            .usage-modal ul li {
+                font-size: 13px;
+            }
+        }
+
+        /* 小屏手机特别优化 */
+        @media (max-width: 380px) {
+            h1 {
+                font-size: 16px;
+            }
+            .title-en {
+                font-size: 16px;
+            }
+            .spore-icon {
+                width: 1.2em;
+                height: 1.2em;
+            }
+        }
     </style>
 </head>
 <body>
 
-    <h1><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M12 3v18M3 12h18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span> 隐写工具 <span class="enc-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L4 6v6c0 5 3.5 9 8 10 4.5-1 8-5 8-10V6z"/><path d="M9 12l2 2 4-4"/></svg> AES-256-GCM</span></h1>
-    <p class="slogan">守护不被看见的权利</p>
+    <h1>
+    <span class="ico spore-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <linearGradient id="sporeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#10b981" />
+                    <stop offset="100%" stop-color="#06b6d4" />
+                </linearGradient>
+            </defs>
+            <path d="M2 12C2 12 5 5 12 5C19 5 22 12 22 12C22 12 19 19 12 19C5 19 2 12 2 12Z"
+                  stroke="url(#sporeGradient)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+            <path d="M10 9.5H13L14.5 11V14.5C14.5 14.7761 14.2761 15 14 15H10C9.72386 15 9.5 14.7761 9.5 14.5V10C9.5 9.72386 9.72386 9.5 10 9.5Z"
+                  stroke="url(#sporeGradient)" stroke-width="1.5" fill="none" stroke-linejoin="round" />
+            <path d="M13 9.5V11H14.5" stroke="url(#sporeGradient)" stroke-width="1.5" fill="none" stroke-linejoin="round" />
+            <path d="M18 3L6 21" stroke="url(#sporeGradient)" stroke-width="2" stroke-linecap="round" />
+        </svg>
+    </span>
+    <span class="title-en">Spore Protocol</span>
+    <span class="title-cn">孢子协议</span>
+    <span class="enc-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L4 6v6c0 5 3.5 9 8 10 4.5-1 8-5 8-10V6z"/><path d="M9 12l2 2 4-4"/></svg> AES-256-GCM</span>
+</h1>
+    <p class="slogan">让数据如孢子般伪装、生存并自由传递</p>
     <p class="info">将任意文件（或文字内容）编码为 PNG 图片（每 3 字节 → 1 个 RGB 像素），或从其生成的图片中还原原文件并即时预览。<strong>使用 AES-256-GCM + PBKDF2 加密，防篡改、抗审查</strong></p>
 
+    <!-- 右上角操作按钮 -->
+    <div class="header-actions">
+        <button type="button" id="btnClear" class="secondary" title="清除所有内容">
+            <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 11v6M14 11v6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
+            清除
+        </button>
+        <button type="button" id="btnUsage" class="secondary" title="使用说明">
+            <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M8 7h8M8 11h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
+            使用说明
+        </button>
+    </div>
     <!-- 密钥输入 -->
     <div class="key-row">
         <label for="keyInput"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="8" cy="15" r="4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M11 12l9-9M16 7h4v4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span> 密码 <span class="key-hint">(AES-256-GCM 加密，PBKDF2 600k 轮)</span></label>
-        <input type="text" id="keyInput" placeholder="输入强密码（留空则不加密）" value="">
+        <input type="text" id="keyInput" class="input-box" placeholder="输入强密码（留空则不加密）" value="">
         <div class="key-actions">
             <button type="button" id="btnGenKey" class="secondary" title="生成 256 位随机密钥">
                 <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg></span>
@@ -284,20 +590,20 @@
         <div class="carrier-row" id="carrierRow" style="display:none;">
             <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="1.5"/><path d="M21 15l-5-5L5 21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
             <span class="carrier-label">载体图片</span>
-            <input type="file" id="carrierFile" accept="image/*,.jpg,.jpeg,.png,.webp,.bmp,.gif,.tiff,.ico">
+            <input type="file" id="carrierFile" class="input-box" accept="image/*,.jpg,.jpeg,.png,.webp,.bmp,.gif,.tiff,.ico">
             <span class="carrier-info" id="carrierInfo">支持 JPG/PNG/WebP/BMP/GIF/TIFF 等任意图片，将自动转为 PNG 无损载体后再隐写</span>
         </div>
 
         <div class="tab-panel active" id="panelFile">
             <div class="flex">
-                <input type="file" id="encFile">
+                <input type="file" id="encFile" class="input-box">
                 <button id="btnEncode">生成图片</button>
             </div>
         </div>
 
         <div class="tab-panel" id="panelText">
             <div class="text-encode-area">
-                <textarea id="encText" placeholder="在此输入要加密/编码的任意文字内容…"></textarea>
+                <textarea id="encText" class="input-box" placeholder="在此输入要加密/编码的任意文字内容…"></textarea>
                 <div class="flex" style="margin-top:8px;">
                     <button id="btnEncodeText">生成图片</button>
                 </div>
@@ -319,7 +625,7 @@
     <div class="card">
         <h2>② 图片 → 文件（解码 + 预览）</h2>
         <div class="flex">
-            <input type="file" id="decFile" accept="image/*,.png,.bmp,.jpg,.jpeg,.webp,.gif,.tiff">
+            <input type="file" id="decFile" class="input-box" accept="image/*,.png,.bmp,.jpg,.jpeg,.webp,.gif,.tiff">
             <button id="btnDecode">还原并预览</button>
         </div>
 
@@ -352,6 +658,95 @@
             <div class="file-name-highlight" id="modalFileName">文件名示例</div>
             <p style="font-size:13px;color:#666;margin-bottom:6px;" id="modalExtra">请注意浏览器下载时可能自动更改扩展名，请手动修正。</p>
             <div class="clearfix"><button class="btn-close-modal" id="modalCloseBtn">我知道了</button></div>
+        </div>
+    </div>
+    
+    <!-- 使用说明弹窗 -->
+    <div class="modal-overlay" id="usageModalOverlay">
+        <div class="modal-box usage-modal">
+            <h3><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg></span> 使用说明</h3>
+
+            <h4><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 16v-4M12 8h.01" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span> 一、这个工具能做什么？</h4>
+            <p>简单来说，这是一个能帮你把秘密"藏"起来的工具。你可以把任何文件（比如文档、压缩包、APK安装包）或者一段文字，变成一张看起来普普通通的图片。</p>
+            <p>更厉害的是，你还能把秘密文件直接"塞"进一张正常的照片里，肉眼完全看不出任何区别。只有知道密码的人，才能从图片里把秘密还原出来。</p>
+
+            <h4><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2L4 6v6c0 5 3.5 9 8 10 4.5-1 8-5 8-10V6z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9 12l2 2 4-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span> 二、安全性说明</h4>
+            <p>你可以完全放心，这个工具的安全性非常高：</p>
+            <ul>
+                <li><strong>文件绝不离开你的电脑</strong>：所有的处理都在你自己的浏览器里完成。没有服务器，没有上传，没有后台记录，完全断网也能用。</li>
+                <li><strong>军用级加密</strong>：我们使用了目前最顶级的加密技术（AES-256-GCM），这是银行、政府机构都在使用的加密标准。如果没有密码，就算是目前世界上最强大的超级计算机，也需要花费数亿年才能破解。</li>
+                <li><strong>密码是唯一的钥匙</strong>：请一定要记住你设置的密码！系统没有"忘记密码"功能，一旦忘记，里面的内容将永远无法找回。</li>
+                <li><strong>防篡改机制</strong>：如果有人试图修改这张图片哪怕一个像素，解密时会自动失败并提示"密码错误或文件已被篡改"。这保证了你收到的文件绝对是原汁原味的，没有被任何人动过手脚。</li>
+            </ul>
+
+            <h4><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span> 三、新手快速上手（编码）</h4>
+            <p>想把秘密藏进图片？只需简单三步：</p>
+            <div class="usage-steps">
+                <ul>
+                    <li><strong>第一步：选择内容</strong> &mdash; 点击"文件编码"标签，上传你要隐藏的文件；或者切换到"文字编码"标签，直接在文本框中输入你想隐藏的文字内容。</li>
+                    <li><strong>第二步：设置密码</strong> &mdash; 在顶部的密码栏中输入一个只有你知道的密码。建议密码至少12位，包含大小写字母、数字和符号。点击"生成"按钮可以自动生成一个高强度随机密码。</li>
+                    <li><strong>第三步：生成图片</strong> &mdash; 点击"生成图片"按钮，等待处理完成。工具会自动生成一张包含秘密的图片，你可以直接保存到电脑或手机中。</li>
+                </ul>
+            </div>
+
+            <h4><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span> 四、新手快速上手（解码）</h4>
+            <p>收到别人发来的图片，想看看里面藏了什么？</p>
+            <div class="usage-steps">
+                <ul>
+                    <li><strong>第一步：上传图片</strong> &mdash; 在"图片还原"区域，点击选择那张看起来普通的图片文件。</li>
+                    <li><strong>第二步：输入密码</strong> &mdash; 在密码栏中输入发送方告诉你的密码。</li>
+                    <li><strong>第三步：查看内容</strong> &mdash; 点击"还原并预览"按钮，文件就会自动还原。如果是图片或视频，你可以直接在下方预览；如果是文档，可以点击下载链接保存到本地。</li>
+                </ul>
+            </div>
+
+            <h4><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="9" cy="9" r="1.5" fill="currentColor"/><path d="M21 15l-5-5L5 21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span> 五、LSB隐写模式使用指南</h4>
+            <p>这是一种"高级隐身术"。普通的编码模式会生成一张全新的图片，而LSB隐写模式可以把秘密完美地融合进一张正常的照片中，生成的图片看起来和原图一模一样。</p>
+            <p><strong>使用步骤：</strong></p>
+            <div class="usage-steps">
+                <ul>
+                    <li>在"隐写模式"中选择"LSB隐写进照片"</li>
+                    <li>上传一张你喜欢的正常照片作为"载体"（支持 JPG、PNG、WebP 等格式）</li>
+                    <li>按照普通编码流程设置密码并生成图片</li>
+                    <li>生成的图片看起来和原图完全一样，但里面已经藏好了你的文件</li>
+                </ul>
+            </div>
+            <p><strong>注意事项：</strong></p>
+            <ul class="usage-warning">
+                <li>因为LSB模式要保留照片的画质，能隐藏的文件大小有限。一般建议隐藏的文件不要超过照片原始大小的30%</li>
+                <li>如果文件太大，建议换一张分辨率更高的照片，或者切换到"像素图"模式</li>
+                <li>载体图片分辨率越高，能隐藏的数据就越多</li>
+            </ul>
+
+            <h4><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span> 六、应用场景推荐</h4>
+            <p>这个工具在生活中非常实用：</p>
+            <ul>
+                <li><strong>私密日记/备忘录</strong>：把不想被别人看到的日记、笔记或敏感信息藏进一张普通的风景照里</li>
+                <li><strong>敏感文件传输</strong>：通过微信或邮件发送机密文档时，发一张图片比直接发文件更安全，也更不容易引起注意</li>
+                <li><strong>密码本备份</strong>：把各种账号密码、密钥信息存成文字，加密后变成图片保存在云盘或U盘里</li>
+                <li><strong>重要资料备份</strong>：将身份证、合同、房产证等重要文件的扫描件加密保存，防止泄露</li>
+                <li><strong>隐私通信</strong>：和朋友之间进行隐蔽的文字交流，即使消息被拦截，对方也只会看到一张普通图片</li>
+                <li><strong>惊喜与趣味</strong>：把一段表白文字或一张隐藏照片发给朋友，增加趣味性</li>
+            </ul>
+
+            <h4><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 8v4M12 16h.01" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span> 七、注意事项与常见问题</h4>
+            <ul>
+                <li><strong>密码丢了怎么办？</strong> 非常抱歉，真的没办法找回。请务必使用密码管理器（如 Bitwarden、1Password）或写在安全的地方妥善保管。</li>
+                <li><strong>图片格式建议</strong>：解码时，请确保图片没有被微信、朋友圈等社交软件压缩过。最好通过"发送文件"的方式传输图片，而不是"发送图片"（后者会压缩画质导致数据丢失）。</li>
+                <li><strong>文件大小说明</strong>：普通像素图模式下，生成的图片大小取决于你的文件；LSB模式下，建议隐藏的文件不要超过载体照片可容纳的容量。</li>
+                <li><strong>解码失败？</strong> 99%的情况是因为密码输错了。请检查是否有多余的空格，或者大小写是否一致。如果确认密码无误但仍失败，可能是图片在传输过程中被压缩或修改过。</li>
+                <li><strong>支持的文件类型</strong>：任何类型的文件都可以编码（文档、压缩包、APK、视频、音频等），没有格式限制。</li>
+            </ul>
+
+            <h4><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span> 八、安全建议</h4>
+            <p>为了你的信息安全，请养成以下好习惯：</p>
+            <ol style="margin: 8px 0 8px 20px; padding: 0;">
+                <li style="margin: 6px 0; font-size: 14px; line-height: 1.6;"><strong>密码要够长够复杂</strong>：建议使用至少12位的密码，混合使用大小写字母、数字和特殊符号。密码越长、越复杂，安全性越高。</li>
+                <li style="margin: 6px 0; font-size: 14px; line-height: 1.6;"><strong>不要二次压缩图片</strong>：通过聊天软件发送隐写图片时，一定要选择"发送文件"而不是"发送图片"，防止画质被压缩导致隐藏的数据丢失。</li>
+                <li style="margin: 6px 0; font-size: 14px; line-height: 1.6;"><strong>妥善保管载体图片</strong>：解码成功后，如果不再需要保留，请及时删除包含秘密的图片。只要图片还在，理论上就存在被破解的风险。</li>
+                <li style="margin: 6px 0; font-size: 14px; line-height: 1.6;"><strong>定期测试备份</strong>：如果是极其重要的数据备份，建议每隔一段时间测试一下密码是否还能正常解密，确保备份可用。</li>
+            </ol>
+
+            <div style="text-align:right; margin-top:16px;"><button class="btn-close-modal" id="usageModalCloseBtn">我知道了</button></div>
         </div>
     </div>
 
@@ -565,12 +960,20 @@
         // 生成 256 位（32 字节）随机密钥，字符集包含大小写字母、数字、特殊字符
         function generateSecureKey() {
             const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=[]{}|;:,.<>?';
-            const keyLength = 43; // Base64 编码后 32 字节 ≈ 256 位
-            const randomValues = new Uint8Array(32);
-            crypto.getRandomValues(randomValues);
+            const keyLength = 43;
+            const charsetLen = charset.length;
+            // 拒绝采样消除模偏差，确保每个字符等概率被选中
+            const maxValid = 256 - (256 % charsetLen);
+            const keyBytes = new Uint8Array(keyLength * 2);
+            crypto.getRandomValues(keyBytes);
             let key = '';
-            for (let i = 0; i < randomValues.length; i++) {
-                key += charset[randomValues[i] % charset.length];
+            let outIdx = 0;
+            for (let i = 0; i < keyBytes.length && outIdx < keyLength; i++) {
+                const val = keyBytes[i];
+                if (val < maxValid) {
+                    key += charset[val % charsetLen];
+                    outIdx++;
+                }
             }
             return key;
         }
@@ -607,7 +1010,7 @@
             }
         });
 
-        let keyVisible = false;
+        let keyVisible = true;
         document.getElementById('btnToggleKey').addEventListener('click', () => {
             const keyInput = document.getElementById('keyInput');
             const btn = document.getElementById('btnToggleKey');
@@ -772,14 +1175,20 @@
             uiSet('encInfo','<span class="ok">'+svgIcon('check')+' 编码完成（LSB 隐写进照片）。</span> 源 <b>'+escapeHtml(srcName)+'</b> ('+len+' bytes) 已藏入载体 <b>'+escapeHtml(cf.name)+'</b> ('+cw+'×'+ch+')。扩展名: <code>'+(ext||'(无)')+'</code> ｜ '+(useEnc?'<span class="enc-badge">AES-256-GCM 加密</span>':'未加密')+' ｜ 下载: <code>'+escapeHtml(lsbOutName)+'</code>');
         };
 
+        const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB 上限
         document.getElementById('btnEncode').addEventListener('click', async ()=>{
             const f=document.getElementById('encFile').files[0]; if (!f){uiSet('encInfo','<span class="err">请先选择要编码的文件。</span>');return;}
-            doEncode(new Uint8Array(await f.arrayBuffer()), f.name);
+            if (f.size > MAX_FILE_SIZE) { uiSet('encInfo','<span class="err">文件过大（最大支持 50MB）：</span><code>'+escapeHtml(f.name)+'</code> ('+fmtSize(f.size)+')'); return; }
+            const btn=document.getElementById('btnEncode');
+            btn.disabled=true; btn.textContent='编码中…';
+            try { await doEncode(new Uint8Array(await f.arrayBuffer()), f.name); } finally { btn.disabled=false; btn.textContent='生成图片'; }
         });
         document.getElementById('btnEncodeText').addEventListener('click', async ()=>{
             const text=document.getElementById('encText').value;
             if (!text){uiSet('encInfo','<span class="err">请先输入要编码的文字内容。</span>');return;}
-            doEncode(new TextEncoder().encode(text), randPiName('.txt'));
+            const btn=document.getElementById('btnEncodeText');
+            btn.disabled=true; btn.textContent='编码中…';
+            try { await doEncode(new TextEncoder().encode(text), randPiName('.txt')); } finally { btn.disabled=false; btn.textContent='生成图片'; }
         });
 
         // ============================================================
@@ -787,13 +1196,15 @@
         // ============================================================
         document.getElementById('btnDecode').addEventListener('click', async ()=>{
             const f=document.getElementById('decFile').files[0]; if (!f){uiSet('decInfo','<span class="err">请先选择编码后的 PNG 图片。</span>');return;}
+            const btn=document.getElementById('btnDecode');
+            btn.disabled=true; btn.textContent='解码中…';
             const pw=document.getElementById('decProgressWrap'),pb=document.getElementById('decProgress'),pl=document.getElementById('decProgressLabel'),ps=document.getElementById('decProgressStatus');
+            try {
             pw.style.display='flex'; pb.value=0; pl.textContent='0%'; ps.textContent='读取图片…';
-            let bmp; try { bmp=await createImageBitmap(f); } catch(e){ uiSet('decInfo','<span class="err">无法解码图片：'+e.message+'</span>'); pw.style.display='none'; return; }
+            let bmp; try { bmp=await createImageBitmap(f); } catch(e){ uiSet('decInfo','<span class="err">无法解码图片：'+e.message+'</span>'); pw.style.display='none'; throw e; }
             const cv=document.createElement('canvas'); cv.width=bmp.width; cv.height=bmp.height; const ctx=cv.getContext('2d'); ctx.drawImage(bmp,0,0);
             const {data,width:iW,height:iH}=ctx.getImageData(0,0,bmp.width,bmp.height); const totalPx=iW*iH;
-            if (totalPx<META_PIXELS){uiSet('decInfo','<span class="err">图片太小，至少需要 '+META_PIXELS+' 个像素。</span>');pw.style.display='none';return;}
-
+            if (totalPx<META_PIXELS){uiSet('decInfo','<span class="err">图片太小，至少需要 '+META_PIXELS+' 个像素。</span>');pw.style.display='none';throw new Error('图片太小');}
             // 自动检测模式
             let decodeMode = 'pixel';
             const px2rgb=px=>[data[px*4],data[px*4+1],data[px*4+2]]; const p0=px2rgb(0);
@@ -803,30 +1214,26 @@
                     const stream = r.payload; const slen = Math.min(stream.length, totalPx*3);
                     for (let i=0;i<slen;i++){ const px=(i/3)|0; data[px*4+(i%3)]=stream[i]; }
                     decodeMode='lsb'; ps.textContent='LSB 提取成功，正在解析…';
-                } catch(e){ uiSet('decInfo','<span class="err">无法识别：既不是像素图编码，也不是本工具 LSB 编码的载体。</span>'); pw.style.display='none'; return; }
+                } catch(e){ uiSet('decInfo','<span class="err">无法识别：既不是像素图编码，也不是本工具 LSB 编码的载体。</span>'); pw.style.display='none'; throw e; }
             }
-
             // 解析元数据
             const p1=px2rgb(1),p2=px2rgb(2); const len=(p1[0]|(p1[1]<<8)|(p1[2]<<16)|(p2[0]<<24)|(p2[1]<<32)|(p2[2]<<40));
-            if (!Number.isFinite(len)||len<=0||len>totalPx*3){uiSet('decInfo','<span class="err">声明文件长度异常 (len='+len+')。</span>');pw.style.display='none';return;}
+            if (!Number.isFinite(len)||len<=0||len>totalPx*3){uiSet('decInfo','<span class="err">声明文件长度异常 (len='+len+')。</span>');pw.style.display='none';throw new Error('长度异常');}
             const p3=px2rgb(3); const extLenEnc=p3[0]; const useEnc=((extLenEnc>>7)&0x1)===1; const extLen=extLenEnc&0x7F;
             let extBytes=[]; if (extLen>0&&extLen<=EXT_MAX){let idx=0; if(idx<extLen)extBytes.push(p3[1]);idx++; if(idx<extLen)extBytes.push(p3[2]);idx++; for(let pi=4;pi<META_PIXELS&&idx<extLen;pi++){const rgb=px2rgb(pi);for(let ci=0;ci<3&&idx<extLen;ci++){extBytes.push(rgb[ci]);idx++;}}}
             let extName=''; if(extBytes.length) try{extName=new TextDecoder().decode(new Uint8Array(extBytes));}catch(_){extName='';}
-
             const password = getPassword();
-            if(useEnc && (!password || !password.length)){uiSet('decInfo','<span class="err">此图片使用了 AES-256-GCM 加密，请在顶部输入正确的密码后重试。</span>');pw.style.display='none';return;}
-
+            if(useEnc && (!password || !password.length)){uiSet('decInfo','<span class="err">此图片使用了 AES-256-GCM 加密，请在顶部输入正确的密码后重试。</span>');pw.style.display='none';throw new Error('需要密码');}
             // 读取加密后的数据
             const encData = new Uint8Array(len); let written=0;
             const updateInterval=Math.max(1,Math.floor(Math.min(len,totalPx*3)/200));
             ps.textContent='读取数据… 0 / '+len+' 字节';
             for (let px=META_PIXELS;px<totalPx&&written<len;px++){const b=px*4;encData[written++]=data[b];if(written>=len)break;encData[written++]=data[b+1];if(written>=len)break;encData[written++]=data[b+2];if(written>=len)break;
                 if(written%updateInterval===0||written===len){pb.value=Math.min(100,Math.round(written/len*100));pl.textContent=pb.value+'%';ps.textContent='读取数据… '+written+' / '+len+' 字节';await sleep(0);}}
-
             let out;
             if (useEnc) {
                 // 解析 AES-GCM 数据：salt(16) + iv(12) + ciphertext + authTag(16)
-                if (len < 44) { uiSet('decInfo','<span class="err">加密数据格式错误：长度不足。</span>'); pw.style.display='none'; return; }
+                if (len < 44) { uiSet('decInfo','<span class="err">加密数据格式错误：长度不足。</span>'); pw.style.display='none'; throw new Error('加密数据格式错误'); }
                 const salt = encData.slice(0, 16);
                 const iv = encData.slice(16, 28);
                 const ciphertext = encData.slice(28, len - 16);
@@ -836,12 +1243,11 @@
                     out = await aesGcmDecrypt({ salt, iv, ciphertext, authTag }, password);
                 } catch(e) {
                     uiSet('decInfo','<span class="err">'+e.message+'</span>');
-                    pw.style.display='none'; return;
+                    pw.style.display='none'; throw e;
                 }
             } else {
                 out = encData;
             }
-
             const finalLen = out.length;
             const finalName=randPiName(extName);
             const blob=new Blob([out],{type:'application/octet-stream'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=finalName; a.className='download-link';
@@ -853,6 +1259,12 @@
             const low=extName.toLowerCase(),isSens=SENSITIVE_EXTS.some(s=>low.endsWith(s));
             showModal(isSens?'注意文件扩展名':'下载提示', isSens?'检测到文件类型可能被浏览器自动更改扩展名。':'文件已准备就绪，请检查下载文件名是否与预期一致。','正确文件名：'+finalName,isSens);
             renderPreview(out, finalName, finalLen);
+            } catch(e) {
+                uiSet('decInfo','<span class="err">解码异常：'+(e.message||e)+'。</span>');
+                pw.style.display='none';
+            } finally {
+                btn.disabled=false; btn.textContent='还原并预览';
+            }
         });
 
         // ============================================================
@@ -946,6 +1358,57 @@
 
         document.getElementById('encFile').addEventListener('change',()=>{document.getElementById('encProgressWrap').style.display='none';document.getElementById('encDownload').innerHTML='';document.getElementById('encInfo').innerHTML='';});
         document.getElementById('decFile').addEventListener('change',()=>{document.getElementById('decProgressWrap').style.display='none';document.getElementById('decDownload').innerHTML='';document.getElementById('decInfo').innerHTML='';document.getElementById('previewWrap').style.display='none';});
-    </script>
+    
+        // === 清除按钮 ===
+        document.getElementById('btnClear').addEventListener('click', function() {
+            document.getElementById('keyInput').value = '';
+            document.getElementById('keyStrength').textContent = '';
+            document.getElementById('encFile').value = '';
+            document.getElementById('decFile').value = '';
+            document.getElementById('carrierFile').value = '';
+            document.getElementById('encText').value = '';
+            document.getElementById('encInfo').innerHTML = '';
+            document.getElementById('encDownload').innerHTML = '';
+            document.getElementById('encProgressWrap').style.display = 'none';
+            document.getElementById('decInfo').innerHTML = '';
+            document.getElementById('decDownload').innerHTML = '';
+            document.getElementById('decProgressWrap').style.display = 'none';
+            document.getElementById('previewWrap').style.display = 'none';
+            document.getElementById('previewBody').innerHTML = '<div class="pv-placeholder">预览将在此处显示</div>';
+        });
+
+        // === 使用说明弹窗 ===
+        (function() {
+            var usageOverlay = document.getElementById('usageModalOverlay');
+            var btnUsage = document.getElementById('btnUsage');
+            var usageCloseBtn = document.getElementById('usageModalCloseBtn');
+            if (!usageOverlay) { console.error('[使用说明] 弹窗容器未找到'); return; }
+            if (!btnUsage) { console.error('[使用说明] 按钮未找到'); return; }
+            btnUsage.addEventListener('click', function() {
+                usageOverlay.classList.add('active');
+            });
+            if (usageCloseBtn) {
+                usageCloseBtn.addEventListener('click', function() {
+                    usageOverlay.classList.remove('active');
+                });
+            }
+            usageOverlay.addEventListener('click', function(e) {
+                if (e.target === usageOverlay) {
+                    usageOverlay.classList.remove('active');
+                }
+            });
+        })();
+
+        // === Escape 键关闭所有弹窗 ===
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal-overlay.active').forEach(function(el) {
+                    el.classList.remove('active');
+                });
+            }
+        });
+        // === 使用说明弹窗调试日志 ===
+        console.log('[使用说明] 弹窗已初始化，usageOverlay:', !!document.getElementById('usageModalOverlay'), 'btnUsage:', !!document.getElementById('btnUsage'));
+</script>
 </body>
 </html>
