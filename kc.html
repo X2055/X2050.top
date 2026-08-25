@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>矿场</title>
+    <title>💎 现金矿场</title>
     <style>
         /* ===== 全局重置 & 字体 ===== */
         * {
@@ -23,7 +23,6 @@
             margin: 0;
         }
 
-        /* ===== 主容器 ===== */
         .app {
             max-width: 460px;
             width: 100%;
@@ -37,7 +36,6 @@
             border: 1px solid rgba(255, 255, 255, 0.5);
         }
 
-        /* ===== 通用工具 ===== */
         .hidden { display: none !important; }
 
         h2 {
@@ -56,7 +54,6 @@
             margin-bottom: 24px;
         }
 
-        /* ===== 输入框组 ===== */
         .input-group {
             margin-bottom: 18px;
         }
@@ -89,7 +86,6 @@
             color: #b0a8a0;
         }
 
-        /* ===== 按钮 ===== */
         .btn {
             width: 100%;
             padding: 18px;
@@ -132,7 +128,6 @@
         .btn:active::after {
             opacity: 1;
         }
-
         .btn-secondary {
             background: #6b7a8a;
             box-shadow: 0 6px 0 #4a5764;
@@ -149,7 +144,6 @@
             box-shadow: 0 2px 0 #8f6b0e;
         }
 
-        /* ===== 切换链接 ===== */
         .toggle-link {
             text-align: center;
             margin-top: 18px;
@@ -165,7 +159,6 @@
             text-decoration: underline;
         }
 
-        /* ===== 消息框 ===== */
         .message {
             margin-top: 16px;
             padding: 12px 16px;
@@ -191,7 +184,6 @@
             border-color: rgba(45, 122, 75, 0.2);
         }
 
-        /* ===== 余额卡片 ===== */
         .balance-card {
             background: linear-gradient(135deg, #1f4d36 0%, #2d7a4b 100%);
             border-radius: 32px;
@@ -244,7 +236,6 @@
             backdrop-filter: blur(4px);
         }
 
-        /* ===== 区块标题 ===== */
         .section-title {
             font-size: 17px;
             font-weight: 600;
@@ -261,7 +252,6 @@
             background: rgba(0,0,0,0.06);
         }
 
-        /* ===== 转账区域 ===== */
         .transfer-box {
             background: rgba(248, 246, 244, 0.6);
             backdrop-filter: blur(4px);
@@ -271,7 +261,6 @@
             border: 1px solid rgba(200, 192, 184, 0.2);
         }
 
-        /* ===== 历史列表 ===== */
         .history-list {
             max-height: 190px;
             overflow-y: auto;
@@ -318,7 +307,6 @@
             font-size: 14px;
         }
 
-        /* ===== 滚动条美化 ===== */
         .history-list::-webkit-scrollbar {
             width: 4px;
         }
@@ -330,7 +318,6 @@
             border-radius: 10px;
         }
 
-        /* ===== Toast ===== */
         .toast {
             position: fixed;
             bottom: 30px;
@@ -363,14 +350,12 @@
             background: rgba(45, 122, 75, 0.9);
         }
 
-        /* ===== 响应式微调 ===== */
         @media (max-width: 480px) {
             .app { padding: 24px 16px 32px; }
             .balance-card .amount { font-size: 42px; }
             .btn { padding: 16px; font-size: 17px; }
         }
 
-        /* ===== 加载动画 ===== */
         .spinner {
             display: inline-block;
             width: 20px;
@@ -385,23 +370,52 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+        .btn .spinner {
+            display: none;
+        }
         .btn-loading .spinner {
             display: inline-block;
         }
         .btn-loading .btn-text {
             display: none;
         }
-        .btn .spinner {
+
+        .error-detail {
+            background: #fce8e8;
+            border-radius: 12px;
+            padding: 10px 14px;
+            margin-top: 8px;
+            font-size: 13px;
+            color: #b13e3e;
+            word-break: break-all;
+            border: 1px solid #f5c6c6;
             display: none;
+        }
+        .error-detail.show {
+            display: block;
+        }
+        .notice {
+            background: #fff3cd;
+            border-radius: 12px;
+            padding: 10px 14px;
+            margin-bottom: 16px;
+            font-size: 13px;
+            color: #856404;
+            border: 1px solid #ffeeba;
         }
     </style>
 </head>
 <body>
 
-    <!-- Toast 容器 -->
     <div id="toast" class="toast"></div>
 
     <div class="app" id="app">
+
+        <!-- 温馨提示 -->
+        <div class="notice" id="noticeBar">
+            ⚠️ 请确保通过 <strong>http://localhost</strong> 或 <strong>http://127.0.0.1</strong> 访问<br>
+            （使用 VS Code 的 Live Server 打开），否则可能无法正常使用。
+        </div>
 
         <!-- ========== 登录视图 ========== -->
         <div id="loginView">
@@ -421,6 +435,7 @@
             </button>
             <div class="toggle-link" id="gotoRegister">还没有账号？去注册</div>
             <div id="loginMessage" class="message"></div>
+            <div id="loginErrorDetail" class="error-detail"></div>
         </div>
 
         <!-- ========== 注册视图 ========== -->
@@ -441,11 +456,11 @@
             </button>
             <div class="toggle-link" id="gotoLogin">已有账号？去登录</div>
             <div id="registerMessage" class="message"></div>
+            <div id="registerErrorDetail" class="error-detail"></div>
         </div>
 
         <!-- ========== 主界面 ========== -->
         <div id="mainView" class="hidden">
-            <!-- 余额卡片 -->
             <div class="balance-card">
                 <div class="label">💰 当前资产</div>
                 <div class="amount" id="balanceAmount">0</div>
@@ -455,15 +470,14 @@
                 </div>
             </div>
 
-            <!-- 挖矿 -->
             <div class="section-title">⛏️ 挖矿</div>
             <button class="btn btn-mine" id="mineBtn">
                 <span class="btn-text">⛏️ 挖矿（冷却 60s）</span>
                 <span class="spinner"></span>
             </button>
             <div id="mineMessage" class="message"></div>
+            <div id="mineErrorDetail" class="error-detail"></div>
 
-            <!-- 转账 -->
             <div class="section-title">💸 转账</div>
             <div class="transfer-box">
                 <div class="input-group">
@@ -479,15 +493,14 @@
                     <span class="spinner"></span>
                 </button>
                 <div id="transferMessage" class="message"></div>
+                <div id="transferErrorDetail" class="error-detail"></div>
             </div>
 
-            <!-- 交易流水 -->
             <div class="section-title">📋 交易流水</div>
             <div class="history-list" id="historyList">
                 <div class="history-empty">暂无交易记录</div>
             </div>
 
-            <!-- 底部操作 -->
             <button class="btn btn-danger" id="logoutBtn" style="margin-top:24px;">
                 <span class="btn-text">🚪 退出登录</span>
             </button>
@@ -496,38 +509,61 @@
 
     <script>
         // ================================================================
-        //  🚀 你的专属配置（已嵌入）
+        //  🚀 配置区域（所有参数已固化）
         // ================================================================
         const FILE_ID = '555871487218';
         const SCRIPT_ID = 'V2-3eNCpvBvUk0SuMV76Gt70C';
         const TOKEN = '6yje16Ws26XvYqxONjw4AY';
 
-        const WEBHOOK_URL = `https://www.kdocs.cn/api/v3/ide/file/${FILE_ID}/script/${SCRIPT_ID}/sync_task`;
+        // 原始 WPS Webhook 地址
+        const ORIGINAL_URL = `https://www.kdocs.cn/api/v3/ide/file/${FILE_ID}/script/${SCRIPT_ID}/sync_task`;
+
+        // 使用 cors.lol 代理（稳定，支持 POST + 自定义头部）
+        const WEBHOOK_URL = 'https://api.cors.lol/?url=' + encodeURIComponent(ORIGINAL_URL);
 
         // ================================================================
-        //  调用 AirScript（统一接口）
+        //  调用代理（带详细错误捕获）
         // ================================================================
         async function callAirScript(functionName, params) {
-            const response = await fetch(WEBHOOK_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'AirScript-Token': TOKEN
-                },
-                body: JSON.stringify({
-                    function: functionName,
-                    params: params
-                })
-            });
+            try {
+                const response = await fetch(WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'AirScript-Token': TOKEN
+                    },
+                    body: JSON.stringify({
+                        function: functionName,
+                        params: params
+                    })
+                });
 
-            if (!response.ok) {
-                const errText = await response.text();
-                throw new Error(`HTTP ${response.status}: ${errText}`);
+                if (!response.ok) {
+                    // 尝试读取错误详情
+                    let errText = await response.text();
+                    throw new Error(`HTTP ${response.status} - ${errText || response.statusText}`);
+                }
+
+                const data = await response.json();
+                // 兼容不同返回格式
+                return data.result !== undefined ? data.result : data;
+            } catch (err) {
+                // 抛出详细错误，便于展示
+                throw new Error(`请求失败: ${err.message}`);
             }
+        }
 
-            const data = await response.json();
-            // 兼容两种返回格式
-            return data.result !== undefined ? data.result : data;
+        // ================================================================
+        //  显示错误详情
+        // ================================================================
+        function showError(detailElement, message) {
+            detailElement.textContent = message;
+            detailElement.classList.add('show');
+        }
+
+        function clearError(detailElement) {
+            detailElement.textContent = '';
+            detailElement.classList.remove('show');
         }
 
         // ================================================================
@@ -538,7 +574,6 @@
             const el = document.getElementById('toast');
             el.textContent = msg;
             el.className = 'toast' + (type ? ' ' + type : '');
-            // 强制重绘
             void el.offsetWidth;
             el.classList.add('show');
             clearTimeout(toastTimer);
@@ -548,7 +583,7 @@
         }
 
         // ================================================================
-        //  DOM 引用 & 状态
+        //  DOM 引用
         // ================================================================
         const loginView = document.getElementById('loginView');
         const registerView = document.getElementById('registerView');
@@ -558,11 +593,13 @@
         const loginPassword = document.getElementById('loginPassword');
         const loginBtn = document.getElementById('loginBtn');
         const loginMessage = document.getElementById('loginMessage');
+        const loginErrorDetail = document.getElementById('loginErrorDetail');
 
         const regUsername = document.getElementById('regUsername');
         const regPassword = document.getElementById('regPassword');
         const registerBtn = document.getElementById('registerBtn');
         const registerMessage = document.getElementById('registerMessage');
+        const registerErrorDetail = document.getElementById('registerErrorDetail');
 
         const balanceAmount = document.getElementById('balanceAmount');
         const displayUsername = document.getElementById('displayUsername');
@@ -571,10 +608,12 @@
         const transferAmount = document.getElementById('transferAmount');
         const transferBtn = document.getElementById('transferBtn');
         const transferMessage = document.getElementById('transferMessage');
+        const transferErrorDetail = document.getElementById('transferErrorDetail');
         const historyList = document.getElementById('historyList');
         const logoutBtn = document.getElementById('logoutBtn');
         const mineBtn = document.getElementById('mineBtn');
         const mineMessage = document.getElementById('mineMessage');
+        const mineErrorDetail = document.getElementById('mineErrorDetail');
 
         const gotoRegister = document.getElementById('gotoRegister');
         const gotoLogin = document.getElementById('gotoLogin');
@@ -591,6 +630,7 @@
             mainView.classList.add('hidden');
             loginMessage.textContent = '';
             loginMessage.className = 'message';
+            clearError(loginErrorDetail);
             loginBtn.disabled = false;
             loginBtn.querySelector('.btn-text').style.display = 'inline';
             loginBtn.querySelector('.spinner').style.display = 'none';
@@ -602,6 +642,7 @@
             mainView.classList.add('hidden');
             registerMessage.textContent = '';
             registerMessage.className = 'message';
+            clearError(registerErrorDetail);
             registerBtn.disabled = false;
             registerBtn.querySelector('.btn-text').style.display = 'inline';
             registerBtn.querySelector('.spinner').style.display = 'none';
@@ -616,10 +657,11 @@
             displayUid.textContent = `UID: ${userData.uid}`;
             transferMessage.textContent = '';
             transferMessage.className = 'message';
+            clearError(transferErrorDetail);
             mineMessage.textContent = '';
             mineMessage.className = 'message';
+            clearError(mineErrorDetail);
             renderHistory();
-            // 重置按钮状态
             transferBtn.disabled = false;
             transferBtn.querySelector('.btn-text').style.display = 'inline';
             transferBtn.querySelector('.spinner').style.display = 'none';
@@ -685,6 +727,7 @@
             setButtonLoading(registerBtn, true);
             registerMessage.textContent = '⏳ 注册中...';
             registerMessage.className = 'message';
+            clearError(registerErrorDetail);
 
             try {
                 const result = await callAirScript('registerUser', { username, password });
@@ -698,11 +741,13 @@
                 } else {
                     registerMessage.textContent = '❌ ' + (result.msg || '注册失败');
                     registerMessage.className = 'message error';
+                    if (result.msg) showError(registerErrorDetail, result.msg);
                 }
             } catch (err) {
-                registerMessage.textContent = '❌ 网络错误：' + err.message;
+                registerMessage.textContent = '❌ 网络错误，详见下方详情';
                 registerMessage.className = 'message error';
-                showToast('网络错误，请检查配置', 'error');
+                showError(registerErrorDetail, err.message);
+                showToast('网络错误，请检查控制台', 'error');
             } finally {
                 setButtonLoading(registerBtn, false);
             }
@@ -722,6 +767,7 @@
             setButtonLoading(loginBtn, true);
             loginMessage.textContent = '⏳ 登录中...';
             loginMessage.className = 'message';
+            clearError(loginErrorDetail);
 
             try {
                 const result = await callAirScript('loginUser', { username, password });
@@ -734,11 +780,13 @@
                 } else {
                     loginMessage.textContent = '❌ ' + (result.msg || '登录失败');
                     loginMessage.className = 'message error';
+                    if (result.msg) showError(loginErrorDetail, result.msg);
                 }
             } catch (err) {
-                loginMessage.textContent = '❌ 网络错误：' + err.message;
+                loginMessage.textContent = '❌ 网络错误，详见下方详情';
                 loginMessage.className = 'message error';
-                showToast('网络错误，请检查配置', 'error');
+                showError(loginErrorDetail, err.message);
+                showToast('网络错误，请检查控制台', 'error');
             } finally {
                 setButtonLoading(loginBtn, false);
             }
@@ -770,6 +818,7 @@
             setButtonLoading(transferBtn, true);
             transferMessage.textContent = '⏳ 转账中...';
             transferMessage.className = 'message';
+            clearError(transferErrorDetail);
 
             try {
                 const result = await callAirScript('transferMoney', {
@@ -790,11 +839,12 @@
                 } else {
                     transferMessage.textContent = '❌ ' + (result.msg || '转账失败');
                     transferMessage.className = 'message error';
-                    showToast(result.msg || '转账失败', 'error');
+                    if (result.msg) showError(transferErrorDetail, result.msg);
                 }
             } catch (err) {
-                transferMessage.textContent = '❌ 网络错误：' + err.message;
+                transferMessage.textContent = '❌ 网络错误，详见下方详情';
                 transferMessage.className = 'message error';
+                showError(transferErrorDetail, err.message);
                 showToast('网络错误', 'error');
             } finally {
                 setButtonLoading(transferBtn, false);
@@ -809,6 +859,7 @@
             setButtonLoading(mineBtn, true);
             mineMessage.textContent = '⛏️ 正在挖矿...';
             mineMessage.className = 'message';
+            clearError(mineErrorDetail);
 
             try {
                 const result = await callAirScript('mine', { username: currentUser.username });
@@ -824,10 +875,12 @@
                 } else {
                     mineMessage.textContent = '❌ ' + (result.msg || '挖矿失败');
                     mineMessage.className = 'message error';
+                    if (result.msg) showError(mineErrorDetail, result.msg);
                 }
             } catch (err) {
-                mineMessage.textContent = '❌ 网络错误：' + err.message;
+                mineMessage.textContent = '❌ 网络错误，详见下方详情';
                 mineMessage.className = 'message error';
+                showError(mineErrorDetail, err.message);
                 showToast('网络错误', 'error');
             } finally {
                 setButtonLoading(mineBtn, false);
@@ -860,14 +913,15 @@
             showRegisterView();
             registerMessage.textContent = '';
             registerMessage.className = 'message';
+            clearError(registerErrorDetail);
         });
         gotoLogin.addEventListener('click', () => {
             showLoginView();
             loginMessage.textContent = '';
             loginMessage.className = 'message';
+            clearError(loginErrorDetail);
         });
 
-        // 回车键快捷操作
         loginPassword.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleLogin(); });
         regPassword.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleRegister(); });
         transferAmount.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleTransfer(); });
@@ -876,8 +930,9 @@
         //  启动应用
         // ================================================================
         showLoginView();
-        console.log('💎 现金矿场已启动');
-        console.log('📡 Webhook:', WEBHOOK_URL);
+        console.log('💎 现金矿场已启动（代理模式：cors.lol）');
+        console.log('📡 代理地址:', WEBHOOK_URL);
+        console.log('🔑 如果仍然报错，请查看页面下方的红色错误详情。');
     </script>
 
 </body>
