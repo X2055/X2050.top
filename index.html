@@ -212,6 +212,10 @@
       <div class="sidebar-content-item" onclick="window.open('user.html','_blank')" style="cursor:pointer;">
         <span class="sb-text">AUR 矿场</span>
       </div>
+      <!-- 侧边栏：证券交易所，纯文字靠左(无图标)，复用侧边栏错峰动画，跳转 stock.html -->
+      <div class="sidebar-content-item" onclick="window.open('stock.html','_blank')" style="cursor:pointer;">
+        <span class="sb-text">证券交易所</span>
+      </div>
       <div class="sidebar-slider-container">
         <input type="range" id="gradientSlider" min="0" max="100" value="0" class="gradient-slider">
       </div>
@@ -375,7 +379,7 @@
       { id: 12, title: "视频学习", icon: svgIcons.video,      isImg: false, url: "https://www.bilibili.com", visible: true },
       { id: 13, title: "社区讨论", icon: svgIcons.chat,       isImg: false, url: "https://www.zhihu.com", visible: true },
       { id: 14, title: "翻译工具", icon: svgIcons.translate,  isImg: false, url: "https://www.bing.com/translator", visible: true },
-      { id: 15, title: "股市行情", icon: svgIcons.stock,      isImg: false, url: "https://finance.sina.com.cn", visible: true },
+      { id: 15, title: "AUR股票", icon: svgIcons.stock,      isImg: false, url: "stock.html", visible: true },
       { id: 16, title: "云音乐",   icon: svgIcons.music,      isImg: false, url: "https://music.163.com", visible: true },
       { id: 17, title: "便签备忘", icon: svgIcons.edit,       isImg: false, isModal: true, modalTitle: "便签", modalText: "功能开发中，可在侧边栏快捷访问主要链接。", visible: true },
       { id: 18, title: "时间日历", icon: svgIcons.calendar,   isImg: false, isModal: true, modalTitle: "日历", modalText: "今天是 " + new Date().toLocaleDateString('zh-CN'), visible: true },
