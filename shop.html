@@ -228,12 +228,12 @@
   var $ = function(id){return document.getElementById(id);};
   var selectedProduct=null;
 
-  // ===== 会话恢复：3.html 把 me 存 sessionStorage 时直接复用；否则弹登录 =====
+  // ===== 会话恢复：改用 localStorage =====
   try{
-    var cached=sessionStorage.getItem('aur_me');
+    var cached=localStorage.getItem('aur_me');
     if(cached){me=JSON.parse(cached);}
   }catch(e){}
-  function persistMe(){try{sessionStorage.setItem('aur_me',JSON.stringify(me));}catch(e){}}
+  function persistMe(){try{localStorage.setItem('aur_me',JSON.stringify(me));}catch(e){}}
 
   function openAuth(){ $('authMask').classList.add('show'); setTimeout(function(){$('auUser').focus();},250); }
   function closeAuth(){$('authMask').classList.remove('show');}
@@ -305,7 +305,6 @@
         .then(function(r){if(r.error||!r.data){showToast('用户名或密码错误',true);done();return;}me=r.data;persistMe();closeAuth();showToast('登录成功');showApp();done();})
         .catch(function(e){showToast('登录失败：'+(e.message||e),true);done();});
     }else{
-      // 注册：调 3.html 同款 gen_address RPC
       sb.rpc('gen_address').then(function(addrRes){
         var addr=addrRes.data||addrRes;
         if(!addr||typeof addr!=='string'||!addr.startsWith('0x')){showToast('生成钱包地址失败：'+(addrRes.error?addrRes.error.message:''),true);done();return;}
@@ -325,14 +324,12 @@
     if(Number(me.balance||0)<needAur)return showToast('余额不足',true);
     $('qqMask').classList.remove('show');
     $('qqConfirm').disabled=true;
-    // 查商户(UID=1)地址
     sb.from('wallets').select('address').eq('uid',MERCHANT_UID).maybeSingle().then(function(mr){
       if(mr.error||!mr.data||!mr.data.address){showToast('商户钱包异常，请联系管理员',true);$('qqConfirm').disabled=false;return;}
       var toAddr=mr.data.address;
       sb.rpc('transfer',{p_from:me.address,p_to:toAddr,p_amount:needAur}).then(function(res){
         var r=res.data;
         if(r&&r.ok){
-          // 本地刷新余额
           me.balance=Number(me.balance||0)-needAur; persistMe();
           var masked=me.address.slice(0,6)+'...'+me.address.slice(-4);
           showReceipt({qq:qq,product:selectedProduct,cnys:selectedProduct.cnys,aur:needAur,masked:masked,toAddr:toAddr,status:'已到账'});
@@ -370,7 +367,6 @@
           return '<div class="tx"><span class="dot"></span><div class="body"><div class="line"><span class="addr">'+(t.from_addr.substr(0,6)+'...'+t.from_addr.substr(-4))+' → '+(t.to_addr.substr(0,6)+'...'+t.to_addr.substr(-4))+'</span><span class="amt">+'+Number(t.amount).toFixed(3)+'</span></div><div class="time">'+new Date(t.created_at).toLocaleString()+'</div></div></div>';
         }).join('');
       });
-    // 同时写一条购买广播记录(若 broadcasts 表存在则写，不存在静默忽略)
     sb.from('broadcasts').insert([{message:msg,type:'purchase'}]).then().catch(function(){});
   }
 
