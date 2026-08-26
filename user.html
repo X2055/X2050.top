@@ -323,13 +323,8 @@
   var $ = function(id){return document.getElementById(id);};
   var views={home:$('v-home'),mine:$('v-mine'),transfer:$('v-transfer'),explorer:$('v-explorer')};
   var tabLinks=document.querySelectorAll('.bottomtab a');
-
-  // ---------- 会话恢复：改用 localStorage ----------
-  try{
-    var cached=localStorage.getItem('aur_me');
-    if(cached){me=JSON.parse(cached);}
-  }catch(e){}
-  function persistMe(){try{localStorage.setItem('aur_me',JSON.stringify(me));}catch(e){}}
+  // ---------- 会话恢复：从 localStorage 读取（刷新/重开浏览器仍保持登录）----------
+  try{var _c=localStorage.getItem('aur_me');if(_c){me=JSON.parse(_c);}}catch(e){}
 
   // ---------- 视图切换 ----------
   function switchView(name){
@@ -386,19 +381,19 @@
     var done=function(){$('authBtn').disabled=false;};
     if(isLogin){
       sb.from('wallets').select('id,uid,username,address,balance,last_mine').eq('username',u).eq('password',hashed).maybeSingle()
-        .then(function(r){if(r.error||!r.data){showToast('用户名或密码错误',true);done();return;}me=r.data;closeAuth();showToast('登录成功');showApp();done();})
+        .then(function(r){if(r.error||!r.data){showToast('用户名或密码错误',true);done();return;}me=r.data;try{localStorage.setItem('aur_me',JSON.stringify(me));}catch(e){}closeAuth();showToast('登录成功');showApp();done();})
         .catch(function(e){showToast('登录失败：'+(e.message||e),true);done();});
     }else{
       sb.rpc('gen_address').then(function(addrRes){
         var addr=addrRes.data||addrRes;
         if(!addr||typeof addr!=='string'||!addr.startsWith('0x')){showToast('生成钱包地址失败：'+(addrRes.error?addrRes.error.message:''),true);done();return;}
         sb.from('wallets').insert([{username:u,password:hashed,address:addr,balance:0,last_mine:0}]).select('id,uid,username,address,balance,last_mine').single()
-          .then(function(ir){if(ir.error){showToast('注册失败：'+(ir.error.message.includes('unique')?'用户名已存在':ir.error.message),true);done();return;}me=ir.data;closeAuth();showToast('注册成功，UID '+me.uid);showApp();done();})
+          .then(function(ir){if(ir.error){showToast('注册失败：'+(ir.error.message.includes('unique')?'用户名已存在':ir.error.message),true);done();return;}me=ir.data;try{localStorage.setItem('aur_me',JSON.stringify(me));}catch(e){}closeAuth();showToast('注册成功，UID '+me.uid);showApp();done();})
           .catch(function(e){showToast('注册失败：'+(e.message||e),true);done();});
       }).catch(function(e){showToast('生成钱包地址失败：'+(e.message||e),true);done();});
     }
   });
-  $('btnLogout').addEventListener('click',function(){me=null;localStorage.removeItem('aur_me');if(window._rtSub){sb.removeChannel(window._rtSub);window._rtSub=null;}openAuth();});
+  $('btnLogout').addEventListener('click',function(){me=null;try{localStorage.removeItem('aur_me');}catch(e){}if(window._rtSub){sb.removeChannel(window._rtSub);window._rtSub=null;}openAuth();});
 
   // ---------- 主页渲染 ----------
   function renderHome(){
@@ -420,6 +415,8 @@
   // ---------- 金本位汇率(正确公式) ----------
   var OZ_GRAM=31.1034768;
   var goldUsdPerOz=null,usdCny=null,rateOnline=false;
+  // 多币种配置(国旗 + 名称 + 相对 USD 的固定近似换算系数;CNY 用实时汇率)
+  // cnyPerUsd = usdCny(实时)。其它币种用 USD 固定系数(主流币近似,足够展示)
   var CURRENCIES=[
     {code:'CNY',name:'人民币',flag:'🇨🇳',unit:'元',usdPerUnit:null},
     {code:'USD',name:'美元',flag:'🇺🇸',unit:'USD',usdPerUnit:1},
@@ -437,7 +434,7 @@
     cny.textContent='≈ ¥'+(bal*cnyEach).toFixed(2)+' (1 AUR ≈ $'+usd.toFixed(2)+')';
   }
   function fetchRate(){
-    var goldDone=false,cnyDone=false;
+    var goldDone=false,cnyDone=false,fallbackTimer=null;
     function check(){if(goldDone&&cnyDone)renderRate();}
     function renderRate(){
       var usd=aurUsd();
@@ -446,7 +443,7 @@
         var perAur,myVal=0;
         if(c.code==='CNY'){perAur=usd?usd*usdCny:null;}
         else if(c.code==='USD'){perAur=usd;}
-        else if(c.code==='GRAM'){perAur=usd?1/OZ_GRAM*OZ_GRAM?usd:usd:usd;}
+        else if(c.code==='GRAM'){perAur=usd?1/OZ_GRAM*OZ_GRAM?usd:usd:usd;} // 1 AUR=1克黄金
         else {perAur=usd?(usd/c.usdPerUnit):null;}
         if(perAur!=null&&me)myVal=Number(me.balance||0)*perAur;
         html+='<div class="rate-row"><span class="flag">'+(c.flag==='🪙'?'🪙':c.flag)+'</span>'
@@ -459,6 +456,8 @@
       $('rateSrc').textContent=(rateOnline?'实时汇率 · 金本位 1 AUR=1g 黄金':'离线兜底 · 金本位 1 AUR=1g 黄金');
       renderCny();
     }
+    // 金价主源: gold-api
+    var goldAc=setTimeout(function(){},0);
     function tryGold(url,resolve,reject){
       var ac=new (window.AbortController||function(){})();
       var tid=setTimeout(function(){ac.abort&&ac.abort();},5500);
@@ -469,10 +468,12 @@
       }).catch(function(){reject();});
     }
     tryGold('https://api.gold-api.com/price/XAU',function(){goldDone=true;check();},function(){
+      // fallback: Yahoo Chart(中国可达)
       tryGold('https://query1.finance.yahoo.com/v8/finance/chart/GC=F',function(){goldDone=true;check();},function(){
         goldUsdPerOz=4626;rateOnline=false;goldDone=true;check();
       });
     });
+    // USD/CNY
     (function(){
       var ac=new (window.AbortController||function(){})();
       setTimeout(function(){if(!cnyDone){usdCny=6.72;cnyDone=true;check();}},5500);
@@ -552,9 +553,8 @@
 
   // ---------- 启动 ----------
   document.addEventListener('DOMContentLoaded',function(){
-    if(me){showApp();}
-    else{openAuth();}
-    setTimeout(fetchRate,0);
+    openAuth();          // 立即弹出登录窗(不被金价 await 阻塞)
+    setTimeout(fetchRate,0); // 汇率后台静默拉取
   });
   window.__mine={sb:sb,me:function(){return me;}};
 })();
