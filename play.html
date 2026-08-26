@@ -235,7 +235,7 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
 
   var myUid = Number(me.uid);
 
-  // 页面加载立即验证钱包是否存在（核心改动）
+  // 页面加载立即验证钱包是否存在
   function verifySession(callback) {
     sb.from('wallets').select('balance').eq('uid', myUid).single().then(function(r){
       if(!r.data) {
@@ -255,7 +255,6 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
     });
   }
 
-  // 页面加载先验证，验证通过后才允许操作
   verifySession();
 
   document.querySelectorAll('.tab').forEach(function(tab){
@@ -300,14 +299,13 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
       reels.forEach(function(r){ r.textContent = symbols[Math.floor(Math.random()*5)]; });
     }, 80);
 
-    sb.rpc('play_slot', { p_uid: String(myUid), p_bet: bet }).then(function(res){
+    sb.rpc('play_slot', { p_uid: myUid, p_bet: bet }).then(function(res){
       clearInterval(interval);
       var r = res.data;
       if(!r) { showToast('服务器无响应', true); btn.disabled = false; btn.textContent = '🎰 开始旋转'; return; }
       if(!r.ok) {
         var errMsg = r.err || '游戏失败';
         showToast(errMsg, true);
-        // 如果是登录/钱包类错误，踢回登录页
         if(errMsg.indexOf('登录') > -1 || errMsg.indexOf('钱包') > -1 || errMsg.indexOf('过期') > -1) {
           localStorage.removeItem('aur_me');
           setTimeout(function(){ location.href = 'user.html'; }, 1500);
@@ -343,7 +341,7 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
     if(bet > Number(me.balance||0)) return showToast('余额不足', true);
     btn.disabled = true; btn.textContent = '掷骰子中...';
 
-    sb.rpc('play_sicbo', { p_uid: String(myUid), p_bet: bet, p_choice: sicboChoice }).then(function(res){
+    sb.rpc('play_sicbo', { p_uid: myUid, p_bet: bet, p_choice: sicboChoice }).then(function(res){
       var r = res.data;
       if(!r) { showToast('服务器无响应', true); btn.disabled = false; btn.textContent = '🎲 掷骰子'; return; }
       if(!r.ok) {
@@ -383,7 +381,7 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
     if(bet > Number(me.balance||0)) return showToast('余额不足', true);
     btn.disabled = true; btn.textContent = '发牌中...';
 
-    sb.rpc('play_baccarat', { p_uid: String(myUid), p_bet: bet, p_choice: baccaratChoice }).then(function(res){
+    sb.rpc('play_baccarat', { p_uid: myUid, p_bet: bet, p_choice: baccaratChoice }).then(function(res){
       var r = res.data;
       if(!r) { showToast('服务器无响应', true); btn.disabled = false; btn.textContent = '🃏 发牌'; return; }
       if(!r.ok) {
