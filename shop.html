@@ -23,7 +23,6 @@
   }
   button,input{font-family:inherit;}
 
-  /* ===== 顶部品牌条 ===== */
   .brandbar{position:sticky;top:0;z-index:50;background:var(--nav);
     padding:calc(8px + env(safe-area-inset-top)) 14px 8px;
     display:flex;align-items:center;justify-content:space-between;
@@ -36,11 +35,9 @@
     display:flex;align-items:center;justify-content:center;}
   .avatar-btn svg{width:20px;height:20px;}
 
-  /* ===== 主体 ===== */
   .wrap{max-width:760px;margin:0 auto;padding:14px;}
   .card{background:var(--card);border-radius:18px;padding:18px;box-shadow:0 2px 14px rgba(13,43,82,.06);margin-bottom:14px;}
 
-  /* 资产卡 */
   .hero{background:linear-gradient(135deg,#0d2b52,#1a4a86);color:#fff;}
   .hero .who{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
   .hero .ava{width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.18);
@@ -57,7 +54,6 @@
   .bal .n{font-size:32px;font-weight:800;letter-spacing:.5px;}
   .bal .cny{font-size:13px;opacity:.85;margin-top:4px;font-weight:500;}
 
-  /* 商品 */
   .sec{display:flex;align-items:center;justify-content:space-between;margin:4px 2px 10px;}
   .sec h3{font-size:15px;font-weight:700;}
   .products{display:grid;gap:10px;}
@@ -71,7 +67,6 @@
   .buy-btn[disabled]{background:#c7c7cc;cursor:not-allowed;}
   .buy-btn:active:not([disabled]){transform:scale(.96);}
 
-  /* 广播 */
   .feed{display:flex;flex-direction:column;gap:8px;}
   .tx{display:flex;align-items:center;gap:10px;padding:11px 12px;border:1px solid var(--line);border-radius:12px;background:#fcfcfd;font-size:13px;}
   .tx .dot{width:8px;height:8px;border-radius:50%;background:var(--blue);flex:0 0 auto;}
@@ -82,7 +77,6 @@
   .tx .time{font-size:10px;color:var(--sub);margin-top:2px;}
   .empty{text-align:center;color:var(--sub);font-size:12px;padding:18px;}
 
-  /* ===== 表单/弹窗(白底主站风格) ===== */
   input.txt{width:100%;padding:14px 15px;border:1.5px solid var(--border);border-radius:14px;font-size:15px;outline:none;background:#fafbfc;}
   input.txt:focus{border-color:var(--blue);background:#fff;}
   .btn{width:100%;padding:15px;border:none;border-radius:14px;background:var(--blue);color:#fff;font-size:16px;font-weight:700;cursor:pointer;transition:transform .1s;}
@@ -99,7 +93,6 @@
   .toggle{text-align:center;color:var(--blue);font-size:13px;margin-top:6px;cursor:pointer;font-weight:600;padding:8px;}
   .link-home{display:block;text-align:center;color:var(--sub);font-size:12px;margin-top:10px;text-decoration:none;}
 
-  /* 收据 */
   .receipt-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px;}
   .receipt-row:last-child{border:none;}
   .receipt-row .k{opacity:.6;}
@@ -116,7 +109,6 @@
 
 <div id="toast"></div>
 
-<!-- 顶部品牌条 -->
 <header class="brandbar">
   <div class="logo">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M13 2L4 14h6l-1 8 9-12h-6l1-8z" fill="#2a90ff"/></svg>
@@ -130,7 +122,6 @@
   </button>
 </header>
 
-<!-- 登录/注册弹窗(白底，主站风格) -->
 <div class="auth-mask" id="authMask">
   <div class="auth-sheet">
     <h2 id="authTitle">登录 Aurum 账户</h2>
@@ -145,7 +136,6 @@
 
 <main class="wrap">
 
-  <!-- 资产 -->
   <section class="card hero">
     <div class="who">
       <div class="ava">
@@ -167,18 +157,15 @@
     </div>
   </section>
 
-  <!-- 商品 -->
   <div class="sec"><h3>Q币兑换</h3></div>
   <div class="products" id="productList"></div>
 
-  <!-- 广播 -->
   <div class="sec" style="margin-top:8px;"><h3>最近购买广播</h3></div>
   <div class="card" style="padding:12px;">
     <div class="feed" id="feedShop"><div class="empty">加载中...</div></div>
   </div>
 </main>
 
-<!-- QQ 填写弹窗 -->
 <div class="auth-mask" id="qqMask">
   <div class="auth-sheet">
     <h2>填写 QQ 号</h2>
@@ -189,7 +176,6 @@
   </div>
 </div>
 
-<!-- 支付详情弹窗 -->
 <div class="auth-mask" id="rcptMask">
   <div class="auth-sheet">
     <h2 style="color:var(--ok);">✅ 支付成功</h2>
@@ -203,11 +189,10 @@
 (function(){
   'use strict';
 
-  // ===== 接口完全照搬 3.html（逐字一致）=====
   var SUPABASE_URL = 'https://irnaphrjcdfmqyykdron.supabase.co';
   var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlybmFwaHJqY2RmbXF5eWtkcm9uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3MDUzNzIsImV4cCI6MjEwMzI4MTM3Mn0.4FNlvN4GfVSmYQTr2ZelAc96EavUohqbLURirbeIUlI';
-  var CNYS_RATE = 100;      // 100 AUR = 1 CNYS
-  var MERCHANT_UID = 1;     // 收款账户 UID
+  var CNYS_RATE = 100;
+  var MERCHANT_UID = 1;
 
   var PRODUCTS = [
     { name:'1 Q币', qbi:1,  cnys:1  },
@@ -228,11 +213,8 @@
   var $ = function(id){return document.getElementById(id);};
   var selectedProduct=null;
 
-  // ===== 会话恢复：从 localStorage 读取（与 3.html 共用同一 key）=====
-  try{
-    var cached=localStorage.getItem('aur_me');
-    if(cached){me=JSON.parse(cached);}
-  }catch(e){}
+  // 会话恢复：从 localStorage 读取（与 3.html 共用同一 key）
+  try{var _c=localStorage.getItem('aur_me');if(_c){me=JSON.parse(_c);}}catch(e){}
   function persistMe(){try{localStorage.setItem('aur_me',JSON.stringify(me));}catch(e){}}
 
   function openAuth(){ $('authMask').classList.add('show'); setTimeout(function(){$('auUser').focus();},250); }
@@ -273,7 +255,6 @@
     });
   }
 
-  // ===== 头像 / 弹窗关闭 =====
   $('avatarBtn').addEventListener('click',function(){if(!me)openAuth();});
   $('authMask').addEventListener('click',function(e){if(e.target===this)closeAuth();});
   $('qqMask').addEventListener('click',function(e){if(e.target===this)$('qqMask').classList.remove('show');});
@@ -285,7 +266,6 @@
     document.body.removeChild(ta);
   });
 
-  // ===== 登录/注册(接口与 3.html 完全一致的 wallets 表查询) =====
   $('authToggle').addEventListener('click',function(){
     isLogin=!isLogin;
     $('authTitle').textContent=isLogin?'登录 Aurum 账户':'注册新账号';
@@ -305,7 +285,6 @@
         .then(function(r){if(r.error||!r.data){showToast('用户名或密码错误',true);done();return;}me=r.data;persistMe();closeAuth();showToast('登录成功');showApp();done();})
         .catch(function(e){showToast('登录失败：'+(e.message||e),true);done();});
     }else{
-      // 注册：调 3.html 同款 gen_address RPC
       sb.rpc('gen_address').then(function(addrRes){
         var addr=addrRes.data||addrRes;
         if(!addr||typeof addr!=='string'||!addr.startsWith('0x')){showToast('生成钱包地址失败：'+(addrRes.error?addrRes.error.message:''),true);done();return;}
@@ -316,7 +295,6 @@
     }
   });
 
-  // ===== 确认支付 =====
   $('qqConfirm').addEventListener('click',function(){
     var qq=$('qqInput').value.trim();
     if(!qq||!/^\d{5,15}$/.test(qq))return showToast('请输入正确的 QQ 号(5-15 位数字)');
@@ -325,14 +303,12 @@
     if(Number(me.balance||0)<needAur)return showToast('余额不足',true);
     $('qqMask').classList.remove('show');
     $('qqConfirm').disabled=true;
-    // 查商户(UID=1)地址
     sb.from('wallets').select('address').eq('uid',MERCHANT_UID).maybeSingle().then(function(mr){
       if(mr.error||!mr.data||!mr.data.address){showToast('商户钱包异常，请联系管理员',true);$('qqConfirm').disabled=false;return;}
       var toAddr=mr.data.address;
       sb.rpc('transfer',{p_from:me.address,p_to:toAddr,p_amount:needAur}).then(function(res){
         var r=res.data;
         if(r&&r.ok){
-          // 本地刷新余额
           me.balance=Number(me.balance||0)-needAur; persistMe();
           var masked=me.address.slice(0,6)+'...'+me.address.slice(-4);
           showReceipt({qq:qq,product:selectedProduct,cnys:selectedProduct.cnys,aur:needAur,masked:masked,toAddr:toAddr,status:'已到账'});
@@ -366,11 +342,9 @@
     sb.from('transactions').select('from_addr,to_addr,amount,created_at').order('created_at',{ascending:false}).limit(25)
       .then(function(r){var el=$('feedShop');if(!r.data||!r.data.length){el.innerHTML='<div class="empty">暂无广播</div>';return;}
         el.innerHTML=r.data.map(function(t){
-          var isMine=t.from_addr===me.address;
           return '<div class="tx"><span class="dot"></span><div class="body"><div class="line"><span class="addr">'+(t.from_addr.substr(0,6)+'...'+t.from_addr.substr(-4))+' → '+(t.to_addr.substr(0,6)+'...'+t.to_addr.substr(-4))+'</span><span class="amt">+'+Number(t.amount).toFixed(3)+'</span></div><div class="time">'+new Date(t.created_at).toLocaleString()+'</div></div></div>';
         }).join('');
       });
-    // 同时写一条购买广播记录(若 broadcasts 表存在则写，不存在静默忽略)
     sb.from('broadcasts').insert([{message:msg,type:'purchase'}]).then().catch(function(){});
   }
 
@@ -380,7 +354,7 @@
         el.innerHTML=r.data.map(function(t){return '<div class="tx"><span class="dot"></span><div class="body"><div class="line"><span class="addr">'+(t.from_addr.substr(0,6)+'...'+t.from_addr.substr(-4))+' → '+(t.to_addr.substr(0,6)+'...'+t.to_addr.substr(-4))+'</span><span class="amt">+'+Number(t.amount).toFixed(3)+'</span></div><div class="time">'+new Date(t.created_at).toLocaleString()+'</div></div></div>';}).join('');});
   }
 
-  // ===== 启动 =====
+  // ---------- 启动（根据 localStorage 缓存决定进主页还是弹登录框）----------
   document.addEventListener('DOMContentLoaded',function(){
     if(me){showApp();}
     else{openAuth();}
