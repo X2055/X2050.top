@@ -434,13 +434,15 @@
         btn.disabled=false;
         if(res.error){ showToast(res.error.message||'操作失败',true); dbg(fn+' 失败: '+res.error.message,'e'); return; }
         var r=res.data;
+        // 兼容 {ok:false,error:...} / {ok:true,cost|value:...} 两种返回
+        if(r&&r.ok===false){ showToast(r.error||'操作失败',true); dbg(fn+' 返回错误: '+r.error,'e'); return; }
         if(r&&r.error){ showToast(r.error,true); dbg(fn+' 返回错误: '+r.error,'e'); return; }
         if(currentTab==='buy'){
           showToast('买入成功！ 花费 '+(r&&r.cost?Number(r.cost).toFixed(2):'')+' AUR','ok');
-          dbg(fn+' 成功, cost='+(r&&r.cost),'o');
+          dbg(fn+' 成功, cost='+(r&&r.cost!==undefined?r.cost:'?'),'o');
         } else {
           showToast('卖出成功！ 获得 '+(r&&r.value?Number(r.value).toFixed(2):'')+' AUR','ok');
-          dbg(fn+' 成功, value='+(r&&r.value),'o');
+          dbg(fn+' 成功, value='+(r&&r.value!==undefined?r.value:'?'),'o');
         }
         closeModal(); verifyBalance(); loadHoldings();
       })
@@ -464,4 +466,3 @@
 </script>
 </body>
 </html>
-
