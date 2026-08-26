@@ -299,7 +299,6 @@
   var views={home:$('v-home'),mine:$('v-mine'),transfer:$('v-transfer'),explorer:$('v-explorer')};
   var tabLinks=document.querySelectorAll('.bottomtab a');
 
-  // 会话恢复：从 localStorage 读取（刷新/重开浏览器仍保持登录）
   try{var _c=localStorage.getItem('aur_me');if(_c){me=JSON.parse(_c);}}catch(e){}
 
   function switchView(name){
@@ -356,12 +355,24 @@
         .then(function(r){if(r.error||!r.data){showToast('用户名或密码错误',true);done();return;}me=r.data;try{localStorage.setItem('aur_me',JSON.stringify(me));}catch(e){}closeAuth();showToast('登录成功');showApp();done();})
         .catch(function(e){showToast('登录失败：'+(e.message||e),true);done();});
     }else{
+      // 注册：先生成地址，再调 RPC 建钱包（绕过 RLS）
       sb.rpc('gen_address').then(function(addrRes){
         var addr=addrRes.data||addrRes;
         if(!addr||typeof addr!=='string'||!addr.startsWith('0x')){showToast('生成钱包地址失败：'+(addrRes.error?addrRes.error.message:''),true);done();return;}
-        sb.from('wallets').insert([{username:u,password:hashed,address:addr,balance:0,last_mine:0}]).select('id,uid,username,address,balance,last_mine').single()
-          .then(function(ir){if(ir.error){showToast('注册失败：'+(ir.error.message.includes('unique')?'用户名已存在':ir.error.message),true);done();return;}me=ir.data;try{localStorage.setItem('aur_me',JSON.stringify(me));}catch(e){}closeAuth();showToast('注册成功，UID '+me.uid);showApp();done();})
-          .catch(function(e){showToast('注册失败：'+(e.message||e),true);done();});
+        // 调 RPC 建钱包，SECURITY DEFINER 绕过 RLS
+        sb.rpc('init_wallet', {p_username:u, p_password:hashed, p_address:addr}).then(function(ir){
+          if(!ir.data || !ir.data.ok){
+            showToast('注册失败：'+(ir.data&&ir.data.err?'用户名已存在或系统错误':ir.error&&ir.error.message||'未知错误'),true);
+            done();return;
+          }
+          // 注册成功后查回完整用户信息
+          sb.from('wallets').select('id,uid,username,address,balance,last_mine').eq('uid',ir.data.uid).maybeSingle()
+            .then(function(qr){
+              if(qr.error||!qr.data){showToast('注册成功但读取信息失败，请登录',true);done();return;}
+              me=qr.data;try{localStorage.setItem('aur_me',JSON.stringify(me));}catch(e){}
+              closeAuth();showToast('注册成功，UID '+me.uid);showApp();done();
+            });
+        }).catch(function(e){showToast('注册失败：'+(e.message||e),true);done();});
       }).catch(function(e){showToast('生成钱包地址失败：'+(e.message||e),true);done();});
     }
   });
@@ -511,13 +522,9 @@
     }).catch(function(e){out.innerHTML='<div class="empty">查询失败：'+(e.message||e)+'</div>';});
   });
 
-  // ---------- 启动（修复：根据 localStorage 缓存决定进主页还是弹登录框）----------
   document.addEventListener('DOMContentLoaded',function(){
-    if(me){
-      showApp();
-    } else {
-      openAuth();
-    }
+    if(me){showApp();}
+    else{openAuth();}
     setTimeout(fetchRate,0);
   });
   window.__mine={sb:sb,me:function(){return me;}};
