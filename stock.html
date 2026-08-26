@@ -268,10 +268,10 @@
     sb.from('wallets').select('balance').eq('uid', myUid).maybeSingle()
       .then(function(r){
         if(r.error){ dbg('wallets 失败: '+r.error.message+' (code:'+r.error.code+')','e'); return; }
-        if(r.data){ me.balance=r.data.balance; try{localStorage.setItem('aur_me',JSON.stringify(me));}catch(e){}
-          $('balText').textContent=Number(me.balance||0).toFixed(2)+' AUR';
+        if(r.data){ me.balance=Number(r.data.balance)||0; try{localStorage.setItem('aur_me',JSON.stringify(me));}catch(e){}
+          $('balText').textContent=me.balance.toFixed(2)+' AUR';
           dbg('余额: '+me.balance,'o');
-        }
+        } else { me.balance=me.balance||0; $('balText').textContent=me.balance.toFixed(2)+' AUR'; }
       })
       .catch(function(e){ dbg('wallets 异常: '+(e.message||e),'e'); });
   }
@@ -400,7 +400,6 @@
   window.setQty=function(q){ $('qtyInput').value=q; updateEstimate(); };
   window.updateEstimate=function(){
     if(!currentStock) return;
-    // 预估仍按输入值显示（允许小数输入预览），实际提交时转整数
     var qty=parseFloat($('qtyInput').value)||0;
     $('estimateAmount').textContent=(qty*currentStock.price).toFixed(2)+' AUR';
   };
@@ -421,8 +420,7 @@
 
   window.confirmTrade=function(){
     if(!currentStock) return;
-    // 【唯一修复点】数量强制转为整数，与数据库 buy_stock/sell_stock 的 p_qty INTEGER 严格对齐，
-    // 消除 "Could not choose the best candidate function" 候选函数冲突。
+    // 数量强制转整数，对齐数据库 buy_stock/sell_stock 的 p_qty INTEGER
     var qty=parseInt($('qtyInput').value, 10);
     if(!qty||qty<=0){ showToast('请输入有效数量',true); return; }
     var btn=$('confirmBtn'); btn.disabled=true;
@@ -432,17 +430,17 @@
     sb.rpc(fn, args)
       .then(function(res){
         btn.disabled=false;
-        if(res.error){ showToast(res.error.message||'操作失败',true); dbg(fn+' 失败: '+res.error.message,'e'); return; }
+        if(res.error){ showToast(res.error.message||'操作失败',true); dbg(fn+' RPC错误: '+res.error.message,'e'); return; }
         var r=res.data;
-        // 兼容 {ok:false,error:...} / {ok:true,cost|value:...} 两种返回
-        if(r&&r.ok===false){ showToast(r.error||'操作失败',true); dbg(fn+' 返回错误: '+r.error,'e'); return; }
-        if(r&&r.error){ showToast(r.error,true); dbg(fn+' 返回错误: '+r.error,'e'); return; }
+        if(r && r.ok===false){ showToast(r.error||'操作失败',true); dbg(fn+' 业务失败: '+r.error,'e'); return; }
         if(currentTab==='buy'){
-          showToast('买入成功！ 花费 '+(r&&r.cost?Number(r.cost).toFixed(2):'')+' AUR','ok');
-          dbg(fn+' 成功, cost='+(r&&r.cost!==undefined?r.cost:'?'),'o');
+          var cost=(r&&r.cost!==undefined)? Number(r.cost).toFixed(2) : '?';
+          showToast('买入成功！ 花费 '+cost+' AUR','ok');
+          dbg(fn+' 成功, cost='+cost,'o');
         } else {
-          showToast('卖出成功！ 获得 '+(r&&r.value?Number(r.value).toFixed(2):'')+' AUR','ok');
-          dbg(fn+' 成功, value='+(r&&r.value!==undefined?r.value:'?'),'o');
+          var val=(r&&r.value!==undefined)? Number(r.value).toFixed(2) : '?';
+          showToast('卖出成功！ 获得 '+val+' AUR','ok');
+          dbg(fn+' 成功, value='+val,'o');
         }
         closeModal(); verifyBalance(); loadHoldings();
       })
