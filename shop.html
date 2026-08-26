@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#0d2b52">
+<title>Aurum Reserve · 商城</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/js-sha256@0.9.0/build/sha256.min.js"></script>
+<style>
+  :root{
+    --nav:#0d2b52; --blue:#2a90ff; --blue-d:#1877e6; --pink:#fb7299;
+    --bg:#eef2f7; --card:#fff; --text:#1c1c1e; --sub:#8e8e93;
+    --border:#e5e5ea; --ok:#2ecc71; --err:#ff3b30; --line:#f0f0f0;
+    --gold:#c9a227;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;
+    background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;
+    padding-bottom:calc(64px + env(safe-area-inset-bottom));
+  }
+  button,input{font-family:inherit;}
+
+  /* ===== 顶部品牌条 ===== */
+  .brandbar{position:sticky;top:0;z-index:50;background:var(--nav);
+    padding:calc(8px + env(safe-area-inset-top)) 14px 8px;
+    display:flex;align-items:center;justify-content:space-between;
+    box-shadow:0 2px 10px rgba(13,43,82,.25);}
+  .brandbar .logo{display:flex;align-items:center;gap:8px;color:#fff;font-weight:700;font-size:16px;}
+  .brandbar .logo svg{flex:0 0 auto;}
+  .brandbar .brand-sub{font-size:10px;opacity:.7;font-weight:500;}
+  .avatar-btn{width:34px;height:34px;border-radius:50%;cursor:pointer;border:none;
+    background:linear-gradient(135deg,#4aa3ff,#007aff);color:#fff;
+    display:flex;align-items:center;justify-content:center;}
+  .avatar-btn svg{width:20px;height:20px;}
+
+  /* ===== 主体 ===== */
+  .wrap{max-width:760px;margin:0 auto;padding:14px;}
+  .card{background:var(--card);border-radius:18px;padding:18px;box-shadow:0 2px 14px rgba(13,43,82,.06);margin-bottom:14px;}
+
+  /* 资产卡 */
+  .hero{background:linear-gradient(135deg,#0d2b52,#1a4a86);color:#fff;}
+  .hero .who{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
+  .hero .ava{width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.18);
+    display:flex;align-items:center;justify-content:center;}
+  .hero .ava svg{width:26px;height:26px;}
+  .hero .meta{line-height:1.4;}
+  .hero .name{font-size:16px;font-weight:700;}
+  .hero .uid{font-size:12px;opacity:.8;}
+  .hero .addr{display:flex;align-items:center;gap:8px;margin-top:6px;font-size:12px;opacity:.92;}
+  .hero .addr code{background:rgba(255,255,255,.16);padding:3px 8px;border-radius:8px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;}
+  .hero .copy{background:rgba(255,255,255,.2);border:none;color:#fff;padding:4px 9px;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;}
+  .bal{margin-top:6px;}
+  .bal .l{font-size:12px;opacity:.85;}
+  .bal .n{font-size:32px;font-weight:800;letter-spacing:.5px;}
+  .bal .cny{font-size:13px;opacity:.85;margin-top:4px;font-weight:500;}
+
+  /* 商品 */
+  .sec{display:flex;align-items:center;justify-content:space-between;margin:4px 2px 10px;}
+  .sec h3{font-size:15px;font-weight:700;}
+  .products{display:grid;gap:10px;}
+  .product{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;
+    display:flex;justify-content:space-between;align-items:center;}
+  .product .info{flex:1;}
+  .product .pname{font-size:15px;font-weight:700;}
+  .product .pprice{font-size:12px;color:var(--ok);margin-top:4px;}
+  .buy-btn{background:linear-gradient(135deg,#ffd700,#ff8c00);border:none;border-radius:10px;
+    padding:9px 18px;color:#000;font-weight:700;font-size:13px;cursor:pointer;}
+  .buy-btn[disabled]{background:#c7c7cc;cursor:not-allowed;}
+  .buy-btn:active:not([disabled]){transform:scale(.96);}
+
+  /* 广播 */
+  .feed{display:flex;flex-direction:column;gap:8px;}
+  .tx{display:flex;align-items:center;gap:10px;padding:11px 12px;border:1px solid var(--line);border-radius:12px;background:#fcfcfd;font-size:13px;}
+  .tx .dot{width:8px;height:8px;border-radius:50%;background:var(--blue);flex:0 0 auto;}
+  .tx .body{flex:1;min-width:0;}
+  .tx .line{display:flex;align-items:center;gap:6px;overflow:hidden;}
+  .tx .addr{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .tx .amt{font-weight:700;color:var(--ok);white-space:nowrap;}
+  .tx .time{font-size:10px;color:var(--sub);margin-top:2px;}
+  .empty{text-align:center;color:var(--sub);font-size:12px;padding:18px;}
+
+  /* ===== 表单/弹窗(白底主站风格) ===== */
+  input.txt{width:100%;padding:14px 15px;border:1.5px solid var(--border);border-radius:14px;font-size:15px;outline:none;background:#fafbfc;}
+  input.txt:focus{border-color:var(--blue);background:#fff;}
+  .btn{width:100%;padding:15px;border:none;border-radius:14px;background:var(--blue);color:#fff;font-size:16px;font-weight:700;cursor:pointer;transition:transform .1s;}
+  .btn:active{transform:scale(.98);background:var(--blue-d);}
+  .btn.ghost{background:#f2f4f7;color:var(--text);}
+  .btn.ok{background:linear-gradient(135deg,#2ecc71,#27ae60);}
+
+  .auth-mask{position:fixed;inset:0;z-index:120;background:rgba(13,43,82,.45);display:none;align-items:flex-end;justify-content:center;}
+  .auth-mask.show{display:flex;}
+  .auth-sheet{width:100%;max-width:480px;background:#fff;border-radius:22px 22px 0 0;padding:22px 20px calc(22px + env(safe-area-inset-bottom));animation:rise .25s ease;}
+  @keyframes rise{from{transform:translateY(40px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+  .auth-sheet h2{text-align:center;color:var(--blue);font-size:21px;margin-bottom:4px;}
+  .auth-sheet p.hint{text-align:center;font-size:12px;color:var(--sub);margin-bottom:14px;}
+  .toggle{text-align:center;color:var(--blue);font-size:13px;margin-top:6px;cursor:pointer;font-weight:600;padding:8px;}
+  .link-home{display:block;text-align:center;color:var(--sub);font-size:12px;margin-top:10px;text-decoration:none;}
+
+  /* 收据 */
+  .receipt-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px;}
+  .receipt-row:last-child{border:none;}
+  .receipt-row .k{opacity:.6;}
+  .receipt-row .v{font-weight:600;text-align:right;word-break:break-all;max-width:65%;}
+
+  #toast{position:fixed;top:calc(14px + env(safe-area-inset-top));left:50%;transform:translate(-50%,-120px);z-index:200;
+    background:rgba(28,28,30,.96);color:#fff;padding:11px 18px;border-radius:12px;font-size:13px;font-weight:600;
+    box-shadow:0 6px 20px rgba(0,0,0,.2);pointer-events:none;transition:transform .3s cubic-bezier(.2,.8,.2,1);max-width:86vw;text-align:center;}
+  #toast.show{transform:translate(-50%,0);}
+  #toast.err{background:#d93025;}
+</style>
+</head>
+<body>
+
+<div id="toast"></div>
+
+<!-- 顶部品牌条 -->
+<header class="brandbar">
+  <div class="logo">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M13 2L4 14h6l-1 8 9-12h-6l1-8z" fill="#2a90ff"/></svg>
+    <div>
+      <div>Aurum Reserve</div>
+      <div class="brand-sub">商城 · CNYS</div>
+    </div>
+  </div>
+  <button class="avatar-btn" id="avatarBtn" title="登录 / 注册">
+    <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8.5" r="3.5" fill="#fff"/><path d="M5 20c0-3.3 3.1-5.5 7-5.5s7 2.2 7 5.5" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+  </button>
+</header>
+
+<!-- 登录/注册弹窗(白底，主站风格) -->
+<div class="auth-mask" id="authMask">
+  <div class="auth-sheet">
+    <h2 id="authTitle">登录 Aurum 账户</h2>
+    <p class="hint" id="authHint">使用用户名和密码登录</p>
+    <input class="txt" id="auUser" placeholder="用户名" autocomplete="off" style="margin-bottom:10px;">
+    <input class="txt" id="auPass" type="password" placeholder="密码" autocomplete="off" style="margin-bottom:4px;">
+    <button class="btn" id="authBtn">登录</button>
+    <div class="toggle" id="authToggle">还没有账号？去注册</div>
+    <a class="link-home" href="3.html">返回主站 / 注册新钱包</a>
+  </div>
+</div>
+
+<main class="wrap">
+
+  <!-- 资产 -->
+  <section class="card hero">
+    <div class="who">
+      <div class="ava">
+        <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8.5" r="3.5" fill="#fff"/><path d="M5 20c0-3.3 3.1-5.5 7-5.5s7 2.2 7 5.5" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+      </div>
+      <div class="meta">
+        <div class="name" id="heroName">--</div>
+        <div class="uid" id="heroUid">UID · --</div>
+      </div>
+    </div>
+    <div class="addr">
+      <code id="heroAddr" style="max-width:62vw;overflow:hidden;text-overflow:ellipsis;display:inline-block;vertical-align:middle;">--</code>
+      <button class="copy" id="btnCopy">复制</button>
+    </div>
+    <div class="bal">
+      <div class="l">钱包余额 (AUR)</div>
+      <div class="n" id="heroBal">0</div>
+      <div class="cny" id="heroCny">≈ 0.00 CNYS</div>
+    </div>
+  </section>
+
+  <!-- 商品 -->
+  <div class="sec"><h3>Q币兑换</h3></div>
+  <div class="products" id="productList"></div>
+
+  <!-- 广播 -->
+  <div class="sec" style="margin-top:8px;"><h3>最近购买广播</h3></div>
+  <div class="card" style="padding:12px;">
+    <div class="feed" id="feedShop"><div class="empty">加载中...</div></div>
+  </div>
+</main>
+
+<!-- QQ 填写弹窗 -->
+<div class="auth-mask" id="qqMask">
+  <div class="auth-sheet">
+    <h2>填写 QQ 号</h2>
+    <p class="hint" id="qqHint">购买 <span id="qqPname" style="color:var(--text);font-weight:700;"></span> · <span id="qqPcnys" style="color:var(--ok);font-weight:700;"></span> CNYS</p>
+    <input class="txt" id="qqInput" placeholder="请输入 QQ 号" maxlength="15" inputmode="numeric" style="margin-bottom:4px;">
+    <button class="btn ok" id="qqConfirm">确认支付</button>
+    <div class="toggle" id="qqCancel">取消</div>
+  </div>
+</div>
+
+<!-- 支付详情弹窗 -->
+<div class="auth-mask" id="rcptMask">
+  <div class="auth-sheet">
+    <h2 style="color:var(--ok);">✅ 支付成功</h2>
+    <p class="hint">Q币凭此凭据找站长领取</p>
+    <div id="rcptContent"></div>
+    <button class="btn" id="rcptClose" style="margin-top:14px;">完成</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+
+  // ===== 接口完全照搬 3.html（逐字一致）=====
+  var SUPABASE_URL = 'https://irnaphrjcdfmqyykdron.supabase.co';
+  var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlybmFwaHJqY2RmbXF5eWtkcm9uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3MDUzNzIsImV4cCI6MjEwMzI4MTM3Mn0.4FNlvN4GfVSmYQTr2ZelAc96EavUohqbLURirbeIUlI';
+  var CNYS_RATE = 100;      // 100 AUR = 1 CNYS
+  var MERCHANT_UID = 1;     // 收款账户 UID
+
+  var PRODUCTS = [
+    { name:'1 Q币', qbi:1,  cnys:1  },
+    { name:'5 Q币', qbi:5,  cnys:5  },
+    { name:'15 Q币',qbi:15, cnys:15 }
+  ];
+
+  function showToast(msg, isErr){
+    var t=document.getElementById('toast'); t.textContent=msg;
+    t.classList.toggle('err',!!isErr); t.classList.add('show');
+    setTimeout(function(){t.classList.remove('show');},3400);
+  }
+  if(typeof window.supabase==='undefined'||!window.supabase.createClient){showToast('网络异常：Supabase SDK 加载失败',true);return;}
+  if(typeof window.sha256!=='function'){showToast('网络异常：加密库加载失败',true);return;}
+  var sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+  var me=null; var isLogin=true;
+  var $ = function(id){return document.getElementById(id);};
+  var selectedProduct=null;
+
+  // ===== 会话恢复：3.html 把 me 存 sessionStorage 时直接复用；否则弹登录 =====
+  try{
+    var cached=sessionStorage.getItem('aur_me');
+    if(cached){me=JSON.parse(cached);}
+  }catch(e){}
+  function persistMe(){try{sessionStorage.setItem('aur_me',JSON.stringify(me));}catch(e){}}
+
+  function openAuth(){ $('authMask').classList.add('show'); setTimeout(function(){$('auUser').focus();},250); }
+  function closeAuth(){$('authMask').classList.remove('show');}
+
+  function showApp(){
+    $('avatarBtn').title=(me?me.username:'登录 / 注册');
+    renderHome(); loadFeed();
+  }
+  function renderHome(){
+    if(!me)return;
+    $('heroName').textContent=me.username;
+    $('heroUid').textContent='UID · '+me.uid;
+    $('heroAddr').textContent=me.address;
+    $('heroAddr').title=me.address;
+    var bal=Number(me.balance||0);
+    $('heroBal').textContent=bal.toFixed(8).replace(/0+$/,'')||'0';
+    $('heroCny').textContent='≈ '+(bal/CNYS_RATE).toFixed(2)+' CNYS （100 AUR = 1 CNYS）';
+    renderProducts(bal);
+  }
+  function renderProducts(bal){
+    var list=$('productList');
+    list.innerHTML=PRODUCTS.map(function(p){
+      var need=p.cnys*CNYS_RATE;
+      var ok=bal>=need;
+      return '<div class="product"><div class="info"><div class="pname">🪙 '+p.name+'</div>'
+        +'<div class="pprice">'+p.cnys+' CNYS · '+need+' AUR</div></div>'
+        +'<button class="buy-btn" '+(ok?'':'disabled')+' data-name="'+p.name+'" data-cnys="'+p.cnys+'" data-need="'+need+'">'
+        +(ok?'购买':'余额不足')+'</button></div>';
+    }).join('');
+    list.querySelectorAll('.buy-btn:not([disabled])').forEach(function(b){
+      b.addEventListener('click',function(){
+        selectedProduct={name:b.dataset.name,cnys:Number(b.dataset.cnys),need:Number(b.dataset.need)};
+        $('qqPname').textContent=selectedProduct.name;
+        $('qqPcnys').textContent=selectedProduct.cnys;
+        $('qqInput').value=''; $('qqMask').classList.add('show'); setTimeout(function(){$('qqInput').focus();},200);
+      });
+    });
+  }
+
+  // ===== 头像 / 弹窗关闭 =====
+  $('avatarBtn').addEventListener('click',function(){if(!me)openAuth();});
+  $('authMask').addEventListener('click',function(e){if(e.target===this)closeAuth();});
+  $('qqMask').addEventListener('click',function(e){if(e.target===this)$('qqMask').classList.remove('show');});
+  $('qqCancel').addEventListener('click',function(){$('qqMask').classList.remove('show');selectedProduct=null;});
+  $('rcptClose').addEventListener('click',function(){$('rcptMask').classList.remove('show');renderHome();});
+  $('btnCopy').addEventListener('click',function(){
+    if(!me)return;var ta=document.createElement('textarea');ta.value=me.address;document.body.appendChild(ta);ta.select();
+    try{document.execCommand('copy');showToast('地址已复制');}catch(e){showToast('复制失败',true);}
+    document.body.removeChild(ta);
+  });
+
+  // ===== 登录/注册(接口与 3.html 完全一致的 wallets 表查询) =====
+  $('authToggle').addEventListener('click',function(){
+    isLogin=!isLogin;
+    $('authTitle').textContent=isLogin?'登录 Aurum 账户':'注册新账号';
+    $('authHint').textContent=isLogin?'使用用户名和密码登录':'注册后将自动分配 0x 钱包地址';
+    $('authBtn').textContent=isLogin?'登录':'注册';
+    $('authToggle').textContent=isLogin?'还没有账号？去注册':'已有账号？去登录';
+    $('auUser').value='';$('auPass').value='';
+  });
+  $('authBtn').addEventListener('click',function(){
+    var u=$('auUser').value.trim(),p=$('auPass').value;
+    if(!u||!p)return showToast('请输入用户名和密码');
+    $('authBtn').disabled=true;
+    var hashed=window.sha256(p);
+    var done=function(){$('authBtn').disabled=false;};
+    if(isLogin){
+      sb.from('wallets').select('id,uid,username,address,balance,last_mine').eq('username',u).eq('password',hashed).maybeSingle()
+        .then(function(r){if(r.error||!r.data){showToast('用户名或密码错误',true);done();return;}me=r.data;persistMe();closeAuth();showToast('登录成功');showApp();done();})
+        .catch(function(e){showToast('登录失败：'+(e.message||e),true);done();});
+    }else{
+      // 注册：调 3.html 同款 gen_address RPC
+      sb.rpc('gen_address').then(function(addrRes){
+        var addr=addrRes.data||addrRes;
+        if(!addr||typeof addr!=='string'||!addr.startsWith('0x')){showToast('生成钱包地址失败：'+(addrRes.error?addrRes.error.message:''),true);done();return;}
+        sb.from('wallets').insert([{username:u,password:hashed,address:addr,balance:0,last_mine:0}]).select('id,uid,username,address,balance,last_mine').single()
+          .then(function(ir){if(ir.error){showToast('注册失败：'+(ir.error.message.includes('unique')?'用户名已存在':ir.error.message),true);done();return;}me=ir.data;persistMe();closeAuth();showToast('注册成功，UID '+me.uid);showApp();done();})
+          .catch(function(e){showToast('注册失败：'+(e.message||e),true);done();});
+      }).catch(function(e){showToast('生成钱包地址失败：'+(e.message||e),true);done();});
+    }
+  });
+
+  // ===== 确认支付 =====
+  $('qqConfirm').addEventListener('click',function(){
+    var qq=$('qqInput').value.trim();
+    if(!qq||!/^\d{5,15}$/.test(qq))return showToast('请输入正确的 QQ 号(5-15 位数字)');
+    if(!selectedProduct||!me)return;
+    var needAur=selectedProduct.need;
+    if(Number(me.balance||0)<needAur)return showToast('余额不足',true);
+    $('qqMask').classList.remove('show');
+    $('qqConfirm').disabled=true;
+    // 查商户(UID=1)地址
+    sb.from('wallets').select('address').eq('uid',MERCHANT_UID).maybeSingle().then(function(mr){
+      if(mr.error||!mr.data||!mr.data.address){showToast('商户钱包异常，请联系管理员',true);$('qqConfirm').disabled=false;return;}
+      var toAddr=mr.data.address;
+      sb.rpc('transfer',{p_from:me.address,p_to:toAddr,p_amount:needAur}).then(function(res){
+        var r=res.data;
+        if(r&&r.ok){
+          // 本地刷新余额
+          me.balance=Number(me.balance||0)-needAur; persistMe();
+          var masked=me.address.slice(0,6)+'...'+me.address.slice(-4);
+          showReceipt({qq:qq,product:selectedProduct,cnys:selectedProduct.cnys,aur:needAur,masked:masked,toAddr:toAddr,status:'已到账'});
+          broadcastPurchase(masked,qq,selectedProduct,selectedProduct.cnys);
+          renderHome();
+        }else{
+          showToast('支付失败：'+(r&&r.err?r.err:'未知错误'),true);
+        }
+        $('qqConfirm').disabled=false;selectedProduct=null;
+      }).catch(function(e){showToast('支付异常：'+(e.message||e),true);$('qqConfirm').disabled=false;});
+    }).catch(function(e){showToast('商户查询失败：'+(e.message||e),true);$('qqConfirm').disabled=false;});
+  });
+
+  function showReceipt(d){
+    var now=new Date().toLocaleString('zh-CN',{timeZone:'Asia/Shanghai'});
+    $('rcptContent').innerHTML=
+      '<div class="receipt-row"><span class="k">用户名</span><span class="v">'+(me.username||'-')+'</span></div>'
+      +'<div class="receipt-row"><span class="k">UID</span><span class="v">'+(me.uid||'-')+'</span></div>'
+      +'<div class="receipt-row"><span class="k">支付钱包</span><span class="v">'+d.masked+'</span></div>'
+      +'<div class="receipt-row"><span class="k">QQ 号</span><span class="v">'+d.qq+'</span></div>'
+      +'<div class="receipt-row"><span class="k">商品</span><span class="v">'+d.product.name+'</span></div>'
+      +'<div class="receipt-row"><span class="k">支付金额</span><span class="v">'+d.aur+' AUR ('+d.cnys+' CNYS)</span></div>'
+      +'<div class="receipt-row"><span class="k">收款账户</span><span class="v">UID '+MERCHANT_UID+'</span></div>'
+      +'<div class="receipt-row"><span class="k">交易状态</span><span class="v" style="color:var(--ok);">'+d.status+'</span></div>'
+      +'<div class="receipt-row"><span class="k">支付时间</span><span class="v">'+now+'</span></div>';
+    $('rcptMask').classList.add('show');
+  }
+
+  function broadcastPurchase(masked,qq,product,cnys){
+    var msg=masked+' 购买了 '+product.name+'（'+cnys+' CNYS，QQ:'+qq+'）';
+    sb.from('transactions').select('from_addr,to_addr,amount,created_at').order('created_at',{ascending:false}).limit(25)
+      .then(function(r){var el=$('feedShop');if(!r.data||!r.data.length){el.innerHTML='<div class="empty">暂无广播</div>';return;}
+        el.innerHTML=r.data.map(function(t){
+          var isMine=t.from_addr===me.address;
+          return '<div class="tx"><span class="dot"></span><div class="body"><div class="line"><span class="addr">'+(t.from_addr.substr(0,6)+'...'+t.from_addr.substr(-4))+' → '+(t.to_addr.substr(0,6)+'...'+t.to_addr.substr(-4))+'</span><span class="amt">+'+Number(t.amount).toFixed(3)+'</span></div><div class="time">'+new Date(t.created_at).toLocaleString()+'</div></div></div>';
+        }).join('');
+      });
+    // 同时写一条购买广播记录(若 broadcasts 表存在则写，不存在静默忽略)
+    sb.from('broadcasts').insert([{message:msg,type:'purchase'}]).then().catch(function(){});
+  }
+
+  function loadFeed(){
+    sb.from('transactions').select('from_addr,to_addr,amount,created_at').order('created_at',{ascending:false}).limit(25)
+      .then(function(r){var el=$('feedShop');if(!r.data||!r.data.length){el.innerHTML='<div class="empty">暂无广播</div>';return;}
+        el.innerHTML=r.data.map(function(t){return '<div class="tx"><span class="dot"></span><div class="body"><div class="line"><span class="addr">'+(t.from_addr.substr(0,6)+'...'+t.from_addr.substr(-4))+' → '+(t.to_addr.substr(0,6)+'...'+t.to_addr.substr(-4))+'</span><span class="amt">+'+Number(t.amount).toFixed(3)+'</span></div><div class="time">'+new Date(t.created_at).toLocaleString()+'</div></div></div>';}).join('');});
+  }
+
+  // ===== 启动 =====
+  document.addEventListener('DOMContentLoaded',function(){
+    if(me){showApp();}
+    else{openAuth();}
+  });
+})();
+</script>
+</body>
+</html>
