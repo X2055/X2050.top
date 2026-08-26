@@ -420,7 +420,7 @@
 
   window.confirmTrade=function(){
     if(!currentStock) return;
-    var qty=parseFloat($('qtyInput').value);
+    var qty=parseInt($('qtyInput').value,10);
     if(!qty||qty<=0){ showToast('请输入有效数量',true); return; }
     var btn=$('confirmBtn'); btn.disabled=true;
     var args={p_uid:String(myUid),p_symbol:currentStock.symbol,p_qty:qty};
@@ -432,11 +432,14 @@
         if(res.error){ showToast(res.error.message||'操作失败',true); dbg(fn+' 失败: '+res.error.message,'e'); return; }
         var r=res.data;
         if(r&&r.error){ showToast(r.error,true); dbg(fn+' 返回错误: '+r.error,'e'); return; }
-        showToast((currentTab==='buy'?'买入':'卖出')+'成功！','ok');
-        dbg(fn+' 成功','o');
+        var r0=res.data||{};
+        var tag=(currentTab==='buy'?'买入':'卖出');
+        var detail=(currentTab==='buy'?(r0.cost!=null?(' 花费 '+Number(r0.cost).toFixed(2)+' AUR'):''):(r0.value!=null?(' 获得 '+Number(r0.value).toFixed(2)+' AUR'):''));
+        showToast(tag+'成功！'+detail,'ok');
+        dbg(fn+' 成功 '+(currentTab==='buy'?('cost='+r0.cost):('value='+r0.value)),'o');
         closeModal(); verifyBalance(); loadHoldings();
       })
-      .catch(function(e){ btn.disabled=false; showToast('网络错误',true); dbg(fn+' 异常: '+(e.message||e),'e'); });
+      .catch(function(e){ btn.disabled=false; showToast('网络错误',true); dbg(fn+' 异常: '+(e.message||e),'e'); document.getElementById('debugPanel').classList.add('show'); });
   };
 
   window.logout=function(){ localStorage.removeItem('aur_me'); location.href='user.html'; };
