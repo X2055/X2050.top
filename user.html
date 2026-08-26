@@ -24,7 +24,6 @@
   }
   button,input{font-family:inherit;}
 
-  /* ===== 顶部品牌条(仅Logo+头像，无导航) ===== */
   .brandbar{
     position:sticky;top:0;z-index:50;background:var(--nav);
     padding:calc(8px + env(safe-area-inset-top)) 14px 8px;
@@ -41,7 +40,6 @@
   }
   .avatar-btn svg{width:20px;height:20px;}
 
-  /* ===== 底部 Tab(均匀4项，手机适配) ===== */
   .bottomtab{
     position:fixed;left:0;right:0;bottom:0;z-index:60;
     background:#fff;border-top:1px solid var(--border);
@@ -57,13 +55,11 @@
   .bottomtab a.active{color:var(--blue);}
   .bottomtab a:active{background:#f2f6fc;}
 
-  /* ===== 主体 ===== */
   .wrap{max-width:760px;margin:0 auto;padding:14px;}
   .view{display:none;}
   .view.active{display:block;}
   .card{background:var(--card);border-radius:18px;padding:18px;box-shadow:0 2px 14px rgba(13,43,82,.06);margin-bottom:14px;}
 
-  /* 身份/资产卡 */
   .hero{background:linear-gradient(135deg,#0d2b52,#1a4a86);color:#fff;}
   .hero .who{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
   .hero .ava{width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.18);
@@ -80,7 +76,6 @@
   .bal .n{font-size:32px;font-weight:800;letter-spacing:.5px;}
   .bal .cny{font-size:13px;opacity:.85;margin-top:4px;font-weight:500;}
 
-  /* 汇率板块 */
   .rate-card{border:1px solid var(--border);}
   .rate-card .sec-h{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
   .rate-card .sec-h h3{font-size:15px;font-weight:700;}
@@ -94,11 +89,9 @@
   .rate-row .mine{font-size:11px;color:var(--sub);margin-top:1px;}
   .rate-src{font-size:10px;color:var(--sub);margin-top:8px;text-align:right;}
 
-  /* 区块标题 */
   .sec{display:flex;align-items:center;justify-content:space-between;margin:4px 2px 10px;}
   .sec h3{font-size:15px;font-weight:700;}
 
-  /* 快捷操作网格 */
   .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
   .gitem{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px 6px;
     display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;text-decoration:none;color:var(--text);transition:transform .1s;}
@@ -106,7 +99,6 @@
   .gitem .ic{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;}
   .gitem .t{font-size:11px;font-weight:600;text-align:center;line-height:1.2;}
 
-  /* 表单 */
   input.txt{width:100%;padding:14px 15px;border:1.5px solid var(--border);border-radius:14px;font-size:15px;outline:none;background:#fafbfc;transition:border .15s;}
   input.txt:focus{border-color:var(--blue);background:#fff;}
   .btn{width:100%;padding:15px;border:none;border-radius:14px;background:var(--blue);color:#fff;font-size:16px;font-weight:700;cursor:pointer;transition:transform .1s,background .2s;margin-top:10px;}
@@ -115,7 +107,6 @@
   .btn.orange{background:#ff9500;} .btn.orange:active{background:#d67d00;}
   .btn.ghost{background:#f2f4f7;color:var(--text);} .btn.ghost:active{background:#e6e9ee;}
 
-  /* 广播列表 */
   .feed{display:flex;flex-direction:column;gap:8px;}
   .tx{display:flex;align-items:center;gap:10px;padding:11px 12px;border:1px solid var(--line);border-radius:12px;background:#fcfcfd;font-size:13px;}
   .tx .dot{width:8px;height:8px;border-radius:50%;background:var(--blue);flex:0 0 auto;}
@@ -125,7 +116,6 @@
   .tx .amt{font-weight:700;color:var(--ok);white-space:nowrap;}
   .tx .time{font-size:10px;color:var(--sub);margin-top:2px;flex:0 0 auto;}
 
-  /* 认证弹窗 */
   .auth-mask{position:fixed;inset:0;z-index:120;background:rgba(13,43,82,.55);display:none;align-items:flex-end;justify-content:center;}
   .auth-mask.show{display:flex;}
   .auth-sheet{width:100%;max-width:480px;background:#fff;border-radius:22px 22px 0 0;padding:22px 20px calc(22px + env(safe-area-inset-bottom));animation:rise .25s ease;}
@@ -134,7 +124,6 @@
   .auth-sheet p.hint{text-align:center;font-size:12px;color:var(--sub);margin-bottom:14px;}
   .toggle{text-align:center;color:var(--blue);font-size:13px;margin-top:6px;cursor:pointer;font-weight:600;padding:8px;}
 
-  /* 挖矿记录 */
   .mine-log{max-height:140px;overflow-y:auto;font-size:12px;color:var(--sub);}
   .mine-log div{padding:4px 2px;border-bottom:1px dashed var(--line);}
 
@@ -155,7 +144,6 @@
 
 <div id="toast"></div>
 
-<!-- 顶部品牌条(无导航，仅Logo+头像) -->
 <header class="brandbar">
   <div class="logo">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M13 2L4 14h6l-1 8 9-12h-6l1-8z" fill="#2a90ff"/></svg>
@@ -165,12 +153,10 @@
     </div>
   </div>
   <button class="avatar-btn" id="avatarBtn" title="登录 / 注册">
-    <!-- 蓝色默认小人 -->
     <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8.5" r="3.5" fill="#fff"/><path d="M5 20c0-3.3 3.1-5.5 7-5.5s7 2.2 7 5.5" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
   </button>
 </header>
 
-<!-- 登录/注册弹窗(底部弹出) -->
 <div class="auth-mask" id="authMask">
   <div class="auth-sheet" id="authSheet">
     <h2 id="authTitle">登录云端矿场</h2>
@@ -184,9 +170,7 @@
 
 <main class="wrap">
 
-  <!-- ===== 主页 ===== -->
   <section class="view active" id="v-home">
-    <!-- 身份/资产卡 -->
     <div class="card hero">
       <div class="who">
         <div class="ava" id="heroAva">
@@ -208,14 +192,12 @@
       </div>
     </div>
 
-    <!-- 汇率板块 -->
     <div class="card rate-card">
       <div class="sec-h"><span class="dot"></span><h3>汇率 · AUR 兑多币种</h3></div>
       <div id="rateList"><div class="empty">汇率加载中...</div></div>
       <div class="rate-src" id="rateSrc">金本位 · 1 AUR = 1 克黄金</div>
     </div>
 
-    <!-- 快捷操作 -->
     <div class="sec"><h3>快捷操作</h3></div>
     <div class="grid">
       <a class="gitem" data-go="mine">
@@ -236,14 +218,12 @@
       </a>
     </div>
 
-    <!-- 全服广播 -->
     <div class="sec" style="margin-top:8px;"><h3>全服交易广播</h3></div>
     <div class="card" style="padding:12px;">
       <div class="feed" id="feedHome"><div class="empty">加载中...</div></div>
     </div>
   </section>
 
-  <!-- ===== 矿场 ===== -->
   <section class="view" id="v-mine">
     <div class="card">
       <div class="sec"><h3>矿场</h3></div>
@@ -253,7 +233,6 @@
     </div>
   </section>
 
-  <!-- ===== 转账 ===== -->
   <section class="view" id="v-transfer">
     <div class="card">
       <div class="sec"><h3>转账 (按地址)</h3></div>
@@ -268,7 +247,6 @@
     </div>
   </section>
 
-  <!-- ===== 地址查询 ===== -->
   <section class="view" id="v-explorer">
     <div class="card">
       <div class="sec"><h3>地址查询</h3></div>
@@ -281,7 +259,6 @@
 
 </main>
 
-<!-- 底部均匀4项Tab -->
 <nav class="bottomtab">
   <a href="#home" data-view="home" class="active">
     <svg viewBox="0 0 24 24" fill="none"><path d="M3 10.5L12 3l9 7.5V20a1 1 0 01-1 1h-5v-6h-6v6H4a1 1 0 01-1-1v-9.5z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
@@ -305,7 +282,6 @@
 (function(){
   'use strict';
 
-  // ---------- Supabase ----------
   var SUPABASE_URL = 'https://irnaphrjcdfmqyykdron.supabase.co';
   var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlybmFwaHJqY2RmbXF5eWtkcm9uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3MDUzNzIsImV4cCI6MjEwMzI4MTM3Mn0.4FNlvN4GfVSmYQTr2ZelAc96EavUohqbLURirbeIUlI';
 
@@ -318,15 +294,14 @@
   if(typeof window.sha256!=='function'){showToast('网络异常：加密库加载失败',true);return;}
   var sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
-  // ---------- 状态 ----------
   var me=null; var isLogin=true;
   var $ = function(id){return document.getElementById(id);};
   var views={home:$('v-home'),mine:$('v-mine'),transfer:$('v-transfer'),explorer:$('v-explorer')};
   var tabLinks=document.querySelectorAll('.bottomtab a');
-  // ---------- 会话恢复：从 localStorage 读取（刷新/重开浏览器仍保持登录）----------
+
+  // 会话恢复：从 localStorage 读取（刷新/重开浏览器仍保持登录）
   try{var _c=localStorage.getItem('aur_me');if(_c){me=JSON.parse(_c);}}catch(e){}
 
-  // ---------- 视图切换 ----------
   function switchView(name){
     Object.keys(views).forEach(function(k){views[k].classList.toggle('active',k===name);});
     tabLinks.forEach(function(a){a.classList.toggle('active',a.dataset.view===name);});
@@ -342,7 +317,6 @@
     renderHome(); loadMyTx(); loadFeed(); switchView('home');
   }
 
-  // ---------- 底部Tab ----------
   tabLinks.forEach(function(a){
     a.addEventListener('click',function(e){
       e.preventDefault();
@@ -360,11 +334,9 @@
     });
   });
 
-  // ---------- 头像点击 ----------
   $('avatarBtn').addEventListener('click',function(){if(!me)openAuth();else switchView('home');});
   $('authMask').addEventListener('click',function(e){if(e.target===this)closeAuth();});
 
-  // ---------- 登录/注册 ----------
   $('authToggle').addEventListener('click',function(){
     isLogin=!isLogin;
     $('authTitle').textContent=isLogin?'登录云端矿场':'注册新账号';
@@ -395,7 +367,6 @@
   });
   $('btnLogout').addEventListener('click',function(){me=null;try{localStorage.removeItem('aur_me');}catch(e){}if(window._rtSub){sb.removeChannel(window._rtSub);window._rtSub=null;}openAuth();});
 
-  // ---------- 主页渲染 ----------
   function renderHome(){
     if(!me)return;
     $('heroName').textContent=me.username;
@@ -412,11 +383,8 @@
     document.body.removeChild(ta);
   });
 
-  // ---------- 金本位汇率(正确公式) ----------
   var OZ_GRAM=31.1034768;
   var goldUsdPerOz=null,usdCny=null,rateOnline=false;
-  // 多币种配置(国旗 + 名称 + 相对 USD 的固定近似换算系数;CNY 用实时汇率)
-  // cnyPerUsd = usdCny(实时)。其它币种用 USD 固定系数(主流币近似,足够展示)
   var CURRENCIES=[
     {code:'CNY',name:'人民币',flag:'🇨🇳',unit:'元',usdPerUnit:null},
     {code:'USD',name:'美元',flag:'🇺🇸',unit:'USD',usdPerUnit:1},
@@ -434,7 +402,7 @@
     cny.textContent='≈ ¥'+(bal*cnyEach).toFixed(2)+' (1 AUR ≈ $'+usd.toFixed(2)+')';
   }
   function fetchRate(){
-    var goldDone=false,cnyDone=false,fallbackTimer=null;
+    var goldDone=false,cnyDone=false;
     function check(){if(goldDone&&cnyDone)renderRate();}
     function renderRate(){
       var usd=aurUsd();
@@ -443,7 +411,7 @@
         var perAur,myVal=0;
         if(c.code==='CNY'){perAur=usd?usd*usdCny:null;}
         else if(c.code==='USD'){perAur=usd;}
-        else if(c.code==='GRAM'){perAur=usd?1/OZ_GRAM*OZ_GRAM?usd:usd:usd;} // 1 AUR=1克黄金
+        else if(c.code==='GRAM'){perAur=usd?1/OZ_GRAM*OZ_GRAM?usd:usd:usd;}
         else {perAur=usd?(usd/c.usdPerUnit):null;}
         if(perAur!=null&&me)myVal=Number(me.balance||0)*perAur;
         html+='<div class="rate-row"><span class="flag">'+(c.flag==='🪙'?'🪙':c.flag)+'</span>'
@@ -456,8 +424,6 @@
       $('rateSrc').textContent=(rateOnline?'实时汇率 · 金本位 1 AUR=1g 黄金':'离线兜底 · 金本位 1 AUR=1g 黄金');
       renderCny();
     }
-    // 金价主源: gold-api
-    var goldAc=setTimeout(function(){},0);
     function tryGold(url,resolve,reject){
       var ac=new (window.AbortController||function(){})();
       var tid=setTimeout(function(){ac.abort&&ac.abort();},5500);
@@ -468,12 +434,10 @@
       }).catch(function(){reject();});
     }
     tryGold('https://api.gold-api.com/price/XAU',function(){goldDone=true;check();},function(){
-      // fallback: Yahoo Chart(中国可达)
       tryGold('https://query1.finance.yahoo.com/v8/finance/chart/GC=F',function(){goldDone=true;check();},function(){
         goldUsdPerOz=4626;rateOnline=false;goldDone=true;check();
       });
     });
-    // USD/CNY
     (function(){
       var ac=new (window.AbortController||function(){})();
       setTimeout(function(){if(!cnyDone){usdCny=6.72;cnyDone=true;check();}},5500);
@@ -485,7 +449,6 @@
     })();
   }
 
-  // ---------- 挖矿 ----------
   $('mineBtn').addEventListener('click',function(){
     if(!me)return;
     var reward=Math.round((Math.random()*0.009+0.001)*1000)/1000;
@@ -502,7 +465,6 @@
       }).catch(function(e){showToast('挖矿异常：'+(e.message||e),true);$('mineBtn').disabled=false;$('mineBtn').textContent='⛏ 开始挖矿';});
   });
 
-  // ---------- 转账 ----------
   function renderTransferFrom(){if(me)$('tfFrom').textContent=me.address;}
   $('tfBtn').addEventListener('click',function(){
     if(!me)return;
@@ -525,7 +487,6 @@
         el.innerHTML=r.data.map(function(t){var out=t.from_addr===me.address;return '<div class="tx"><span class="dot" style="background:'+(out?'#ff3b30':'#2ecc71')+'"></span><div class="body"><div class="line"><span class="addr">'+(out?'→ ':'← ')+(out?t.to_addr:t.from_addr)+'</span><span class="amt" style="color:'+(out?'#ff3b30':'#2ecc71')+'">'+(out?'-':'+')+Number(t.amount).toFixed(3)+'</span></div><div class="time">'+new Date(t.created_at).toLocaleString()+'</div></div></div>';}).join('');});
   }
 
-  // ---------- 全服广播 ----------
   function loadFeed(){
     sb.from('transactions').select('from_addr,to_addr,amount,created_at').order('created_at',{ascending:false}).limit(25)
       .then(function(r){var el=$('feedHome');if(!r.data||!r.data.length){el.innerHTML='<div class="empty">暂无广播</div>';return;}
@@ -536,7 +497,6 @@
     window._rtSub=sb.channel('tx-feed').on('postgres_changes',{event:'INSERT',schema:'public',table:'transactions'},function(){loadFeed();if(me)loadMyTx();}).subscribe();
   }
 
-  // ---------- 地址查询 ----------
   $('exBtn').addEventListener('click',function(){
     var addr=$('exAddr').value.trim();
     if(!addr||!addr.startsWith('0x'))return showToast('请输入合法的 0x 地址',true);
@@ -551,10 +511,14 @@
     }).catch(function(e){out.innerHTML='<div class="empty">查询失败：'+(e.message||e)+'</div>';});
   });
 
-  // ---------- 启动 ----------
+  // ---------- 启动（修复：根据 localStorage 缓存决定进主页还是弹登录框）----------
   document.addEventListener('DOMContentLoaded',function(){
-    openAuth();          // 立即弹出登录窗(不被金价 await 阻塞)
-    setTimeout(fetchRate,0); // 汇率后台静默拉取
+    if(me){
+      showApp();
+    } else {
+      openAuth();
+    }
+    setTimeout(fetchRate,0);
   });
   window.__mine={sb:sb,me:function(){return me;}};
 })();
