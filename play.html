@@ -55,6 +55,7 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
   font-size: 17px; font-weight: 700; margin-top: 12px;
 }
 .slot-btn:active { transform: scale(.97); }
+.slot-btn:disabled { opacity: .6; }
 
 .dice-area { text-align: center; }
 .dice-result { display: flex; justify-content: center; gap: 16px; margin: 24px 0; }
@@ -100,6 +101,7 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
   background: rgba(0,0,0,0.82); color: #fff; padding: 12px 20px;
   border-radius: 14px; font-size: 14px; font-weight: 500;
   transition: transform .35s cubic-bezier(.2,.8,.2,1); pointer-events: none;
+  max-width: 80%; text-align: center;
 }
 #toast.show { transform: translate(-50%, 0); }
 #toast.err { background: #ff3b30; }
@@ -126,7 +128,7 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="4" fill="#007aff"/><path d="M7 14l2-4 2 3 2-5 4 6H7z" fill="#fff"/></svg>
     Aurum Casino
   </div>
-  <div class="balance" id="balanceText">-- AUR</div>
+  <div class="balance" id="balanceText">验证中...</div>
 </header>
 
 <div class="tabs">
@@ -225,21 +227,36 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
 
   try { var c = localStorage.getItem('aur_me'); if(c) me = JSON.parse(c); } catch(e) {}
 
-  if(!me) { showToast('请先在主站登录', true); setTimeout(function(){ location.href = '3.html'; }, 1500); return; }
+  if(!me) {
+    showToast('请先在主站登录', true);
+    setTimeout(function(){ location.href = 'user.html'; }, 1500);
+    return;
+  }
 
-  // 强制转数字，避免 uid 类型不匹配
   var myUid = Number(me.uid);
 
-  function refreshBalance() {
+  // 页面加载立即验证钱包是否存在（核心改动）
+  function verifySession(callback) {
     sb.from('wallets').select('balance').eq('uid', myUid).single().then(function(r){
-      if(r.data) {
-        me.balance = r.data.balance;
-        try { localStorage.setItem('aur_me', JSON.stringify(me)); } catch(e){}
-        document.getElementById('balanceText').textContent = Number(me.balance||0).toFixed(2) + ' AUR';
+      if(!r.data) {
+        showToast('登录已过期，请重新登录', true);
+        localStorage.removeItem('aur_me');
+        setTimeout(function(){ location.href = 'user.html'; }, 1500);
+        return;
       }
+      me.balance = r.data.balance;
+      try { localStorage.setItem('aur_me', JSON.stringify(me)); } catch(e){}
+      document.getElementById('balanceText').textContent = Number(me.balance||0).toFixed(2) + ' AUR';
+      if(callback) callback();
+    }).catch(function(){
+      showToast('登录已过期，请重新登录', true);
+      localStorage.removeItem('aur_me');
+      setTimeout(function(){ location.href = 'user.html'; }, 1500);
     });
   }
-  refreshBalance();
+
+  // 页面加载先验证，验证通过后才允许操作
+  verifySession();
 
   document.querySelectorAll('.tab').forEach(function(tab){
     tab.addEventListener('click', function(){
@@ -271,10 +288,11 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
 
   // 老虎机
   document.getElementById('slotBtn').addEventListener('click', function(){
+    var btn = this;
     var bet = parseFloat(document.getElementById('slotBet').value);
     if(!bet || bet < 50) return showToast('最低投注 50 AUR', true);
     if(bet > Number(me.balance||0)) return showToast('余额不足', true);
-    this.disabled = true; this.textContent = '旋转中...';
+    btn.disabled = true; btn.textContent = '旋转中...';
 
     var reels = [document.getElementById('reel1'), document.getElementById('reel2'), document.getElementById('reel3')];
     var symbols = ['🍒','🍋','🔔','💎','🍒'];
@@ -282,14 +300,19 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
       reels.forEach(function(r){ r.textContent = symbols[Math.floor(Math.random()*5)]; });
     }, 80);
 
-    sb.rpc('play_slot', { p_uid: myUid, p_bet: bet }).then(function(res){
+    sb.rpc('play_slot', { p_uid: String(myUid), p_bet: bet }).then(function(res){
       clearInterval(interval);
       var r = res.data;
-      if(!r || !r.ok) {
-        showToast(r && r.err ? r.err : '游戏失败', true);
-        document.getElementById('slotBtn').disabled = false;
-        document.getElementById('slotBtn').textContent = '🎰 开始旋转';
-        return;
+      if(!r) { showToast('服务器无响应', true); btn.disabled = false; btn.textContent = '🎰 开始旋转'; return; }
+      if(!r.ok) {
+        var errMsg = r.err || '游戏失败';
+        showToast(errMsg, true);
+        // 如果是登录/钱包类错误，踢回登录页
+        if(errMsg.indexOf('登录') > -1 || errMsg.indexOf('钱包') > -1 || errMsg.indexOf('过期') > -1) {
+          localStorage.removeItem('aur_me');
+          setTimeout(function(){ location.href = 'user.html'; }, 1500);
+        }
+        btn.disabled = false; btn.textContent = '🎰 开始旋转'; return;
       }
       var result = r.reels;
       setTimeout(function(){
@@ -302,38 +325,39 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
           resultEl.textContent = '未中奖，再试一次';
           resultEl.className = 'result-text lose';
         }
-        refreshBalance();
-        document.getElementById('slotBtn').disabled = false;
-        document.getElementById('slotBtn').textContent = '🎰 开始旋转';
+        verifySession();
+        btn.disabled = false; btn.textContent = '🎰 开始旋转';
       }, 600);
     }).catch(function(e){
       clearInterval(interval);
-      showToast('网络错误', true);
-      document.getElementById('slotBtn').disabled = false;
-      document.getElementById('slotBtn').textContent = '🎰 开始旋转';
+      showToast('网络错误，请重试', true);
+      btn.disabled = false; btn.textContent = '🎰 开始旋转';
     });
   });
 
   // 骰宝
   document.getElementById('sicboBtn').addEventListener('click', function(){
+    var btn = this;
     var bet = parseFloat(document.getElementById('sicboBet').value);
     if(!bet || bet < 100) return showToast('最低投注 100 AUR', true);
     if(bet > Number(me.balance||0)) return showToast('余额不足', true);
-    this.disabled = true; this.textContent = '掷骰子中...';
+    btn.disabled = true; btn.textContent = '掷骰子中...';
 
-    sb.rpc('play_sicbo', { p_uid: myUid, p_bet: bet, p_choice: sicboChoice }).then(function(res){
+    sb.rpc('play_sicbo', { p_uid: String(myUid), p_bet: bet, p_choice: sicboChoice }).then(function(res){
       var r = res.data;
-      if(!r || !r.ok) {
-        showToast(r && r.err ? r.err : '游戏失败', true);
-        document.getElementById('sicboBtn').disabled = false;
-        document.getElementById('sicboBtn').textContent = '🎲 掷骰子';
-        return;
+      if(!r) { showToast('服务器无响应', true); btn.disabled = false; btn.textContent = '🎲 掷骰子'; return; }
+      if(!r.ok) {
+        var errMsg = r.err || '游戏失败';
+        showToast(errMsg, true);
+        if(errMsg.indexOf('登录') > -1 || errMsg.indexOf('钱包') > -1 || errMsg.indexOf('过期') > -1) {
+          localStorage.removeItem('aur_me');
+          setTimeout(function(){ location.href = 'user.html'; }, 1500);
+        }
+        btn.disabled = false; btn.textContent = '🎲 掷骰子'; return;
       }
       var dice = r.dice;
       var html = '';
-      dice.forEach(function(d){
-        html += '<div class="die">' + d + '</div>';
-      });
+      dice.forEach(function(d){ html += '<div class="die">' + d + '</div>'; });
       document.getElementById('diceResult').innerHTML = html;
       var resultEl = document.getElementById('sicboResult');
       if(r.payout > 0) {
@@ -343,36 +367,37 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
         resultEl.textContent = '总和 ' + r.total + '，未中奖';
         resultEl.className = 'result-text lose';
       }
-      refreshBalance();
-      document.getElementById('sicboBtn').disabled = false;
-      document.getElementById('sicboBtn').textContent = '🎲 掷骰子';
+      verifySession();
+      btn.disabled = false; btn.textContent = '🎲 掷骰子';
     }).catch(function(e){
-      showToast('网络错误', true);
-      document.getElementById('sicboBtn').disabled = false;
-      document.getElementById('sicboBtn').textContent = '🎲 掷骰子';
+      showToast('网络错误，请重试', true);
+      btn.disabled = false; btn.textContent = '🎲 掷骰子';
     });
   });
 
   // 百家乐
   document.getElementById('baccaratBtn').addEventListener('click', function(){
+    var btn = this;
     var bet = parseFloat(document.getElementById('baccaratBet').value);
     if(!bet || bet < 200) return showToast('最低投注 200 AUR', true);
     if(bet > Number(me.balance||0)) return showToast('余额不足', true);
-    this.disabled = true; this.textContent = '发牌中...';
+    btn.disabled = true; btn.textContent = '发牌中...';
 
-    sb.rpc('play_baccarat', { p_uid: myUid, p_bet: bet, p_choice: baccaratChoice }).then(function(res){
+    sb.rpc('play_baccarat', { p_uid: String(myUid), p_bet: bet, p_choice: baccaratChoice }).then(function(res){
       var r = res.data;
-      if(!r || !r.ok) {
-        showToast(r && r.err ? r.err : '游戏失败', true);
-        document.getElementById('baccaratBtn').disabled = false;
-        document.getElementById('baccaratBtn').textContent = '🃏 发牌';
-        return;
+      if(!r) { showToast('服务器无响应', true); btn.disabled = false; btn.textContent = '🃏 发牌'; return; }
+      if(!r.ok) {
+        var errMsg = r.err || '游戏失败';
+        showToast(errMsg, true);
+        if(errMsg.indexOf('登录') > -1 || errMsg.indexOf('钱包') > -1 || errMsg.indexOf('过期') > -1) {
+          localStorage.removeItem('aur_me');
+          setTimeout(function(){ location.href = 'user.html'; }, 1500);
+        }
+        btn.disabled = false; btn.textContent = '🃏 发牌'; return;
       }
       function renderCards(containerId, cards) {
         var html = '';
-        cards.forEach(function(c){
-          html += '<div class="bacc-card">' + c + '</div>';
-        });
+        cards.forEach(function(c){ html += '<div class="bacc-card">' + c + '</div>'; });
         document.getElementById(containerId).innerHTML = html;
       }
       renderCards('bankerCards', r.banker);
@@ -385,13 +410,11 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
         resultEl.textContent = '庄 ' + r.banker.join('+') + ' vs 闲 ' + r.player.join('+') + '，未中奖';
         resultEl.className = 'result-text lose';
       }
-      refreshBalance();
-      document.getElementById('baccaratBtn').disabled = false;
-      document.getElementById('baccaratBtn').textContent = '🃏 发牌';
+      verifySession();
+      btn.disabled = false; btn.textContent = '🃏 发牌';
     }).catch(function(e){
-      showToast('网络错误', true);
-      document.getElementById('baccaratBtn').disabled = false;
-      document.getElementById('baccaratBtn').textContent = '🃏 发牌';
+      showToast('网络错误，请重试', true);
+      btn.disabled = false; btn.textContent = '🃏 发牌';
     });
   });
 })();
