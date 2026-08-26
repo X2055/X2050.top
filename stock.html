@@ -400,6 +400,7 @@
   window.setQty=function(q){ $('qtyInput').value=q; updateEstimate(); };
   window.updateEstimate=function(){
     if(!currentStock) return;
+    // 预估仍按输入值显示（允许小数输入预览），实际提交时转整数
     var qty=parseFloat($('qtyInput').value)||0;
     $('estimateAmount').textContent=(qty*currentStock.price).toFixed(2)+' AUR';
   };
@@ -420,26 +421,30 @@
 
   window.confirmTrade=function(){
     if(!currentStock) return;
-    var qty=parseInt($('qtyInput').value,10);
+    // 【唯一修复点】数量强制转为整数，与数据库 buy_stock/sell_stock 的 p_qty INTEGER 严格对齐，
+    // 消除 "Could not choose the best candidate function" 候选函数冲突。
+    var qty=parseInt($('qtyInput').value, 10);
     if(!qty||qty<=0){ showToast('请输入有效数量',true); return; }
     var btn=$('confirmBtn'); btn.disabled=true;
     var args={p_uid:String(myUid),p_symbol:currentStock.symbol,p_qty:qty};
     var fn=currentTab==='buy'?'buy_stock':'sell_stock';
-    dbg('调用 '+fn+'('+currentStock.symbol+', '+qty+')...','w');
+    dbg('调用 '+fn+'(symbol='+currentStock.symbol+', qty='+qty+', uid='+myUid+')...','w');
     sb.rpc(fn, args)
       .then(function(res){
         btn.disabled=false;
         if(res.error){ showToast(res.error.message||'操作失败',true); dbg(fn+' 失败: '+res.error.message,'e'); return; }
         var r=res.data;
         if(r&&r.error){ showToast(r.error,true); dbg(fn+' 返回错误: '+r.error,'e'); return; }
-        var r0=res.data||{};
-        var tag=(currentTab==='buy'?'买入':'卖出');
-        var detail=(currentTab==='buy'?(r0.cost!=null?(' 花费 '+Number(r0.cost).toFixed(2)+' AUR'):''):(r0.value!=null?(' 获得 '+Number(r0.value).toFixed(2)+' AUR'):''));
-        showToast(tag+'成功！'+detail,'ok');
-        dbg(fn+' 成功 '+(currentTab==='buy'?('cost='+r0.cost):('value='+r0.value)),'o');
+        if(currentTab==='buy'){
+          showToast('买入成功！ 花费 '+(r&&r.cost?Number(r.cost).toFixed(2):'')+' AUR','ok');
+          dbg(fn+' 成功, cost='+(r&&r.cost),'o');
+        } else {
+          showToast('卖出成功！ 获得 '+(r&&r.value?Number(r.value).toFixed(2):'')+' AUR','ok');
+          dbg(fn+' 成功, value='+(r&&r.value),'o');
+        }
         closeModal(); verifyBalance(); loadHoldings();
       })
-      .catch(function(e){ btn.disabled=false; showToast('网络错误',true); dbg(fn+' 异常: '+(e.message||e),'e'); document.getElementById('debugPanel').classList.add('show'); });
+      .catch(function(e){ btn.disabled=false; showToast('网络错误',true); dbg(fn+' 异常: '+(e.message||e),'e'); });
   };
 
   window.logout=function(){ localStorage.removeItem('aur_me'); location.href='user.html'; };
@@ -449,7 +454,6 @@
     .on('postgres_changes',{event:'UPDATE',schema:'public',table:'stocks'},function(payload){
       dbg('实时更新: '+payload.new.symbol+' = '+payload.new.price,'w');
       var old=stocks[payload.new.symbol]; stocks[payload.new.symbol]=payload.new;
-      // 简单全量重渲染（数据量小，无闪烁问题）
       renderMarket(); renderHoldings();
     })
     .subscribe(function(status){
@@ -460,3 +464,4 @@
 </script>
 </body>
 </html>
+
