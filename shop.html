@@ -214,6 +214,7 @@
   var selectedProduct=null;
 
   try{var _c=localStorage.getItem('aur_me');if(_c){me=JSON.parse(_c);}}catch(e){}
+
   function persistMe(){try{localStorage.setItem('aur_me',JSON.stringify(me));}catch(e){}}
 
   function openAuth(){ $('authMask').classList.add('show'); setTimeout(function(){$('auUser').focus();},250); }
@@ -284,7 +285,6 @@
         .then(function(r){if(r.error||!r.data){showToast('用户名或密码错误',true);done();return;}me=r.data;persistMe();closeAuth();showToast('登录成功');showApp();done();})
         .catch(function(e){showToast('登录失败：'+(e.message||e),true);done();});
     }else{
-      // 注册：先生成地址，再调 RPC 建钱包（绕过 RLS）
       sb.rpc('gen_address').then(function(addrRes){
         var addr=addrRes.data||addrRes;
         if(!addr||typeof addr!=='string'||!addr.startsWith('0x')){showToast('生成钱包地址失败：'+(addrRes.error?addrRes.error.message:''),true);done();return;}
@@ -362,9 +362,30 @@
         el.innerHTML=r.data.map(function(t){return '<div class="tx"><span class="dot"></span><div class="body"><div class="line"><span class="addr">'+(t.from_addr.substr(0,6)+'...'+t.from_addr.substr(-4))+' → '+(t.to_addr.substr(0,6)+'...'+t.to_addr.substr(-4))+'</span><span class="amt">+'+Number(t.amount).toFixed(3)+'</span></div><div class="time">'+new Date(t.created_at).toLocaleString()+'</div></div></div>';}).join('');});
   }
 
+  // 核心改动：页面加载时立即验证登录态
+  function verifyAndShow(){
+    if(!me){openAuth();return;}
+    sb.from('wallets').select('uid,username,address,balance').eq('address',me.address).maybeSingle()
+      .then(function(r){
+        if(r.error || !r.data){
+          localStorage.removeItem('aur_me');
+          me = null;
+          openAuth();
+          return;
+        }
+        me = r.data;
+        persistMe();
+        showApp();
+      })
+      .catch(function(){
+        localStorage.removeItem('aur_me');
+        me = null;
+        openAuth();
+      });
+  }
+
   document.addEventListener('DOMContentLoaded',function(){
-    if(me){showApp();}
-    else{openAuth();}
+    verifyAndShow();
   });
 })();
 </script>
