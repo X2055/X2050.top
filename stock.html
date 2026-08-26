@@ -197,7 +197,9 @@ input { font-family: inherit; outline: none; }
 
 <!-- Tab 1: 行情 -->
 <div class="tab-page active" id="pageMarket">
-  <div id="marketList"></div>
+  <div id="marketList">
+    <div style="text-align:center;color:#5a6175;font-size:13px;padding:40px 0;">加载中...</div>
+  </div>
 </div>
 
 <!-- Tab 2: 持仓 -->
@@ -331,6 +333,7 @@ input { font-family: inherit; outline: none; }
 
   function verifyBalance() {
     sb.from('wallets').select('balance').eq('uid', myUid).single().then(function(r){
+      console.log('[wallets]', r);
       if(r.data) {
         me.balance = r.data.balance;
         try { localStorage.setItem('aur_me', JSON.stringify(me)); } catch(e){}
@@ -342,21 +345,33 @@ input { font-family: inherit; outline: none; }
   verifyBalance();
 
   function loadStocks() {
+    console.log('[loadStocks] fetching...');
     sb.from('stocks').select('*').then(function(r){
-      if(r.data) {
-        r.data.forEach(function(s){ stocks[s.symbol] = s; });
-        renderMarket();
+      console.log('[loadStocks] result:', r);
+      if(r.error) {
+        console.error('[loadStocks] ERROR:', r.error);
+        document.getElementById('marketList').innerHTML = '<div style="text-align:center;color:#ef4444;font-size:13px;padding:40px 0;">加载失败: ' + r.error.message + '</div>';
+        return;
       }
+      if(!r.data || r.data.length === 0) {
+        console.warn('[loadStocks] empty data, check RLS or table content');
+        document.getElementById('marketList').innerHTML = '<div style="text-align:center;color:#5a6175;font-size:13px;padding:40px 0;">暂无股票数据，请检查数据库</div>';
+        return;
+      }
+      r.data.forEach(function(s){ stocks[s.symbol] = s; });
+      console.log('[loadStocks] loaded', Object.keys(stocks).length, 'stocks');
+      renderMarket();
     });
   }
   loadStocks();
 
   function loadHoldings() {
     sb.from('holdings').select('*').eq('uid', myUid).then(function(r){
+      console.log('[holdings]', r);
       holdings = {};
       if(r.data) r.data.forEach(function(h){ holdings[h.symbol] = h; });
       renderHoldings();
-      renderMarket(); // 刷新行情里的持仓显示
+      renderMarket();
     });
   }
   loadHoldings();
@@ -364,6 +379,7 @@ input { font-family: inherit; outline: none; }
   // Realtime
   sb.channel('stocks-ch')
     .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'stocks' }, function(payload) {
+      console.log('[realtime] stock update:', payload.new.symbol, payload.new.price);
       var old = stocks[payload.new.symbol];
       stocks[payload.new.symbol] = payload.new;
       renderMarketRow(payload.new, old);
@@ -384,11 +400,11 @@ input { font-family: inherit; outline: none; }
     var html = '';
     tiers.forEach(function(t){
       var list = Object.values(stocks).filter(function(s){ return s.tier === t.key; });
-      if(!list.length) return;
+      if(!list.length) { console.log('[renderMarket] no stocks in tier:', t.key); return; }
       html += '<div class="section-title">'+t.label+'</div>';
       list.forEach(function(s){ html += buildStockRow(s); });
     });
-    document.getElementById('marketList').innerHTML = html;
+    document.getElementById('marketList').innerHTML = html || '<div style="text-align:center;color:#5a6175;font-size:13px;padding:40px 0;">没有可显示的股票</div>';
   }
 
   function buildStockRow(s) {
@@ -536,7 +552,6 @@ input { font-family: inherit; outline: none; }
     var w = canvas.offsetWidth, h = canvas.offsetHeight;
     ctx.clearRect(0, 0, w, h);
 
-    // 生成模拟走势（基于当前价±2%）
     var points = [];
     var base = s.prev_close || s.price;
     var current = s.price;
@@ -559,7 +574,6 @@ input { font-family: inherit; outline: none; }
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    // 填充
     ctx.lineTo(w, h); ctx.lineTo(0, h); ctx.closePath();
     var grad = ctx.createLinearGradient(0,0,0,h);
     grad.addColorStop(0, (s.change >= 0 ? 'rgba(34,197,94,' : 'rgba(239,68,68,') + '0.15)');
