@@ -4,7 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>AUR 证券</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/supabase/2.39.7/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"
+  onerror="this.onerror=null;var f=document.createElement('script');f.src='https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js';f.onerror=function(){window.__sbLoadFailed=true;};document.head.appendChild(f);"></script>
 <style>
   :root{
     --bg:#0a0e17;
@@ -223,7 +224,10 @@
 
   <div class="toast" id="toast"></div>
   <div class="dbg-fab" id="dbgFab">🐞</div>
-  <div class="dbg-panel" id="dbgPanel"></div>
+  <div class="dbg-panel" id="dbgPanel">
+    <button id="dbgCopyBtn" style="width:100%;padding:8px;margin-bottom:8px;border-radius:8px;border:1px solid var(--border);background:var(--card2);color:var(--text);font-size:11px;font-weight:600;">复制日志</button>
+    <div id="dbgLines"></div>
+  </div>
 
 </div>
 
@@ -242,24 +246,69 @@
   const TIER_ORDER = ["low","mid","high"];
 
   // ------------------------------------------------------------------
-  // 调试面板
+  // 调试面板（可复制日志，便于反馈问题）
   // ------------------------------------------------------------------
   const dbgPanel = document.getElementById("dbgPanel");
+  const dbgLines = document.getElementById("dbgLines");
   const dbgFab = document.getElementById("dbgFab");
+  const dbgCopyBtn = document.getElementById("dbgCopyBtn");
+  const dbgHistory = [];
   function dbg(msg, level){
     level = level || "g";
     const t = new Date().toLocaleTimeString("zh-CN", {hour12:false});
+    dbgHistory.push("[" + t + "] " + String(msg));
     const line = document.createElement("div");
     line.className = "dbg-line";
     line.innerHTML = '<span class="dbg-t">' + t + '</span><span class="dbg-' + level + '">' + escapeHtml(String(msg)) + '</span>';
-    dbgPanel.appendChild(line);
+    dbgLines.appendChild(line);
     dbgPanel.scrollTop = dbgPanel.scrollHeight;
-    while (dbgPanel.children.length > 200) dbgPanel.removeChild(dbgPanel.firstChild);
+    while (dbgLines.children.length > 200) dbgLines.removeChild(dbgLines.firstChild);
   }
   function escapeHtml(s){
     return s.replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   }
   dbgFab.addEventListener("click", () => dbgPanel.classList.toggle("show"));
+  dbgCopyBtn.addEventListener("click", async () => {
+    const text = dbgHistory.join("\n");
+    try{
+      await navigator.clipboard.writeText(text);
+      dbgCopyBtn.textContent = "已复制 ✓";
+      setTimeout(() => { dbgCopyBtn.textContent = "复制日志"; }, 1500);
+    } catch(e){
+      // 部分安卓浏览器 clipboard API 不可用，退化为全选提示
+      dbgCopyBtn.textContent = "复制失败，请长按选中文字";
+      setTimeout(() => { dbgCopyBtn.textContent = "复制日志"; }, 2000);
+    }
+  });
+
+  // 捕获任何未被 try/catch 处理的致命错误，直接显示，而不是让页面静默卡死
+  window.addEventListener("error", (e) => {
+    dbg("致命错误: " + (e && e.message ? e.message : e), "r");
+    showFatal("页面运行出错：" + (e && e.message ? e.message : "未知错误") + "。请点击右下角 🐞 复制日志并反馈。");
+  });
+
+  function showFatal(text){
+    const box = document.getElementById("marketList");
+    if (box) box.innerHTML = '<div class="empty-state" style="color:var(--down);">⚠️ ' + escapeHtml(text) + '</div>';
+  }
+
+  // ------------------------------------------------------------------
+  // 等待 Supabase 客户端库加载完成（含 CDN 失败兜底提示）
+  // ------------------------------------------------------------------
+  function waitForSupabaseLib(timeoutMs){
+    return new Promise((resolve, reject) => {
+      const start = Date.now();
+      const timer = setInterval(() => {
+        if (window.supabase && typeof window.supabase.createClient === "function"){
+          clearInterval(timer);
+          resolve();
+        } else if (window.__sbLoadFailed || Date.now() - start > timeoutMs){
+          clearInterval(timer);
+          reject(new Error("Supabase 客户端库加载失败（CDN 无法访问）"));
+        }
+      }, 150);
+    });
+  }
 
   // ------------------------------------------------------------------
   // Toast
@@ -274,48 +323,10 @@
   }
 
   // ------------------------------------------------------------------
-  // 登录态 / 身份标识解析
-  // 【重要修复】线上 wallets 表的主键实际是 address（钱包地址文本），不是 uid。
-  // 这里按优先级尝试从 aur_me 里取出能匹配 wallets.address 的字段：
-  // address / addr / wallet / walletAddress → 都没有的话兜底用 uid（字符串化）。
-  // 如果你的挖矿模块里 aur_me 用的字段名不在这个列表里，请把实际字段名告诉我，
-  // 我再改成精确匹配。
+  // 状态（sb / myAddress 在 bootstrap() 成功后才会被赋值）
   // ------------------------------------------------------------------
-  let me = null;
-  try { me = JSON.parse(localStorage.getItem("aur_me")); } catch(e) { me = null; }
-
-  if (!me) {
-    document.getElementById("app").innerHTML =
-      '<div style="padding:60px 24px;text-align:center;color:#8b92a5;">' +
-      '<div style="font-size:40px;margin-bottom:16px;">🔒</div>' +
-      '<div style="font-size:15px;color:#e4e8f1;font-weight:600;margin-bottom:8px;">未登录</div>' +
-      '<div style="font-size:13px;line-height:1.7;">请先在挖矿模块登录，再打开 AUR 证券。</div></div>';
-    throw new Error("未检测到 aur_me 登录信息");
-  }
-
-  const myKey = me.address || me.addr || me.wallet || me.walletAddress ||
-                (me.uid !== undefined && me.uid !== null ? String(me.uid) : null);
-
-  if (!myKey) {
-    document.getElementById("app").innerHTML =
-      '<div style="padding:60px 24px;text-align:center;color:#8b92a5;">' +
-      '<div style="font-size:40px;margin-bottom:16px;">⚠️</div>' +
-      '<div style="font-size:15px;color:#e4e8f1;font-weight:600;margin-bottom:8px;">无法识别登录身份</div>' +
-      '<div style="font-size:13px;line-height:1.7;">aur_me 中没有找到 address / uid 等可用字段，请联系开发者确认字段名。</div></div>';
-    throw new Error("aur_me 缺少可用身份字段: " + JSON.stringify(me));
-  }
-  const myAddress = String(myKey);
-  dbg("登录态 OK，身份标识(address)=" + myAddress);
-
-  // ------------------------------------------------------------------
-  // Supabase 初始化
-  // ------------------------------------------------------------------
-  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-  dbg("Supabase 客户端已初始化");
-
-  // ------------------------------------------------------------------
-  // 状态
-  // ------------------------------------------------------------------
+  let sb = null;
+  let myAddress = null;
   let stocksMap = {};
   let holdingsMap = {};
   let balance = 0;
@@ -648,15 +659,63 @@
   // ------------------------------------------------------------------
   // 启动
   // ------------------------------------------------------------------
-  async function init(){
-    await loadStocks();
-    await loadBalance();
-    await loadHoldings();
-    subscribeStocks();
-    startTickLoop();
-    dbg("初始化完成");
+  async function bootstrap(){
+    dbg("等待 Supabase 客户端库加载…");
+    try{
+      await waitForSupabaseLib(10000);
+    } catch(e){
+      dbg(e.message, "r");
+      showFatal("无法加载 Supabase 客户端库，通常是网络无法访问 CDN（jsdelivr/unpkg）。请检查手机网络，或尝试切换 Wi-Fi/流量后重试。");
+      return;
+    }
+    dbg("Supabase 客户端库已加载");
+
+    // 登录态 / 身份标识解析
+    // 线上 wallets 表的主键实际是 address（钱包地址文本），不是 uid。
+    // 按优先级尝试从 aur_me 里取出能匹配 wallets.address 的字段。
+    let me = null;
+    try { me = JSON.parse(localStorage.getItem("aur_me")); } catch(e) { me = null; }
+
+    if (!me) {
+      showFatal("未检测到登录信息（aur_me）。请先在挖矿模块登录，再打开 AUR 证券。");
+      dbg("未检测到 aur_me", "r");
+      return;
+    }
+
+    const myKey = me.address || me.addr || me.wallet || me.walletAddress ||
+                  (me.uid !== undefined && me.uid !== null ? String(me.uid) : null);
+
+    if (!myKey) {
+      showFatal("无法识别登录身份：aur_me 中没有 address / uid 等可用字段。");
+      dbg("aur_me 缺少可用身份字段: " + JSON.stringify(me), "r");
+      return;
+    }
+    myAddress = String(myKey);
+    dbg("登录态 OK，身份标识(address)=" + myAddress);
+
+    try{
+      sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+      dbg("Supabase 客户端已初始化");
+    } catch(e){
+      dbg("Supabase 客户端初始化失败: " + e.message, "r");
+      showFatal("Supabase 客户端初始化失败：" + e.message);
+      return;
+    }
+
+    try{
+      await loadStocks();
+      await loadBalance();
+      await loadHoldings();
+      subscribeStocks();
+      startTickLoop();
+      dbg("初始化完成");
+    } catch(e){
+      dbg("初始化过程异常: " + e.message, "r");
+      showFatal("初始化过程出错：" + e.message);
+    }
   }
-  init();
+
+  bootstrap();
 
 })();
 </script>
