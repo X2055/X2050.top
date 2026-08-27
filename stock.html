@@ -4,235 +4,655 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>AUR 证券</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/supabase/2.39.7/supabase.min.js"></script>
 <style>
-  :root {
-    --bg: #0b0e14;
-    --card: #151a21;
-    --green: #2ecc71;
-    --red: #e74c3c;
-    --text: #e0e0e0;
-    --sub: #7a8290;
-    --border: #22272e;
+  :root{
+    --bg:#0a0e17;
+    --card:#131722;
+    --card2:#171c2b;
+    --text:#e4e8f1;
+    --sub:#8b92a5;
+    --up:#22c55e;
+    --down:#ef4444;
+    --gold:#f5c518;
+    --border:#232838;
   }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    padding-bottom: 70px;
-  }
-  .header {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 15px; background: var(--bg); position: sticky; top: 0; z-index: 10;
-  }
-  .header-left { display: flex; align-items: center; gap: 8px; font-size: 18px; font-weight: 600; }
-  .logo { color: #3498db; font-size: 20px; }
-  .header-right { font-weight: 600; font-size: 16px; }
-  .search-bar {
-    margin: 0 15px 15px; padding: 10px 15px; background: var(--card);
-    border-radius: 8px; display: flex; align-items: center; gap: 10px; color: var(--sub);
-  }
-  .stock-list { padding: 0 15px; }
-  .stock-item {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 15px 0; border-bottom: 1px solid var(--border); cursor: pointer;
-  }
-  .stock-left { display: flex; flex-direction: column; gap: 4px; }
-  .symbol-row { display: flex; align-items: center; gap: 8px; }
-  .symbol { font-weight: 700; font-size: 16px; }
-  .name { color: var(--sub); font-size: 13px; }
-  .tag { background: #222; color: var(--sub); padding: 2px 6px; border-radius: 4px; font-size: 11px; }
-  .stock-right { text-align: right; display: flex; flex-direction: column; gap: 4px; }
-  .price { font-weight: 600; font-size: 16px; }
-  .change { font-size: 13px; }
-  .group-title { color: var(--sub); font-size: 13px; margin: 15px 0 5px; }
-  .modal-bg {
-    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 100;
-  }
-  .modal {
-    background: var(--card); width: 90%; max-width: 350px;
-    border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 15px;
-  }
-  .modal-header h2 { font-size: 20px; margin-bottom: 5px; }
-  .modal-header .sub { color: var(--sub); font-size: 14px; }
-  .modal-price { font-size: 28px; font-weight: 700; color: var(--green); }
-  .modal-tabs { display: flex; gap: 10px; }
-  .tab {
-    flex: 1; padding: 12px; text-align: center; border-radius: 8px;
-    background: #222; color: var(--sub); cursor: pointer; font-weight: 600;
-  }
-  .tab.active.buy { background: var(--green); color: #000; }
-  .tab.active.sell { background: var(--red); color: #fff; }
-  .qty-input {
-    width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border);
-    background: #0b0e14; color: #fff; font-size: 16px; outline: none;
-  }
-  .modal-info { display: flex; justify-content: space-between; font-size: 13px; color: var(--sub); }
-  .btn {
-    width: 100%; padding: 14px; border: none; border-radius: 8px;
-    font-size: 16px; font-weight: 700; cursor: pointer; color: #fff;
-  }
-  .btn-buy { background: var(--green); }
-  .btn-sell { background: var(--red); }
-  .nav {
-    position: fixed; bottom: 0; left: 0; right: 0; background: var(--card);
-    display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid var(--border); z-index: 10;
-  }
-  .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--sub); font-size: 12px; }
-  .nav-item.active { color: #3498db; }
-  .debug {
-    position: fixed; bottom: 60px; left: 0; right: 0; background: rgba(0,0,0,0.9);
-    color: #0f0; font-size: 11px; padding: 10px; max-height: 150px; overflow-y: auto; z-index: 50;
-    font-family: monospace; pointer-events: none;
-  }
-  .toast {
-    position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-    background: #333; color: #fff; padding: 10px 20px; border-radius: 20px;
-    font-size: 14px; z-index: 200; display: none;
-  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;height:100%;background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;
+    overscroll-behavior-y:none;}
+  #app{max-width:520px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;position:relative;}
+
+  /* ---- top bar ---- */
+  .topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;
+    padding:14px 16px;background:rgba(10,14,23,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--border);}
+  .brand{display:flex;align-items:center;gap:8px;font-weight:700;font-size:17px;letter-spacing:.3px;}
+  .brand .bolt{color:var(--gold);font-size:19px;}
+  .balance{font-size:13px;color:var(--sub);text-align:right;}
+  .balance b{display:block;color:var(--gold);font-size:16px;font-weight:700;}
+
+  /* ---- pages ---- */
+  .page{flex:1;padding:12px 12px 90px;display:none;}
+  .page.active{display:block;}
+
+  .section-title{font-size:13px;color:var(--sub);margin:16px 4px 8px;font-weight:600;letter-spacing:.5px;}
+  .section-title:first-child{margin-top:4px;}
+
+  .stock-row{display:flex;align-items:center;justify-content:space-between;background:var(--card);
+    border-radius:14px;padding:12px 14px;margin-bottom:8px;border:1px solid var(--border);transition:background .15s;}
+  .stock-row:active{background:var(--card2);}
+  .sr-left{display:flex;flex-direction:column;gap:2px;min-width:0;}
+  .sr-symbol{font-weight:700;font-size:15px;}
+  .sr-name{font-size:12px;color:var(--sub);}
+  .sr-mid{display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex:1;padding-right:10px;}
+  .sr-price{font-weight:700;font-size:15px;font-variant-numeric:tabular-nums;}
+  .sr-chg{font-size:12px;font-variant-numeric:tabular-nums;}
+  .sr-right{display:flex;flex-direction:column;align-items:flex-end;gap:2px;min-width:52px;}
+  .sr-hold-label{font-size:10px;color:var(--sub);}
+  .sr-hold-val{font-size:13px;font-weight:600;}
+  .up{color:var(--up);}
+  .down{color:var(--down);}
+  .flat{color:var(--sub);}
+
+  @keyframes flashUp{0%{background:rgba(34,197,94,.28);}100%{background:var(--card);}}
+  @keyframes flashDown{0%{background:rgba(239,68,68,.28);}100%{background:var(--card);}}
+  .flash-up{animation:flashUp .6s ease-out;}
+  .flash-down{animation:flashDown .6s ease-out;}
+
+  /* ---- holdings page ---- */
+  .hold-card{background:var(--card);border-radius:14px;padding:14px;margin-bottom:10px;border:1px solid var(--border);}
+  .hc-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+  .hc-name{font-weight:700;font-size:15px;}
+  .hc-name span{color:var(--sub);font-weight:400;font-size:12px;margin-left:6px;}
+  .hc-pnl{font-weight:700;font-size:15px;}
+  .hc-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px 10px;font-size:12px;color:var(--sub);}
+  .hc-grid b{color:var(--text);font-weight:600;}
+  .empty-state{text-align:center;color:var(--sub);padding:60px 20px;font-size:13px;line-height:1.7;}
+
+  /* ---- me page ---- */
+  .me-card{background:var(--card);border-radius:14px;padding:18px;margin-bottom:12px;border:1px solid var(--border);}
+  .me-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);font-size:14px;}
+  .me-row:last-child{border-bottom:none;}
+  .me-row span:first-child{color:var(--sub);}
+  .me-row b{font-variant-numeric:tabular-nums;}
+  .btn-logout{width:100%;padding:13px;border-radius:12px;border:1px solid var(--border);background:var(--card);
+    color:var(--down);font-weight:600;font-size:14px;margin-top:6px;}
+
+  /* ---- bottom tabs ---- */
+  .tabbar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:520px;
+    display:flex;background:rgba(19,23,34,.95);backdrop-filter:blur(10px);border-top:1px solid var(--border);
+    padding:8px 0 max(8px,env(safe-area-inset-bottom));z-index:25;}
+  .tab-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--sub);
+    font-size:11px;padding:4px 0;font-weight:600;}
+  .tab-item.active{color:var(--gold);}
+  .tab-icon{font-size:19px;line-height:1;}
+
+  /* ---- trade modal ---- */
+  .sheet-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:40;opacity:0;pointer-events:none;transition:opacity .2s;}
+  .sheet-backdrop.show{opacity:1;pointer-events:auto;}
+  .sheet{position:fixed;left:50%;bottom:0;transform:translate(-50%,100%);width:100%;max-width:520px;
+    background:var(--card);border-radius:20px 20px 0 0;z-index:41;padding:16px 18px max(18px,env(safe-area-inset-bottom));
+    transition:transform .25s cubic-bezier(.32,.72,0,1);max-height:88vh;overflow-y:auto;}
+  .sheet.show{transform:translate(-50%,0);}
+  .sheet-handle{width:36px;height:4px;background:var(--border);border-radius:3px;margin:0 auto 14px;}
+  .sheet-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;}
+  .sh-title{font-size:18px;font-weight:700;}
+  .sh-title span{color:var(--sub);font-weight:400;font-size:13px;margin-left:6px;}
+  .sh-price{text-align:right;}
+  .sh-price b{font-size:18px;font-variant-numeric:tabular-nums;}
+  .sh-price div{font-size:12px;}
+
+  .seg{display:flex;background:var(--bg);border-radius:12px;padding:3px;margin-bottom:14px;}
+  .seg-btn{flex:1;text-align:center;padding:9px 0;border-radius:9px;font-weight:700;font-size:14px;color:var(--sub);}
+  .seg-btn.active-buy{background:var(--up);color:#08170d;}
+  .seg-btn.active-sell{background:var(--down);color:#1a0505;}
+
+  .qty-wrap{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+  .qty-input{flex:1;background:var(--bg);border:1px solid var(--border);border-radius:12px;color:var(--text);
+    font-size:18px;font-weight:700;padding:11px 14px;text-align:center;font-variant-numeric:tabular-nums;}
+  .qty-input:focus{outline:none;border-color:var(--gold);}
+  .qty-quick{display:flex;gap:6px;margin-bottom:14px;}
+  .qty-quick button{flex:1;padding:8px 0;border-radius:9px;border:1px solid var(--border);background:var(--bg);
+    color:var(--text);font-size:12px;font-weight:600;}
+  .qty-quick button:active{background:var(--card2);}
+
+  .est-row{display:flex;justify-content:space-between;align-items:center;background:var(--bg);
+    border-radius:12px;padding:12px 14px;margin-bottom:8px;font-size:13px;color:var(--sub);}
+  .est-row b{color:var(--text);font-size:15px;font-variant-numeric:tabular-nums;}
+  .hold-hint{font-size:12px;color:var(--sub);margin-bottom:14px;padding-left:2px;}
+
+  .confirm-btn{width:100%;padding:15px;border-radius:14px;border:none;font-weight:700;font-size:16px;color:#fff;}
+  .confirm-btn.buy{background:var(--up);color:#08170d;}
+  .confirm-btn.sell{background:var(--down);color:#1a0505;}
+  .confirm-btn:disabled{opacity:.4;}
+
+  .recent-title{font-size:12px;color:var(--sub);margin:16px 0 8px;font-weight:600;}
+  .recent-row{display:flex;justify-content:space-between;font-size:12px;padding:6px 0;color:var(--sub);
+    border-bottom:1px solid var(--border);}
+  .recent-row .rside-buy{color:var(--up);}
+  .recent-row .rside-sell{color:var(--down);}
+
+  /* ---- toast ---- */
+  .toast{position:fixed;top:14px;left:50%;transform:translateX(-50%) translateY(-60px);z-index:80;
+    padding:11px 20px;border-radius:12px;font-size:13px;font-weight:600;color:#fff;opacity:0;
+    transition:all .25s ease;max-width:88%;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,.4);}
+  .toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
+  .toast.ok{background:var(--up);color:#08170d;}
+  .toast.err{background:var(--down);color:#fff;}
+
+  /* ---- debug panel ---- */
+  .dbg-fab{position:fixed;right:14px;bottom:78px;z-index:60;width:40px;height:40px;border-radius:50%;
+    background:var(--card2);border:1px solid var(--border);color:var(--sub);font-size:16px;
+    display:flex;align-items:center;justify-content:center;opacity:.7;}
+  .dbg-panel{position:fixed;right:10px;left:10px;bottom:126px;max-height:42vh;z-index:59;
+    background:rgba(10,14,23,.96);border:1px solid var(--border);border-radius:14px;padding:10px;
+    overflow-y:auto;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10.5px;display:none;}
+  .dbg-panel.show{display:block;}
+  .dbg-line{padding:3px 0;border-bottom:1px solid rgba(255,255,255,.05);word-break:break-all;}
+  .dbg-t{color:var(--sub);margin-right:6px;}
+  .dbg-g{color:var(--up);}
+  .dbg-y{color:var(--gold);}
+  .dbg-r{color:var(--down);}
+
+  .loading-msg{text-align:center;color:var(--sub);padding:50px 20px;font-size:13px;}
 </style>
 </head>
 <body>
-<div class="header">
-  <div class="header-left"><span class="logo">⚡</span> AUR 证券</div>
-  <div class="header-right" id="balance-display">0 AUR</div>
-</div>
-<div class="search-bar"><span>🔍</span> AUR 证券</div>
-<div class="stock-list" id="stock-list"></div>
+<div id="app">
 
-<div class="modal-bg" id="modal">
-  <div class="modal">
-    <div class="modal-header">
-      <h2 id="m-symbol">MSFT · 微软</h2>
-      <div class="modal-price" id="m-price">0.00 AUR</div>
-      <div class="sub" id="m-change">▲ 0.00%</div>
-    </div>
-    <div class="modal-tabs">
-      <div class="tab active buy" id="tab-buy">买入</div>
-      <div class="tab sell" id="tab-sell">卖出</div>
-    </div>
-    <input type="number" class="qty-input" id="qty" placeholder="数量（股）" min="1" value="1">
-    <div class="modal-info">
-      <span id="m-hold">持仓: 0</span>
-      <span id="m-cost">预估: 0 AUR</span>
-    </div>
-    <button class="btn btn-buy" id="confirm-btn">确认买入</button>
+  <div class="topbar">
+    <div class="brand"><span class="bolt">⚡</span> AUR 证券</div>
+    <div class="balance">余额<b id="balanceVal">-- AUR</b></div>
   </div>
-</div>
 
-<div class="nav">
-  <div class="nav-item active"><span>📈</span> 行情</div>
-  <div class="nav-item"><span>👤</span> 我的</div>
+  <!-- 行情页 -->
+  <div class="page active" id="page-market">
+    <div id="marketList"><div class="loading-msg">加载行情中…</div></div>
+  </div>
+
+  <!-- 持仓页 -->
+  <div class="page" id="page-holdings">
+    <div id="holdingsList"><div class="loading-msg">加载持仓中…</div></div>
+  </div>
+
+  <!-- 我的页 -->
+  <div class="page" id="page-me">
+    <div class="me-card">
+      <div class="me-row"><span>UID</span><b id="meUid">--</b></div>
+      <div class="me-row"><span>现金余额</span><b id="meCash">--</b></div>
+      <div class="me-row"><span>持仓市值</span><b id="meMarketVal">--</b></div>
+      <div class="me-row"><span>总资产估值</span><b id="meTotal">--</b></div>
+    </div>
+    <button class="btn-logout" id="btnLogout">退出登录</button>
+  </div>
+
+  <div class="tabbar">
+    <div class="tab-item active" data-tab="market"><div class="tab-icon">📈</div>行情</div>
+    <div class="tab-item" data-tab="holdings"><div class="tab-icon">💼</div>持仓</div>
+    <div class="tab-item" data-tab="me"><div class="tab-icon">👤</div>我的</div>
+  </div>
+
+  <!-- 交易弹窗 -->
+  <div class="sheet-backdrop" id="sheetBackdrop"></div>
+  <div class="sheet" id="tradeSheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-head">
+      <div>
+        <div class="sh-title" id="shTitle">-- <span id="shName"></span></div>
+      </div>
+      <div class="sh-price">
+        <b id="shPrice">--</b>
+        <div id="shChg">--</div>
+      </div>
+    </div>
+
+    <div class="seg">
+      <div class="seg-btn active-buy" id="segBuy">买入</div>
+      <div class="seg-btn" id="segSell">卖出</div>
+    </div>
+
+    <div class="qty-wrap">
+      <input type="number" class="qty-input" id="qtyInput" value="10" min="1" step="1">
+    </div>
+    <div class="qty-quick">
+      <button data-q="10">10</button>
+      <button data-q="50">50</button>
+      <button data-q="100">100</button>
+      <button data-q="500">500</button>
+    </div>
+
+    <div class="est-row">
+      <span id="estLabel">预估花费</span>
+      <b id="estVal">0.00 AUR</b>
+    </div>
+    <div class="hold-hint" id="holdHint"></div>
+
+    <button class="confirm-btn buy" id="confirmBtn">确认买入</button>
+
+    <div class="recent-title">最近成交</div>
+    <div id="recentTrades"></div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <div class="dbg-fab" id="dbgFab">🐞</div>
+  <div class="dbg-panel" id="dbgPanel"></div>
+
 </div>
-<div class="debug" id="dbg"></div>
-<div class="toast" id="toast"></div>
 
 <script>
-const SUPABASE_URL = 'https://irnaphrjwlgjdfwrykgu.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlybmFwaHJqd2xnamRmd3J5a2d1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYyMjcwOTUsImV4cCI6MjA3MTgwMzA5NX0.GW4vA6Hk2iZgQ5XNfUf9XlM4v4Yc8WbBQYJzKjT8f3Y';
+(function(){
+  "use strict";
 
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-const dbg = (t,c='')=>{const e=document.getElementById('dbg');e.innerHTML+=`[${new Date().toLocaleTimeString()}] ${t}<br>`;e.scrollTop=e.scrollHeight;if(c=='e')console.error(t);};
-const showToast = (t,b=false)=>{const o=document.getElementById('toast');o.textContent=t;o.style.display='block';o.style.background=b?'#e74c3c':'#333';setTimeout(()=>o.style.display='none',3000);};
+  // ------------------------------------------------------------------
+  // 配置
+  // ------------------------------------------------------------------
+  const SUPABASE_URL = "https://irnaphrjcdfmqyyykdron.supabase.co";
+  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlybmFwaHJqY2RmbXF5eWtkcm9uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3MDUzNzIsImV4cCI6MjEwMzI4MTM3Mn0.4FNlvN4GfVSmYQTr2ZelAc96EavUohqbLURirbeIUlI";
+  const TICK_MS = 15000;
 
-dbg('Supabase 初始化...');
-let me={uid:null};
-let stocks=[];
-let cur=null;
-let side='buy';
+  const TIER_LABEL = { low: "低档位 · 练手股", mid: "中档位 · 龙头股", high: "高档位 · 世界巨头" };
+  const TIER_ORDER = ["low","mid","high"];
 
-(async()=>{
-  const {data:u} = await sb.auth.getUser();
-  if(!u?.user){dbg('未登录','e');return;}
-  me.uid = u.user.id;
-  dbg(`已登录: uid=${me.uid}`);
-  await verifyBalance();
-  await loadStocks();
-  dbg('实时订阅: SUBSCRIBED');
-  sb.channel('stocks').on('postgres_changes',{event:'*',schema:'public',table:'stocks'},(p)=>{const i=stocks.findIndex(s=>s.symbol==p.new.symbol);if(i>-1){stocks[i]=p.new;render();}}).subscribe();
-})();
+  // ------------------------------------------------------------------
+  // 调试面板
+  // ------------------------------------------------------------------
+  const dbgPanel = document.getElementById("dbgPanel");
+  const dbgFab = document.getElementById("dbgFab");
+  function dbg(msg, level){
+    level = level || "g";
+    const t = new Date().toLocaleTimeString("zh-CN", {hour12:false});
+    const line = document.createElement("div");
+    line.className = "dbg-line";
+    line.innerHTML = '<span class="dbg-t">' + t + '</span><span class="dbg-' + level + '">' + escapeHtml(String(msg)) + '</span>';
+    dbgPanel.appendChild(line);
+    dbgPanel.scrollTop = dbgPanel.scrollHeight;
+    while (dbgPanel.children.length > 200) dbgPanel.removeChild(dbgPanel.firstChild);
+  }
+  function escapeHtml(s){
+    return s.replace(/[&<>"']/g, c => ({"&":"&","<":"<",">":">",'"':""","'":"'"}[c]));
+  }
+  dbgFab.addEventListener("click", () => dbgPanel.classList.toggle("show"));
 
-async function verifyBalance(){
-  const {data,error} = await sb.from('wallets').select('balance').eq('uid',me.uid).single();
-  if(error){dbg('查余额失败: '+error.message,'e');return;}
-  // 唯一修复点：强转数字，防字符串拼接
-  const bal = Number(data.balance)||0;
-  document.getElementById('balance-display').textContent = bal.toFixed(2)+' AUR';
-  dbg(`余额: ${bal.toFixed(3)}`);
-}
+  // ------------------------------------------------------------------
+  // Toast
+  // ------------------------------------------------------------------
+  const toastEl = document.getElementById("toast");
+  let toastTimer = null;
+  function toast(msg, ok){
+    toastEl.textContent = msg;
+    toastEl.className = "toast show " + (ok ? "ok" : "err");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { toastEl.classList.remove("show"); }, 2800);
+  }
 
-async function loadStocks(){
-  const {data,error} = await sb.from('stocks').select('*').order('symbol');
-  if(error){dbg('查 stocks 失败: '+error.message,'e');return;}
-  stocks=data; dbg(`stocks 加载: ${stocks.length} 只`); render();
-}
+  // ------------------------------------------------------------------
+  // 登录态
+  // ------------------------------------------------------------------
+  let me = null;
+  try { me = JSON.parse(localStorage.getItem("aur_me")); } catch(e) { me = null; }
 
-function render(){
-  const el=document.getElementById('stock-list');
-  let h='<div class="group-title">中档位 · 龙头股</div>';
-  stocks.forEach(s=>{
-    h+=`<div class="stock-item" onclick="openModal('${s.symbol}')">
-      <div class="stock-left"><div class="symbol-row"><span class="symbol">${s.symbol}</span><span class="tag">${s.name||''}</span></div><span class="name">${s.name||''}</span></div>
-      <div class="stock-right"><div class="price">${s.price}</div><div class="change" style="color:var(--green)">▲ 0.00%</div></div>
-    </div>`;
+  if (!me || !me.uid) {
+    document.getElementById("app").innerHTML =
+      '<div style="padding:60px 24px;text-align:center;color:#8b92a5;">' +
+      '<div style="font-size:40px;margin-bottom:16px;">🔒</div>' +
+      '<div style="font-size:15px;color:#e4e8f1;font-weight:600;margin-bottom:8px;">未登录</div>' +
+      '<div style="font-size:13px;line-height:1.7;">请先在挖矿模块登录，再打开 AUR 证券。</div></div>';
+    throw new Error("未检测到 aur_me 登录信息");
+  }
+  const myUid = String(me.uid);
+  dbg("登录态 OK，uid=" + myUid);
+
+  // ------------------------------------------------------------------
+  // Supabase 初始化
+  // ------------------------------------------------------------------
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  dbg("Supabase 客户端已初始化");
+
+  // ------------------------------------------------------------------
+  // 状态
+  // ------------------------------------------------------------------
+  let stocksMap = {};     // symbol -> stock row
+  let holdingsMap = {};   // symbol -> holding row
+  let balance = 0;
+  let activeSymbol = null;
+  let sheetSide = "buy";  // 'buy' | 'sell'
+
+  // ------------------------------------------------------------------
+  // 格式化辅助
+  // ------------------------------------------------------------------
+  function fmt2(n){ return Number(n || 0).toFixed(2); }
+  function chgClass(v){ v = Number(v); return v > 0 ? "up" : (v < 0 ? "down" : "flat"); }
+  function chgSign(v){ v = Number(v); return (v > 0 ? "+" : "") + fmt2(v); }
+
+  // ------------------------------------------------------------------
+  // 数据加载
+  // ------------------------------------------------------------------
+  async function loadBalance(){
+    try{
+      const { data, error } = await sb.from("wallets").select("balance").eq("uid", myUid).maybeSingle();
+      if (error) { dbg("查询余额出错: " + error.message, "r"); return; }
+      balance = Number(data && data.balance) || 0;
+      document.getElementById("balanceVal").textContent = fmt2(balance) + " AUR";
+      dbg("余额刷新: " + fmt2(balance) + " AUR");
+    } catch(e){ dbg("查询余额异常: " + e.message, "r"); }
+  }
+
+  async function loadStocks(){
+    try{
+      const { data, error } = await sb.from("stocks").select("*").order("tier").order("symbol");
+      if (error) { dbg("查询股票列表出错: " + error.message, "r"); return; }
+      stocksMap = {};
+      (data || []).forEach(s => { stocksMap[s.symbol] = s; });
+      dbg("股票列表已加载，共 " + (data ? data.length : 0) + " 只");
+      renderMarket();
+    } catch(e){ dbg("查询股票列表异常: " + e.message, "r"); }
+  }
+
+  async function loadHoldings(){
+    try{
+      const { data, error } = await sb.from("holdings").select("*").eq("uid", myUid);
+      if (error) { dbg("查询持仓出错: " + error.message, "r"); return; }
+      holdingsMap = {};
+      (data || []).forEach(h => { holdingsMap[h.symbol] = h; });
+      dbg("持仓已加载，共 " + (data ? data.length : 0) + " 项");
+      renderMarket();
+      renderHoldings();
+      renderMe();
+    } catch(e){ dbg("查询持仓异常: " + e.message, "r"); }
+  }
+
+  // ------------------------------------------------------------------
+  // 渲染：行情页
+  // ------------------------------------------------------------------
+  function renderMarket(){
+    const wrap = document.getElementById("marketList");
+    if (!Object.keys(stocksMap).length){
+      wrap.innerHTML = '<div class="loading-msg">加载行情中…</div>';
+      return;
+    }
+    let html = "";
+    TIER_ORDER.forEach(tier => {
+      const list = Object.values(stocksMap).filter(s => s.tier === tier).sort((a,b)=>a.symbol.localeCompare(b.symbol));
+      if (!list.length) return;
+      html += '<div class="section-title">' + TIER_LABEL[tier] + '</div>';
+      list.forEach(s => {
+        const h = holdingsMap[s.symbol];
+        const qty = h ? h.qty : 0;
+        html += '<div class="stock-row" data-symbol="' + s.symbol + '" id="row-' + s.symbol + '">' +
+          '<div class="sr-left"><div class="sr-symbol">' + s.symbol + '</div><div class="sr-name">' + s.name + '</div></div>' +
+          '<div class="sr-mid"><div class="sr-price">' + fmt2(s.price) + '</div>' +
+          '<div class="sr-chg ' + chgClass(s.change_pct) + '">' + chgSign(s.change_pct) + '%</div></div>' +
+          '<div class="sr-right"><div class="sr-hold-label">持仓</div><div class="sr-hold-val">' + (qty > 0 ? qty : "-") + '</div></div>' +
+          '</div>';
+      });
+    });
+    wrap.innerHTML = html;
+    wrap.querySelectorAll(".stock-row").forEach(row => {
+      row.addEventListener("click", () => openSheet(row.getAttribute("data-symbol"), "buy"));
+    });
+  }
+
+  // ------------------------------------------------------------------
+  // 渲染：持仓页
+  // ------------------------------------------------------------------
+  function renderHoldings(){
+    const wrap = document.getElementById("holdingsList");
+    const list = Object.values(holdingsMap).filter(h => h.qty > 0);
+    if (!list.length){
+      wrap.innerHTML = '<div class="empty-state">暂无持仓<br>去「行情」页买入你的第一只股票吧</div>';
+      return;
+    }
+    let html = "";
+    list.forEach(h => {
+      const s = stocksMap[h.symbol];
+      if (!s) return;
+      const marketVal = s.price * h.qty;
+      const costVal = h.avg_cost * h.qty;
+      const pnl = marketVal - costVal;
+      const pnlPct = costVal > 0 ? (pnl / costVal * 100) : 0;
+      html += '<div class="hold-card" data-symbol="' + h.symbol + '">' +
+        '<div class="hc-top"><div class="hc-name">' + h.symbol + '<span>' + s.name + '</span></div>' +
+        '<div class="hc-pnl ' + chgClass(pnl) + '">' + chgSign(pnl) + '</div></div>' +
+        '<div class="hc-grid">' +
+        '<div>持仓股数 <b>' + h.qty + '</b></div>' +
+        '<div>现价 <b>' + fmt2(s.price) + '</b></div>' +
+        '<div>成本价 <b>' + fmt2(h.avg_cost) + '</b></div>' +
+        '<div>市值 <b>' + fmt2(marketVal) + '</b></div>' +
+        '<div>盈亏% <b class="' + chgClass(pnlPct) + '">' + chgSign(pnlPct) + '%</b></div>' +
+        '</div></div>';
+    });
+    wrap.innerHTML = html;
+    wrap.querySelectorAll(".hold-card").forEach(card => {
+      card.addEventListener("click", () => openSheet(card.getAttribute("data-symbol"), "sell"));
+    });
+  }
+
+  // ------------------------------------------------------------------
+  // 渲染：我的页
+  // ------------------------------------------------------------------
+  function renderMe(){
+    document.getElementById("meUid").textContent = myUid;
+    document.getElementById("meCash").textContent = fmt2(balance) + " AUR";
+    let marketVal = 0;
+    Object.values(holdingsMap).forEach(h => {
+      const s = stocksMap[h.symbol];
+      if (s) marketVal += s.price * h.qty;
+    });
+    document.getElementById("meMarketVal").textContent = fmt2(marketVal) + " AUR";
+    document.getElementById("meTotal").textContent = fmt2(marketVal + balance) + " AUR";
+  }
+
+  // ------------------------------------------------------------------
+  // Tab 切换
+  // ------------------------------------------------------------------
+  document.querySelectorAll(".tab-item").forEach(tab => {
+    tab.addEventListener("click", () => {
+      document.querySelectorAll(".tab-item").forEach(t => t.classList.remove("active"));
+      document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+      tab.classList.add("active");
+      document.getElementById("page-" + tab.getAttribute("data-tab")).classList.add("active");
+    });
   });
-  el.innerHTML=h;
-}
 
-async function openModal(sym){
-  cur=stocks.find(s=>s.symbol==ym);
-  if(!cur)cur=stocks.find(s=>s.symbol==sym);
-  if(!cur)return;
-  document.getElementById('m-symbol').textContent=`${cur.symbol} · ${cur.name||''}`;
-  document.getElementById('m-price').textContent=`${cur.price} AUR`;
-  const {data:h} = await sb.from('holdings').select('qty').eq('uid',me.uid).eq('symbol',cur.symbol).maybeSingle();
-  document.getElementById('m-hold').textContent=`持仓: ${h?h.qty:0}`;
-  document.getElementById('qty').value=1;
-  updCost();
-  document.getElementById('modal').style.display='flex';
-}
+  // ------------------------------------------------------------------
+  // 交易弹窗
+  // ------------------------------------------------------------------
+  const sheetBackdrop = document.getElementById("sheetBackdrop");
+  const tradeSheet = document.getElementById("tradeSheet");
+  const qtyInput = document.getElementById("qtyInput");
 
-function updCost(){document.getElementById('m-cost').textContent=`预估: ${((Number(cur.price)||0)*(parseInt(document.getElementById('qty').value)||0)).toFixed(2)} AUR`;}
-document.getElementById('qty').oninput=updCost;
-
-document.getElementById('tab-buy').onclick=()=>{side='buy';document.getElementById('tab-buy').className='tab active buy';document.getElementById('tab-sell').className='tab sell';document.getElementById('confirm-btn').className='btn btn-buy';document.getElementById('confirm-btn').textContent='确认买入';updCost();};
-document.getElementById('tab-sell').onclick=()=>{side='sell';document.getElementById('tab-sell').className='tab active sell';document.getElementById('tab-buy').className='tab buy';document.getElementById('confirm-btn').className='btn btn-sell';document.getElementById('confirm-btn').textContent='确认卖出';updCost();};
-document.getElementById('confirm-btn').onclick=confirmTrade;
-document.getElementById('modal').onclick=e=>{if(e.target.id=='modal')document.getElementById('modal').style.display='none';};
-
-async function confirmTrade(){
-  const q = parseInt(document.getElementById('qty').value,10)||0;
-  if(q<=0){showToast('数量无效',true);return;}
-  const fn = side=='buy'?'buy_stock':'sell_stock';
-  
-  // 唯一修复点：严格对齐 SQL 函数签名 p_uid, p_symbol, p_qty
-  const args = { p_uid: String(me.uid), p_symbol: cur.symbol, p_qty: q };
-  
-  dbg(`调用 ${fn}(symbol=${cur.symbol}, qty=${q}, uid=${me.uid})...`);
-  const res = await sb.rpc(fn, args);
-  
-  if(res.error){
-    dbg(`${fn} RPC错误: ${res.error.message}`,'e');
-    showToast(res.error.message.includes('integer = text')?'参数缓存未刷新，强刷页面试试':(res.error.message||'交易失败'),true);
-    return;
+  function openSheet(symbol, side){
+    activeSymbol = symbol;
+    sheetSide = side;
+    const s = stocksMap[symbol];
+    if (!s) return;
+    document.getElementById("shTitle").innerHTML = symbol + ' <span id="shName">' + s.name + '</span>';
+    updateSheetPrice();
+    qtyInput.value = 10;
+    setSide(side);
+    renderRecentTrades(symbol);
+    sheetBackdrop.classList.add("show");
+    tradeSheet.classList.add("show");
+    dbg("打开交易弹窗: " + symbol + " / " + side);
   }
-  const r = res.data;
-  if(r && r.ok===false){
-    dbg(`${fn} 业务失败: ${r.error}`,'e');
-    showToast(r.error||'交易失败',true);
-    return;
+
+  function closeSheet(){
+    sheetBackdrop.classList.remove("show");
+    tradeSheet.classList.remove("show");
+    activeSymbol = null;
   }
-  if(r && r.ok){
-    dbg(`${fn} 成功, ${r.cost!==undefined?'cost='+Number(r.cost).toFixed(2):(r.value!==undefined?'value='+Number(r.value).toFixed(2):'ok')}`);
-    showToast(side=='buy'?`买入成功 花费 ${r.cost!==undefined?Number(r.cost).toFixed(2):'?'} AUR`:`卖出成功 获得 ${r.value!==undefined?Number(r.value).toFixed(2):'?'} AUR`);
-    document.getElementById('modal').style.display='none';
-    await verifyBalance();
-    if(cur) openModal(cur.symbol);
-  } else {
-    dbg(`${fn} 未知返回: ${JSON.stringify(r)}`,'e');
-    showToast('返回异常',true);
+  sheetBackdrop.addEventListener("click", closeSheet);
+
+  function updateSheetPrice(){
+    if (!activeSymbol) return;
+    const s = stocksMap[activeSymbol];
+    if (!s) return;
+    document.getElementById("shPrice").textContent = fmt2(s.price);
+    const chgEl = document.getElementById("shChg");
+    chgEl.textContent = chgSign(s.change_pct) + "%";
+    chgEl.className = chgClass(s.change_pct);
+    updateEstimate();
   }
-}
+
+  function setSide(side){
+    sheetSide = side;
+    const segBuy = document.getElementById("segBuy");
+    const segSell = document.getElementById("segSell");
+    const confirmBtn = document.getElementById("confirmBtn");
+    const h = holdingsMap[activeSymbol];
+    const heldQty = h ? h.qty : 0;
+
+    if (side === "buy"){
+      segBuy.classList.add("active-buy"); segSell.classList.remove("active-sell");
+      document.getElementById("estLabel").textContent = "预估花费";
+      confirmBtn.textContent = "确认买入";
+      confirmBtn.className = "confirm-btn buy";
+      confirmBtn.disabled = false;
+      document.getElementById("holdHint").textContent = "余额 " + fmt2(balance) + " AUR";
+    } else {
+      segSell.classList.add("active-sell"); segBuy.classList.remove("active-buy");
+      document.getElementById("estLabel").textContent = "预估获得";
+      confirmBtn.textContent = "确认卖出";
+      confirmBtn.className = "confirm-btn sell";
+      confirmBtn.disabled = heldQty <= 0;
+      document.getElementById("holdHint").textContent = heldQty > 0 ? ("可卖持仓 " + heldQty + " 股") : "当前无持仓，无法卖出";
+    }
+    updateEstimate();
+  }
+
+  document.getElementById("segBuy").addEventListener("click", () => setSide("buy"));
+  document.getElementById("segSell").addEventListener("click", () => setSide("sell"));
+
+  document.querySelectorAll(".qty-quick button").forEach(btn => {
+    btn.addEventListener("click", () => {
+      qtyInput.value = btn.getAttribute("data-q");
+      updateEstimate();
+    });
+  });
+  qtyInput.addEventListener("input", updateEstimate);
+
+  function updateEstimate(){
+    if (!activeSymbol) return;
+    const s = stocksMap[activeSymbol];
+    if (!s) return;
+    const qty = Math.max(0, parseInt(qtyInput.value, 10) || 0);
+    const est = qty * Number(s.price);
+    document.getElementById("estVal").textContent = fmt2(est) + " AUR";
+  }
+
+  function renderRecentTrades(symbol){
+    const wrap = document.getElementById("recentTrades");
+    wrap.innerHTML = '<div style="color:var(--sub);font-size:12px;">加载中…</div>';
+    sb.from("stock_trades").select("*").eq("symbol", symbol).order("created_at", {ascending:false}).limit(8)
+      .then(({data, error}) => {
+        if (error) { wrap.innerHTML = '<div style="color:var(--sub);font-size:12px;">加载失败</div>'; return; }
+        if (!data || !data.length){ wrap.innerHTML = '<div style="color:var(--sub);font-size:12px;">暂无成交记录</div>'; return; }
+        let html = "";
+        data.forEach(t => {
+          const time = new Date(t.created_at).toLocaleTimeString("zh-CN", {hour12:false});
+          html += '<div class="recent-row"><span class="' + (t.side === "buy" ? "rside-buy" : "rside-sell") + '">' +
+            (t.side === "buy" ? "买入" : "卖出") + ' ' + t.qty + ' 股 @ ' + fmt2(t.price) + '</span><span>' + time + '</span></div>';
+        });
+        wrap.innerHTML = html;
+      });
+  }
+
+  document.getElementById("confirmBtn").addEventListener("click", async () => {
+    if (!activeSymbol) return;
+    const qty = parseInt(qtyInput.value, 10);
+    if (!qty || qty <= 0) { toast("请输入有效数量", false); return; }
+
+    const btn = document.getElementById("confirmBtn");
+    btn.disabled = true;
+    const fn = sheetSide === "buy" ? "buy_stock" : "sell_stock";
+    dbg("调用 RPC: " + fn + " uid=" + myUid + " symbol=" + activeSymbol + " qty=" + qty, "y");
+
+    try{
+      const { data, error } = await sb.rpc(fn, { p_uid: String(myUid), p_symbol: activeSymbol, p_qty: qty });
+      if (error){
+        dbg("RPC 异常: " + error.message, "r");
+        toast("网络/权限错误: " + error.message, false);
+        btn.disabled = false;
+        return;
+      }
+      if (data && data.ok === false){
+        dbg("业务失败: " + data.error, "r");
+        toast(data.error || "操作失败", false);
+        btn.disabled = false;
+        return;
+      }
+      dbg("RPC 成功: " + JSON.stringify(data), "g");
+      toast(sheetSide === "buy" ? ("买入成功，花费 " + fmt2(data.cost) + " AUR") : ("卖出成功，获得 " + fmt2(data.value) + " AUR"), true);
+      closeSheet();
+      await Promise.all([loadBalance(), loadHoldings()]);
+    } catch(e){
+      dbg("调用异常: " + e.message, "r");
+      toast("调用异常: " + e.message, false);
+      btn.disabled = false;
+    }
+  });
+
+  // ------------------------------------------------------------------
+  // 实时订阅股票价格
+  // ------------------------------------------------------------------
+  function subscribeStocks(){
+    sb.channel("stocks-rt")
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "stocks" }, (payload) => {
+        const row = payload.new;
+        if (!row || !row.symbol) return;
+        const prevPrice = stocksMap[row.symbol] ? Number(stocksMap[row.symbol].price) : Number(row.price);
+        stocksMap[row.symbol] = row;
+        renderMarket();
+        renderHoldings();
+        renderMe();
+
+        const rowEl = document.getElementById("row-" + row.symbol);
+        if (rowEl){
+          rowEl.classList.remove("flash-up","flash-down");
+          void rowEl.offsetWidth;
+          rowEl.classList.add(Number(row.price) >= prevPrice ? "flash-up" : "flash-down");
+        }
+        if (activeSymbol === row.symbol){
+          updateSheetPrice();
+        }
+      })
+      .subscribe((status) => {
+        dbg("实时订阅状态: " + status, status === "SUBSCRIBED" ? "g" : "y");
+      });
+  }
+
+  // ------------------------------------------------------------------
+  // 前端兜底定时 tick（即使 pg_cron / Edge Function 未部署也能跑起来）
+  // ------------------------------------------------------------------
+  function startTickLoop(){
+    setInterval(async () => {
+      try{
+        const { error } = await sb.rpc("tick_stocks");
+        if (error) dbg("tick_stocks 调用出错: " + error.message, "r");
+        else dbg("tick_stocks 已触发", "g");
+      } catch(e){ dbg("tick_stocks 异常: " + e.message, "r"); }
+    }, TICK_MS);
+  }
+
+  document.getElementById("btnLogout").addEventListener("click", () => {
+    localStorage.removeItem("aur_me");
+    location.reload();
+  });
+
+  // ------------------------------------------------------------------
+  // 启动
+  // ------------------------------------------------------------------
+  async function init(){
+    await loadStocks();
+    await loadBalance();
+    await loadHoldings();
+    subscribeStocks();
+    startTickLoop();
+    dbg("初始化完成");
+  }
+  init();
+
+})();
 </script>
 </body>
 </html>
