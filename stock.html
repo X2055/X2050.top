@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>AUR 证券</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"
-  onerror="this.onerror=null;var f=document.createElement('script');f.src='https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js';f.onerror=function(){window.__sbLoadFailed=true;};document.head.appendChild(f);"></script>
+<!-- 优先使用 cdnjs / jsdelivr 双兜底 CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/supabase-js/2.39.8/supabase.umd.min.js" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js'"></script>
 <style>
   :root{
     --bg:#0a0e17;
@@ -72,14 +72,15 @@
   .me-row:last-child{border-bottom:none;}
   .me-row span:first-child{color:var(--sub);}
   .me-row b{font-variant-numeric:tabular-nums;word-break:break-all;text-align:right;max-width:65%;}
-  .btn-logout{width:100%;padding:13px;border-radius:12px;border:1px solid var(--border);background:var(--card);
-    color:var(--down);font-weight:600;font-size:14px;margin-top:6px;}
+  .btn-action{width:100%;padding:13px;border-radius:12px;border:1px solid var(--border);background:var(--card);
+    color:var(--text);font-weight:600;font-size:14px;margin-top:8px;cursor:pointer;}
+  .btn-logout{color:var(--down);}
 
   .tabbar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:520px;
     display:flex;background:rgba(19,23,34,.95);backdrop-filter:blur(10px);border-top:1px solid var(--border);
     padding:8px 0 max(8px,env(safe-area-inset-bottom));z-index:25;}
   .tab-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--sub);
-    font-size:11px;padding:4px 0;font-weight:600;}
+    font-size:11px;padding:4px 0;font-weight:600;cursor:pointer;}
   .tab-item.active{color:var(--gold);}
   .tab-icon{font-size:19px;line-height:1;}
 
@@ -98,7 +99,7 @@
   .sh-price div{font-size:12px;}
 
   .seg{display:flex;background:var(--bg);border-radius:12px;padding:3px;margin-bottom:14px;}
-  .seg-btn{flex:1;text-align:center;padding:9px 0;border-radius:9px;font-weight:700;font-size:14px;color:var(--sub);}
+  .seg-btn{flex:1;text-align:center;padding:9px 0;border-radius:9px;font-weight:700;font-size:14px;color:var(--sub);cursor:pointer;}
   .seg-btn.active-buy{background:var(--up);color:#08170d;}
   .seg-btn.active-sell{background:var(--down);color:#1a0505;}
 
@@ -108,7 +109,7 @@
   .qty-input:focus{outline:none;border-color:var(--gold);}
   .qty-quick{display:flex;gap:6px;margin-bottom:14px;}
   .qty-quick button{flex:1;padding:8px 0;border-radius:9px;border:1px solid var(--border);background:var(--bg);
-    color:var(--text);font-size:12px;font-weight:600;}
+    color:var(--text);font-size:12px;font-weight:600;cursor:pointer;}
   .qty-quick button:active{background:var(--card2);}
 
   .est-row{display:flex;justify-content:space-between;align-items:center;background:var(--bg);
@@ -116,10 +117,10 @@
   .est-row b{color:var(--text);font-size:15px;font-variant-numeric:tabular-nums;}
   .hold-hint{font-size:12px;color:var(--sub);margin-bottom:14px;padding-left:2px;}
 
-  .confirm-btn{width:100%;padding:15px;border-radius:14px;border:none;font-weight:700;font-size:16px;color:#fff;}
+  .confirm-btn{width:100%;padding:15px;border-radius:14px;border:none;font-weight:700;font-size:16px;color:#fff;cursor:pointer;}
   .confirm-btn.buy{background:var(--up);color:#08170d;}
   .confirm-btn.sell{background:var(--down);color:#1a0505;}
-  .confirm-btn:disabled{opacity:.4;}
+  .confirm-btn:disabled{opacity:.4;cursor:not-allowed;}
 
   .recent-title{font-size:12px;color:var(--sub);margin:16px 0 8px;font-weight:600;}
   .recent-row{display:flex;justify-content:space-between;font-size:12px;padding:6px 0;color:var(--sub);
@@ -136,7 +137,7 @@
 
   .dbg-fab{position:fixed;right:14px;bottom:78px;z-index:60;width:40px;height:40px;border-radius:50%;
     background:var(--card2);border:1px solid var(--border);color:var(--sub);font-size:16px;
-    display:flex;align-items:center;justify-content:center;opacity:.7;}
+    display:flex;align-items:center;justify-content:center;opacity:.7;cursor:pointer;}
   .dbg-panel{position:fixed;right:10px;left:10px;bottom:126px;max-height:42vh;z-index:59;
     background:rgba(10,14,23,.96);border:1px solid var(--border);border-radius:14px;padding:10px;
     overflow-y:auto;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10.5px;display:none;}
@@ -173,7 +174,7 @@
       <div class="me-row"><span>持仓市值</span><b id="meMarketVal">--</b></div>
       <div class="me-row"><span>总资产估值</span><b id="meTotal">--</b></div>
     </div>
-    <button class="btn-logout" id="btnLogout">退出登录</button>
+    <button class="btn-action btn-logout" id="btnLogout">退出登录</button>
   </div>
 
   <div class="tabbar">
@@ -225,7 +226,7 @@
   <div class="toast" id="toast"></div>
   <div class="dbg-fab" id="dbgFab">🐞</div>
   <div class="dbg-panel" id="dbgPanel">
-    <button id="dbgCopyBtn" style="width:100%;padding:8px;margin-bottom:8px;border-radius:8px;border:1px solid var(--border);background:var(--card2);color:var(--text);font-size:11px;font-weight:600;">复制日志</button>
+    <button id="dbgCopyBtn" style="width:100%;padding:8px;margin-bottom:8px;border-radius:8px;border:1px solid var(--border);background:var(--card2);color:var(--text);font-size:11px;font-weight:600;cursor:pointer;">复制日志</button>
     <div id="dbgLines"></div>
   </div>
 
@@ -238,7 +239,7 @@
   // ------------------------------------------------------------------
   // 配置
   // ------------------------------------------------------------------
-  const SUPABASE_URL = "https://irnaphrjcdfmqyyykdron.supabase.co";
+  const SUPABASE_URL = "https://irnaphrjcdfmqyykdron.supabase.co";
   const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlybmFwaHJqY2RmbXF5eWtkcm9uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3MDUzNzIsImV4cCI6MjEwMzI4MTM3Mn0.4FNlvN4GfVSmYQTr2ZelAc96EavUohqbLURirbeIUlI";
   const TICK_MS = 15000;
 
@@ -246,13 +247,14 @@
   const TIER_ORDER = ["low","mid","high"];
 
   // ------------------------------------------------------------------
-  // 调试面板（可复制日志，便于反馈问题）
+  // 调试面板
   // ------------------------------------------------------------------
   const dbgPanel = document.getElementById("dbgPanel");
   const dbgLines = document.getElementById("dbgLines");
   const dbgFab = document.getElementById("dbgFab");
   const dbgCopyBtn = document.getElementById("dbgCopyBtn");
   const dbgHistory = [];
+  
   function dbg(msg, level){
     level = level || "g";
     const t = new Date().toLocaleTimeString("zh-CN", {hour12:false});
@@ -264,9 +266,11 @@
     dbgPanel.scrollTop = dbgPanel.scrollHeight;
     while (dbgLines.children.length > 200) dbgLines.removeChild(dbgLines.firstChild);
   }
+  
   function escapeHtml(s){
-    return s.replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+    return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   }
+  
   dbgFab.addEventListener("click", () => dbgPanel.classList.toggle("show"));
   dbgCopyBtn.addEventListener("click", async () => {
     const text = dbgHistory.join("\n");
@@ -275,25 +279,27 @@
       dbgCopyBtn.textContent = "已复制 ✓";
       setTimeout(() => { dbgCopyBtn.textContent = "复制日志"; }, 1500);
     } catch(e){
-      // 部分安卓浏览器 clipboard API 不可用，退化为全选提示
-      dbgCopyBtn.textContent = "复制失败，请长按选中文字";
+      dbgCopyBtn.textContent = "复制失败，请截图调试面板";
       setTimeout(() => { dbgCopyBtn.textContent = "复制日志"; }, 2000);
     }
   });
 
-  // 捕获任何未被 try/catch 处理的致命错误，直接显示，而不是让页面静默卡死
   window.addEventListener("error", (e) => {
-    dbg("致命错误: " + (e && e.message ? e.message : e), "r");
-    showFatal("页面运行出错：" + (e && e.message ? e.message : "未知错误") + "。请点击右下角 🐞 复制日志并反馈。");
+    dbg("捕获异常: " + (e && e.message ? e.message : e), "r");
   });
 
-  function showFatal(text){
+  function showBannerWarning(text, showAuthLink){
     const box = document.getElementById("marketList");
-    if (box) box.innerHTML = '<div class="empty-state" style="color:var(--down);">⚠️ ' + escapeHtml(text) + '</div>';
+    let html = '<div class="empty-state"><div style="color:var(--gold);font-size:15px;font-weight:bold;margin-bottom:8px;">⚠️ 提示</div>' + escapeHtml(text);
+    if (showAuthLink) {
+      html += '<br><br><button onclick="location.reload()" class="btn-action" style="max-width:200px;margin:0 auto;display:block;">重新加载页面</button>';
+    }
+    html += '</div>';
+    if (box) box.innerHTML = html;
   }
 
   // ------------------------------------------------------------------
-  // 等待 Supabase 客户端库加载完成（含 CDN 失败兜底提示）
+  // Supabase SDK 验证
   // ------------------------------------------------------------------
   function waitForSupabaseLib(timeoutMs){
     return new Promise((resolve, reject) => {
@@ -302,16 +308,16 @@
         if (window.supabase && typeof window.supabase.createClient === "function"){
           clearInterval(timer);
           resolve();
-        } else if (window.__sbLoadFailed || Date.now() - start > timeoutMs){
+        } else if (Date.now() - start > timeoutMs){
           clearInterval(timer);
-          reject(new Error("Supabase 客户端库加载失败（CDN 无法访问）"));
+          reject(new Error("Supabase 客户端 SDK 网络加载超时"));
         }
-      }, 150);
+      }, 100);
     });
   }
 
   // ------------------------------------------------------------------
-  // Toast
+  // Toast 提示
   // ------------------------------------------------------------------
   const toastEl = document.getElementById("toast");
   let toastTimer = null;
@@ -323,7 +329,7 @@
   }
 
   // ------------------------------------------------------------------
-  // 状态（sb / myAddress 在 bootstrap() 成功后才会被赋值）
+  // 全局状态
   // ------------------------------------------------------------------
   let sb = null;
   let myAddress = null;
@@ -333,58 +339,57 @@
   let activeSymbol = null;
   let sheetSide = "buy";
 
-  // ------------------------------------------------------------------
-  // 格式化辅助
-  // ------------------------------------------------------------------
   function fmt2(n){ return Number(n || 0).toFixed(2); }
   function chgClass(v){ v = Number(v); return v > 0 ? "up" : (v < 0 ? "down" : "flat"); }
   function chgSign(v){ v = Number(v); return (v > 0 ? "+" : "") + fmt2(v); }
 
   // ------------------------------------------------------------------
-  // 数据加载
+  // 数据获取
   // ------------------------------------------------------------------
   async function loadBalance(){
+    if (!myAddress || !sb) return;
     try{
       const { data, error } = await sb.from("wallets").select("balance").eq("address", myAddress).maybeSingle();
-      if (error) { dbg("查询余额出错: " + error.message, "r"); toast("查询余额失败: " + error.message, false); return; }
-      if (!data) { dbg("wallets 中找不到 address=" + myAddress + " 的记录", "r"); }
+      if (error) { dbg("查询余额错误: " + error.message, "r"); return; }
       balance = Number(data && data.balance) || 0;
       document.getElementById("balanceVal").textContent = fmt2(balance) + " AUR";
-      dbg("余额刷新: " + fmt2(balance) + " AUR");
-    } catch(e){ dbg("查询余额异常: " + e.message, "r"); }
+      dbg("余额更新: " + fmt2(balance) + " AUR");
+    } catch(e){ dbg("加载余额异常: " + e.message, "r"); }
   }
 
   async function loadStocks(){
+    if (!sb) return;
     try{
       const { data, error } = await sb.from("stocks").select("*").order("tier").order("symbol");
-      if (error) { dbg("查询股票列表出错: " + error.message, "r"); toast("加载行情失败: " + error.message, false); return; }
+      if (error) { dbg("查询股票列表错误: " + error.message, "r"); toast("获取行情失败", false); return; }
       stocksMap = {};
       (data || []).forEach(s => { stocksMap[s.symbol] = s; });
-      dbg("股票列表已加载，共 " + (data ? data.length : 0) + " 只");
+      dbg("行情列表就绪: " + Object.keys(stocksMap).length + "只");
       renderMarket();
-    } catch(e){ dbg("查询股票列表异常: " + e.message, "r"); }
+    } catch(e){ dbg("加载行情异常: " + e.message, "r"); }
   }
 
   async function loadHoldings(){
+    if (!myAddress || !sb) return;
     try{
       const { data, error } = await sb.from("holdings").select("*").eq("address", myAddress);
-      if (error) { dbg("查询持仓出错: " + error.message, "r"); return; }
+      if (error) { dbg("查询持仓错误: " + error.message, "r"); return; }
       holdingsMap = {};
       (data || []).forEach(h => { holdingsMap[h.symbol] = h; });
-      dbg("持仓已加载，共 " + (data ? data.length : 0) + " 项");
+      dbg("持仓加载就绪: " + Object.keys(holdingsMap).length + "项");
       renderMarket();
       renderHoldings();
       renderMe();
-    } catch(e){ dbg("查询持仓异常: " + e.message, "r"); }
+    } catch(e){ dbg("加载持仓异常: " + e.message, "r"); }
   }
 
   // ------------------------------------------------------------------
-  // 渲染：行情页
+  // 视图渲染
   // ------------------------------------------------------------------
   function renderMarket(){
     const wrap = document.getElementById("marketList");
     if (!Object.keys(stocksMap).length){
-      wrap.innerHTML = '<div class="loading-msg">加载行情中…</div>';
+      wrap.innerHTML = '<div class="loading-msg">加载行情数据中…</div>';
       return;
     }
     let html = "";
@@ -409,9 +414,6 @@
     });
   }
 
-  // ------------------------------------------------------------------
-  // 渲染：持仓页
-  // ------------------------------------------------------------------
   function renderHoldings(){
     const wrap = document.getElementById("holdingsList");
     const list = Object.values(holdingsMap).filter(h => h.qty > 0);
@@ -444,11 +446,8 @@
     });
   }
 
-  // ------------------------------------------------------------------
-  // 渲染：我的页
-  // ------------------------------------------------------------------
   function renderMe(){
-    document.getElementById("meUid").textContent = myAddress;
+    document.getElementById("meUid").textContent = myAddress || "未登录";
     document.getElementById("meCash").textContent = fmt2(balance) + " AUR";
     let marketVal = 0;
     Object.values(holdingsMap).forEach(h => {
@@ -459,9 +458,7 @@
     document.getElementById("meTotal").textContent = fmt2(marketVal + balance) + " AUR";
   }
 
-  // ------------------------------------------------------------------
   // Tab 切换
-  // ------------------------------------------------------------------
   document.querySelectorAll(".tab-item").forEach(tab => {
     tab.addEventListener("click", () => {
       document.querySelectorAll(".tab-item").forEach(t => t.classList.remove("active"));
@@ -472,13 +469,17 @@
   });
 
   // ------------------------------------------------------------------
-  // 交易弹窗
+  // 交易 Sheet
   // ------------------------------------------------------------------
   const sheetBackdrop = document.getElementById("sheetBackdrop");
   const tradeSheet = document.getElementById("tradeSheet");
   const qtyInput = document.getElementById("qtyInput");
 
   function openSheet(symbol, side){
+    if (!myAddress) {
+      toast("请先在云端矿场完成登录", false);
+      return;
+    }
     activeSymbol = symbol;
     sheetSide = side;
     const s = stocksMap[symbol];
@@ -490,7 +491,6 @@
     renderRecentTrades(symbol);
     sheetBackdrop.classList.add("show");
     tradeSheet.classList.add("show");
-    dbg("打开交易弹窗: " + symbol + " / " + side);
   }
 
   function closeSheet(){
@@ -575,44 +575,41 @@
   }
 
   document.getElementById("confirmBtn").addEventListener("click", async () => {
-    if (!activeSymbol) return;
+    if (!activeSymbol || !myAddress) return;
     const qty = parseInt(qtyInput.value, 10);
     if (!qty || qty <= 0) { toast("请输入有效数量", false); return; }
 
     const btn = document.getElementById("confirmBtn");
     btn.disabled = true;
     const fn = sheetSide === "buy" ? "buy_stock" : "sell_stock";
-    dbg("调用 RPC: " + fn + " address=" + myAddress + " symbol=" + activeSymbol + " qty=" + qty, "y");
 
     try{
       const { data, error } = await sb.rpc(fn, { p_address: myAddress, p_symbol: activeSymbol, p_qty: qty });
       if (error){
-        dbg("RPC 异常: " + error.message, "r");
-        toast("网络/权限错误: " + error.message, false);
+        dbg("RPC 交易执行失败: " + error.message, "r");
+        toast("交易失败: " + error.message, false);
         btn.disabled = false;
         return;
       }
       if (data && data.ok === false){
-        dbg("业务失败: " + data.error, "r");
         toast(data.error || "操作失败", false);
         btn.disabled = false;
         return;
       }
-      dbg("RPC 成功: " + JSON.stringify(data), "g");
       toast(sheetSide === "buy" ? ("买入成功，花费 " + fmt2(data.cost) + " AUR") : ("卖出成功，获得 " + fmt2(data.value) + " AUR"), true);
       closeSheet();
       await Promise.all([loadBalance(), loadHoldings()]);
     } catch(e){
-      dbg("调用异常: " + e.message, "r");
-      toast("调用异常: " + e.message, false);
+      toast("交易异常: " + e.message, false);
       btn.disabled = false;
     }
   });
 
   // ------------------------------------------------------------------
-  // 实时订阅股票价格
+  // WebSocket 实时订阅 & 定时刷新
   // ------------------------------------------------------------------
   function subscribeStocks(){
+    if (!sb) return;
     sb.channel("stocks-rt")
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "stocks" }, (payload) => {
         const row = payload.new;
@@ -634,20 +631,16 @@
         }
       })
       .subscribe((status) => {
-        dbg("实时订阅状态: " + status, status === "SUBSCRIBED" ? "g" : "y");
+        dbg("实时数据订阅: " + status, status === "SUBSCRIBED" ? "g" : "y");
       });
   }
 
-  // ------------------------------------------------------------------
-  // 前端兜底定时 tick
-  // ------------------------------------------------------------------
   function startTickLoop(){
     setInterval(async () => {
+      if (!sb) return;
       try{
-        const { error } = await sb.rpc("tick_stocks");
-        if (error) dbg("tick_stocks 调用出错: " + error.message, "r");
-        else dbg("tick_stocks 已触发", "g");
-      } catch(e){ dbg("tick_stocks 异常: " + e.message, "r"); }
+        await sb.rpc("tick_stocks");
+      } catch(e){ }
     }, TICK_MS);
   }
 
@@ -657,28 +650,36 @@
   });
 
   // ------------------------------------------------------------------
-  // 启动
+  // 应用初始化
   // ------------------------------------------------------------------
   async function bootstrap(){
-    dbg("等待 Supabase 客户端库加载…");
+    dbg("正在初始化应用组件…");
     try{
-      await waitForSupabaseLib(10000);
+      await waitForSupabaseLib(8000);
     } catch(e){
       dbg(e.message, "r");
-      showFatal("无法加载 Supabase 客户端库，通常是网络无法访问 CDN（jsdelivr/unpkg）。请检查手机网络，或尝试切换 Wi-Fi/流量后重试。");
+      showBannerWarning("Supabase SDK 依赖库加载失败，请检查网络连接后刷新重试。", true);
       return;
     }
-    dbg("Supabase 客户端库已加载");
 
-    // 登录态 / 身份标识解析
-    // 线上 wallets 表的主键实际是 address（钱包地址文本），不是 uid。
-    // 按优先级尝试从 aur_me 里取出能匹配 wallets.address 的字段。
+    try{
+      sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+      dbg("Supabase SDK 连接就绪");
+    } catch(e){
+      dbg("初始化 Supabase 实例异常: " + e.message, "r");
+      showBannerWarning("数据库连接配置异常：" + e.message, true);
+      return;
+    }
+
+    // 检查缓存身份
     let me = null;
     try { me = JSON.parse(localStorage.getItem("aur_me")); } catch(e) { me = null; }
 
     if (!me) {
-      showFatal("未检测到登录信息（aur_me）。请先在挖矿模块登录，再打开 AUR 证券。");
-      dbg("未检测到 aur_me", "r");
+      dbg("未找到本地 aur_me 登录数据", "y");
+      showBannerWarning("未检测到登录账户。请先打开「云端矿场」模块进行注册或登录，完成后再返回本模块。", false);
+      await loadStocks(); // 允许未登录状态下预览股市行情
+      subscribeStocks();
       return;
     }
 
@@ -686,21 +687,13 @@
                   (me.uid !== undefined && me.uid !== null ? String(me.uid) : null);
 
     if (!myKey) {
-      showFatal("无法识别登录身份：aur_me 中没有 address / uid 等可用字段。");
-      dbg("aur_me 缺少可用身份字段: " + JSON.stringify(me), "r");
+      dbg("aur_me 中缺乏有效 address 识别字段", "r");
+      showBannerWarning("身份数据异常，缺失 0x 钱包地址，请尝试重新登录云端矿场。", true);
       return;
     }
-    myAddress = String(myKey);
-    dbg("登录态 OK，身份标识(address)=" + myAddress);
 
-    try{
-      sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-      dbg("Supabase 客户端已初始化");
-    } catch(e){
-      dbg("Supabase 客户端初始化失败: " + e.message, "r");
-      showFatal("Supabase 客户端初始化失败：" + e.message);
-      return;
-    }
+    myAddress = String(myKey);
+    dbg("校验通过，当前用户 Address=" + myAddress);
 
     try{
       await loadStocks();
@@ -708,10 +701,9 @@
       await loadHoldings();
       subscribeStocks();
       startTickLoop();
-      dbg("初始化完成");
+      dbg("应用初始化完成");
     } catch(e){
-      dbg("初始化过程异常: " + e.message, "r");
-      showFatal("初始化过程出错：" + e.message);
+      dbg("加载过程异常: " + e.message, "r");
     }
   }
 
