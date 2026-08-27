@@ -2,465 +2,237 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#0d2b52">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>AUR 证券</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-  :root{
-    --nav:#0d2b52; --blue:#2a90ff; --bg:#eef2f7; --card:#fff;
-    --text:#1c1c1e; --sub:#8e8e93; --border:#e5e5ea; --line:#f0f0f0;
-    --ok:#2ecc71; --err:#ff3b30; --gold:#c9a227; --red:#ef4444; --green:#22c55e;
+  :root {
+    --bg: #0b0e14;
+    --card: #151a21;
+    --green: #2ecc71;
+    --red: #e74c3c;
+    --text: #e0e0e0;
+    --sub: #7a8290;
+    --border: #22272e;
   }
-  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-  html,body{height:100%;}
-  body{
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;
-    background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;
-    padding-bottom:calc(64px + env(safe-area-inset-bottom));
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    padding-bottom: 70px;
   }
-  button,input{font-family:inherit;}
-
-  .brandbar{
-    position:sticky;top:0;z-index:50;background:var(--nav);
-    padding:calc(8px + env(safe-area-inset-top)) 14px 8px;
-    display:flex;align-items:center;justify-content:space-between;
-    box-shadow:0 2px 10px rgba(13,43,82,.25);
+  .header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 15px; background: var(--bg); position: sticky; top: 0; z-index: 10;
   }
-  .brandbar .logo{display:flex;align-items:center;gap:8px;color:#fff;font-weight:700;font-size:16px;}
-  .brandbar .bal{font-size:12px;color:rgba(255,255,255,.8);background:rgba(255,255,255,.15);padding:4px 10px;border-radius:8px;}
-
-  .bottomtab{
-    position:fixed;left:0;right:0;bottom:0;z-index:60;
-    background:#fff;border-top:1px solid var(--border);
-    display:flex;padding:6px 4px calc(6px + env(safe-area-inset-bottom));
-    box-shadow:0 -2px 10px rgba(13,43,82,.08);
+  .header-left { display: flex; align-items: center; gap: 8px; font-size: 18px; font-weight: 600; }
+  .logo { color: #3498db; font-size: 20px; }
+  .header-right { font-weight: 600; font-size: 16px; }
+  .search-bar {
+    margin: 0 15px 15px; padding: 10px 15px; background: var(--card);
+    border-radius: 8px; display: flex; align-items: center; gap: 10px; color: var(--sub);
   }
-  .bottomtab a{
-    flex:1 1 0;display:flex;flex-direction:column;align-items:center;gap:2px;
-    text-decoration:none;color:var(--sub);font-size:11px;font-weight:600;
-    padding:5px 2px;border-radius:10px;
+  .stock-list { padding: 0 15px; }
+  .stock-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 15px 0; border-bottom: 1px solid var(--border); cursor: pointer;
   }
-  .bottomtab a svg{width:22px;height:22px;}
-  .bottomtab a.active{color:var(--blue);}
-  .bottomtab a:active{background:#f2f6fc;}
-
-  .wrap{max-width:760px;margin:0 auto;padding:14px;}
-  .view{display:none;}
-  .view.active{display:block;}
-  .card{background:var(--card);border-radius:18px;padding:14px 16px;box-shadow:0 2px 14px rgba(13,43,82,.06);margin-bottom:12px;}
-
-  .sec{display:flex;align-items:center;justify-content:space-between;margin:4px 2px 10px;}
-  .sec h3{font-size:15px;font-weight:700;}
-
-  .stock-row{
-    display:flex;align-items:center;padding:12px 4px;border-bottom:1px solid var(--line);
-    cursor:pointer;
+  .stock-left { display: flex; flex-direction: column; gap: 4px; }
+  .symbol-row { display: flex; align-items: center; gap: 8px; }
+  .symbol { font-weight: 700; font-size: 16px; }
+  .name { color: var(--sub); font-size: 13px; }
+  .tag { background: #222; color: var(--sub); padding: 2px 6px; border-radius: 4px; font-size: 11px; }
+  .stock-right { text-align: right; display: flex; flex-direction: column; gap: 4px; }
+  .price { font-weight: 600; font-size: 16px; }
+  .change { font-size: 13px; }
+  .group-title { color: var(--sub); font-size: 13px; margin: 15px 0 5px; }
+  .modal-bg {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 100;
   }
-  .stock-row:active{background:#f6f9fd;}
-  .stock-row:last-child{border-bottom:none;}
-  .s-info{flex:1;display:flex;flex-direction:column;gap:2px;}
-  .s-sym{font-weight:700;font-size:15px;}
-  .s-name{font-size:11px;color:var(--sub);}
-  .s-price{font-weight:700;font-size:15px;font-variant-numeric:tabular-nums;}
-  .s-change{font-size:12px;font-variant-numeric:tabular-nums;}
-  .s-holding{font-size:11px;color:var(--sub);text-align:right;margin-left:8px;}
-  .up{color:var(--green);} .down{color:var(--red);}
-
-  .holding-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;cursor:pointer;}
-  .h-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
-  .h-sym{font-weight:700;font-size:15px;}
-  .h-pl{font-size:14px;font-weight:700;}
-  .h-mid{display:flex;gap:14px;font-size:12px;color:var(--sub);margin-bottom:6px;}
-  .h-bot{display:flex;justify-content:space-between;font-size:11px;color:var(--sub);}
-
-  .me-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px;}
-  .me-row:last-child{border-bottom:none;}
-  .me-label{color:var(--sub);}
-  .me-val{font-weight:700;font-variant-numeric:tabular-nums;}
-
-  .modal-mask{position:fixed;inset:0;z-index:100;background:rgba(13,43,82,.5);display:none;align-items:flex-end;justify-content:center;}
-  .modal-mask.show{display:flex;}
-  .modal{width:100%;max-width:480px;background:#fff;border-radius:20px 20px 0 0;padding:20px 20px calc(20px + env(safe-area-inset-bottom));animation:rise .25s ease;}
-  @keyframes rise{from{transform:translateY(40px);opacity:0;}to{transform:translateY(0);opacity:1;}}
-  .modal-title{font-size:18px;font-weight:800;margin-bottom:4px;}
-  .modal-price{font-size:28px;font-weight:800;font-variant-numeric:tabular-nums;}
-  .modal-change{font-size:13px;margin-bottom:14px;}
-  .trade-tabs{display:flex;gap:0;margin-bottom:12px;background:#f2f4f7;border-radius:10px;padding:3px;}
-  .trade-tab{flex:1;text-align:center;padding:9px;border-radius:8px;font-size:14px;font-weight:600;color:var(--sub);}
-  .trade-tab.active-buy{background:var(--green);color:#fff;}
-  .trade-tab.active-sell{background:var(--red);color:#fff;}
-  .qty-input{width:100%;padding:12px;background:#fafbfc;border:1.5px solid var(--border);border-radius:12px;font-size:16px;font-weight:600;text-align:center;margin-bottom:6px;}
-  .qty-input:focus{border-color:var(--blue);outline:none;}
-  .qty-presets{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px;}
-  .qty-preset{background:#f2f4f7;border:1px solid var(--border);border-radius:8px;padding:8px 0;font-size:13px;color:var(--sub);font-weight:600;}
-  .qty-preset:active{background:rgba(42,144,255,.15);border-color:var(--blue);color:var(--blue);}
-  .estimate{display:flex;justify-content:space-between;font-size:13px;color:var(--sub);margin-bottom:14px;}
-  .estimate span{color:var(--text);font-weight:600;font-variant-numeric:tabular-nums;}
-  .trade-btn{width:100%;padding:14px;border:none;border-radius:12px;font-size:16px;font-weight:700;}
-  .trade-btn.buy{background:var(--green);color:#fff;}
-  .trade-btn.sell{background:var(--red);color:#fff;}
-  .trade-btn:disabled{opacity:.5;}
-  .recent-list{margin-top:14px;padding-top:12px;border-top:1px solid var(--line);}
-  .recent-title{font-size:12px;color:var(--sub);margin-bottom:6px;}
-  .recent-item{display:flex;justify-content:space-between;font-size:12px;padding:4px 0;color:var(--sub);}
-  .recent-item span{font-variant-numeric:tabular-nums;}
-
-  .empty{text-align:center;color:var(--sub);font-size:12px;padding:30px 0;}
-  .tier-tag{font-size:10px;color:var(--sub);background:#f2f4f7;padding:2px 6px;border-radius:4px;margin-left:6px;}
-
-  #toast{position:fixed;top:calc(14px + env(safe-area-inset-top));left:50%;transform:translate(-50%,-120px);z-index:200;background:rgba(28,28,30,.96);color:#fff;padding:11px 18px;border-radius:12px;font-size:13px;font-weight:600;box-shadow:0 6px 20px rgba(0,0,0,.2);pointer-events:none;transition:transform .3s cubic-bezier(.2,.8,.2,1);max-width:86vw;text-align:center;}
-  #toast.show{transform:translate(-50%,0);}
-  #toast.err{background:#d93025;}
-
-  .debug-btn{position:fixed;right:10px;bottom:70px;z-index:150;background:var(--gold);color:#000;border:none;border-radius:50%;width:34px;height:34px;font-size:14px;font-weight:700;}
-  .debug-panel{position:fixed;left:8px;right:8px;bottom:64px;max-height:35vh;overflow-y:auto;background:rgba(0,0,0,.92);border:1px solid var(--gold);border-radius:12px;padding:10px;z-index:149;font-family:monospace;font-size:11px;color:#0f0;line-height:1.5;display:none;}
-  .debug-panel.show{display:block;}
-  .debug-panel .e{color:#ef4444;} .debug-panel .o{color:#22c55e;} .debug-panel .w{color:#ffcc00;}
+  .modal {
+    background: var(--card); width: 90%; max-width: 350px;
+    border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 15px;
+  }
+  .modal-header h2 { font-size: 20px; margin-bottom: 5px; }
+  .modal-header .sub { color: var(--sub); font-size: 14px; }
+  .modal-price { font-size: 28px; font-weight: 700; color: var(--green); }
+  .modal-tabs { display: flex; gap: 10px; }
+  .tab {
+    flex: 1; padding: 12px; text-align: center; border-radius: 8px;
+    background: #222; color: var(--sub); cursor: pointer; font-weight: 600;
+  }
+  .tab.active.buy { background: var(--green); color: #000; }
+  .tab.active.sell { background: var(--red); color: #fff; }
+  .qty-input {
+    width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border);
+    background: #0b0e14; color: #fff; font-size: 16px; outline: none;
+  }
+  .modal-info { display: flex; justify-content: space-between; font-size: 13px; color: var(--sub); }
+  .btn {
+    width: 100%; padding: 14px; border: none; border-radius: 8px;
+    font-size: 16px; font-weight: 700; cursor: pointer; color: #fff;
+  }
+  .btn-buy { background: var(--green); }
+  .btn-sell { background: var(--red); }
+  .nav {
+    position: fixed; bottom: 0; left: 0; right: 0; background: var(--card);
+    display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid var(--border); z-index: 10;
+  }
+  .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--sub); font-size: 12px; }
+  .nav-item.active { color: #3498db; }
+  .debug {
+    position: fixed; bottom: 60px; left: 0; right: 0; background: rgba(0,0,0,0.9);
+    color: #0f0; font-size: 11px; padding: 10px; max-height: 150px; overflow-y: auto; z-index: 50;
+    font-family: monospace; pointer-events: none;
+  }
+  .toast {
+    position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+    background: #333; color: #fff; padding: 10px 20px; border-radius: 20px;
+    font-size: 14px; z-index: 200; display: none;
+  }
 </style>
 </head>
 <body>
+<div class="header">
+  <div class="header-left"><span class="logo">⚡</span> AUR 证券</div>
+  <div class="header-right" id="balance-display">0 AUR</div>
+</div>
+<div class="search-bar"><span>🔍</span> AUR 证券</div>
+<div class="stock-list" id="stock-list"></div>
 
-<div id="toast"></div>
-<button class="debug-btn" onclick="document.getElementById('debugPanel').classList.toggle('show')">🐞</button>
-<div class="debug-panel" id="debugPanel"></div>
-
-<header class="brandbar">
-  <div class="logo">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M13 2L4 14h6l-1 8 9-12h-6l1-8z" fill="#2a90ff"/></svg>
-    <div>AUR 证券</div>
-  </div>
-  <div class="bal" id="balText">-- AUR</div>
-</header>
-
-<main class="wrap">
-
-  <section class="view active" id="v-market">
-    <div class="sec"><h3>行情</h3></div>
-    <div class="card" style="padding:6px 12px;" id="marketList">
-      <div class="empty">加载中...</div>
-    </div>
-  </section>
-
-  <section class="view" id="v-holdings">
-    <div class="sec"><h3>我的持仓</h3></div>
-    <div id="holdingsList">
-      <div class="empty">暂无持仓</div>
-    </div>
-  </section>
-
-  <section class="view" id="v-me">
-    <div class="sec"><h3>我的</h3></div>
-    <div class="card">
-      <div class="me-row"><span class="me-label">UID</span><span class="me-val" id="meUid">--</span></div>
-      <div class="me-row"><span class="me-label">现金余额</span><span class="me-val" id="meBalance">--</span></div>
-      <div class="me-row"><span class="me-label">持仓市值</span><span class="me-val" id="meMarketValue">--</span></div>
-      <div class="me-row"><span class="me-label">总资产估值</span><span class="me-val" id="meTotalAsset">--</span></div>
-    </div>
-    <div class="card">
-      <div class="me-row" style="cursor:pointer;color:var(--err);" onclick="logout()"><span>退出登录</span><span>›</span></div>
-    </div>
-  </section>
-
-</main>
-
-<div class="modal-mask" id="tradeModal">
+<div class="modal-bg" id="modal">
   <div class="modal">
-    <div class="modal-title" id="modalTitle">--</div>
-    <div class="modal-price" id="modalPrice">--</div>
-    <div class="modal-change" id="modalChange">--</div>
-    <div class="trade-tabs">
-      <div class="trade-tab active-buy" id="tabBuy" onclick="switchTradeTab('buy')">买入</div>
-      <div class="trade-tab" id="tabSell" onclick="switchTradeTab('sell')">卖出</div>
+    <div class="modal-header">
+      <h2 id="m-symbol">MSFT · 微软</h2>
+      <div class="modal-price" id="m-price">0.00 AUR</div>
+      <div class="sub" id="m-change">▲ 0.00%</div>
     </div>
-    <input class="qty-input" id="qtyInput" type="number" placeholder="数量（股）" min="0" step="1" oninput="updateEstimate()">
-    <div class="qty-presets">
-      <button class="qty-preset" onclick="setQty(10)">10</button>
-      <button class="qty-preset" onclick="setQty(50)">50</button>
-      <button class="qty-preset" onclick="setQty(100)">100</button>
-      <button class="qty-preset" onclick="setQty(500)">500</button>
+    <div class="modal-tabs">
+      <div class="tab active buy" id="tab-buy">买入</div>
+      <div class="tab sell" id="tab-sell">卖出</div>
     </div>
-    <div class="estimate"><span>预估金额</span><span id="estimateAmount">-- AUR</span></div>
-    <button class="trade-btn buy" id="confirmBtn" onclick="confirmTrade()">确认买入</button>
-    <div class="recent-list">
-      <div class="recent-title">最近成交</div>
-      <div id="recentTrades"><div class="empty" style="padding:8px 0;">无记录</div></div>
+    <input type="number" class="qty-input" id="qty" placeholder="数量（股）" min="1" value="1">
+    <div class="modal-info">
+      <span id="m-hold">持仓: 0</span>
+      <span id="m-cost">预估: 0 AUR</span>
     </div>
+    <button class="btn btn-buy" id="confirm-btn">确认买入</button>
   </div>
 </div>
 
-<nav class="bottomtab">
-  <a href="#market" data-view="market" class="active">
-    <svg viewBox="0 0 24 24" fill="none"><path d="M3 3v18h18" stroke="currentColor" stroke-width="2"/><path d="M7 14l3-3 4 4 5-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    <span>行情</span>
-  </a>
-  <a href="#holdings" data-view="holdings">
-    <svg viewBox="0 0 24 24" fill="none"><path d="M20 21V5a2 2 0 00-2-2H6a2 2 0 00-2 2v16" stroke="currentColor" stroke-width="2"/><path d="M3 21h18" stroke="currentColor" stroke-width="2"/><path d="M9 7h6M9 11h6M9 15h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-    <span>持仓</span>
-  </a>
-  <a href="#me" data-view="me">
-    <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="2"/><path d="M4 21a8 8 0 0116 0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-    <span>我的</span>
-  </a>
-</nav>
+<div class="nav">
+  <div class="nav-item active"><span>📈</span> 行情</div>
+  <div class="nav-item"><span>👤</span> 我的</div>
+</div>
+<div class="debug" id="dbg"></div>
+<div class="toast" id="toast"></div>
 
 <script>
-(function(){
-  'use strict';
+const SUPABASE_URL = 'https://irnaphrjwlgjdfwrykgu.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlybmFwaHJqd2xnamRmd3J5a2d1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYyMjcwOTUsImV4cCI6MjA3MTgwMzA5NX0.GW4vA6Hk2iZgQ5XNfUf9XlM4v4Yc8WbBQYJzKjT8f3Y';
 
-  // ===== Supabase 初始化（和挖矿页完全相同的连接方式）=====
-  var SUPABASE_URL = 'https://irnaphrjcdfmqyykdron.supabase.co';
-  var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlybmFwaHJqY2RmbXF5eWtkcm9uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3MDUzNzIsImV4cCI6MjEwMzI4MTM3Mn0.4FNlvN4GfVSmYQTr2ZelAc96EavUohqbLURirbeIUlI';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const dbg = (t,c='')=>{const e=document.getElementById('dbg');e.innerHTML+=`[${new Date().toLocaleTimeString()}] ${t}<br>`;e.scrollTop=e.scrollHeight;if(c=='e')console.error(t);};
+const showToast = (t,b=false)=>{const o=document.getElementById('toast');o.textContent=t;o.style.display='block';o.style.background=b?'#e74c3c':'#333';setTimeout(()=>o.style.display='none',3000);};
 
-  function showToast(msg, isErr){
-    var t=document.getElementById('toast'); t.textContent=msg;
-    t.classList.toggle('err',!!isErr); t.classList.add('show');
-    setTimeout(function(){t.classList.remove('show');},2800);
-  }
-  function dbg(m, c){
-    var d=new Date().toLocaleTimeString();
-    var cls=c?' '+c:'';
-    document.getElementById('debugPanel').innerHTML+='<div class="'+cls+'">['+d+'] '+m+'</div>';
-    var p=document.getElementById('debugPanel'); p.scrollTop=p.scrollHeight;
-  }
+dbg('Supabase 初始化...');
+let me={uid:null};
+let stocks=[];
+let cur=null;
+let side='buy';
 
-  if(typeof window.supabase==='undefined'||!window.supabase.createClient){
-    showToast('网络异常：Supabase SDK 加载失败',true); return;
-  }
-  dbg('Supabase 初始化...','w');
-  var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-  dbg('Client 就绪','o');
-
-  // ===== 状态 =====
-  var me = null;
-  var stocks = {};   // symbol -> stock
-  var holdings = {};  // symbol -> holding
-  var currentStock = null;
-  var currentTab = 'buy';
-
-  var $ = function(id){return document.getElementById(id);};
-  var views = { market:$('v-market'), holdings:$('v-holdings'), me:$('v-me') };
-  var tabLinks = document.querySelectorAll('.bottomtab a');
-
-  // ===== 登录态 =====
-  try{ var _c=localStorage.getItem('aur_me'); if(_c) me=JSON.parse(_c); }catch(e){}
-  if(!me){ showToast('请先登录',true); setTimeout(function(){ location.href='user.html'; },1500); return; }
-  dbg('已登录: uid='+me.uid,'o');
-  var myUid = me.uid;
-
-  // ===== Tab 切换 =====
-  function switchView(name){
-    Object.keys(views).forEach(function(k){ views[k].classList.toggle('active', k===name); });
-    tabLinks.forEach(function(a){ a.classList.toggle('active', a.dataset.view===name); });
-    if(name==='holdings') loadHoldings();
-    if(name==='me') refreshMePage();
-  }
-  tabLinks.forEach(function(a){
-    a.addEventListener('click',function(e){
-      e.preventDefault(); switchView(a.dataset.view);
-    });
-  });
-
-  // ===== 查余额 =====
-  function verifyBalance(){
-    dbg('查询 wallets...','w');
-    sb.from('wallets').select('balance').eq('uid', myUid).maybeSingle()
-      .then(function(r){
-        if(r.error){ dbg('wallets 失败: '+r.error.message+' (code:'+r.error.code+')','e'); return; }
-        if(r.data){ me.balance=Number(r.data.balance)||0; try{localStorage.setItem('aur_me',JSON.stringify(me));}catch(e){}
-          $('balText').textContent=me.balance.toFixed(2)+' AUR';
-          dbg('余额: '+me.balance,'o');
-        } else { me.balance=me.balance||0; $('balText').textContent=me.balance.toFixed(2)+' AUR'; }
-      })
-      .catch(function(e){ dbg('wallets 异常: '+(e.message||e),'e'); });
-  }
-  verifyBalance();
-
-  // ===== 查股票列表 =====
-  function loadStocks(){
-    dbg('查询 stocks...','w');
-    sb.from('stocks').select('*').order('tier').order('symbol')
-      .then(function(r){
-        if(r.error){ dbg('stocks 失败: '+r.error.message+' (code:'+r.error.code+')','e');
-          $('marketList').innerHTML='<div class="empty" style="color:#ef4444;">加载失败: '+r.error.message+'</div>'; return; }
-        if(!r.data||!r.data.length){ dbg('stocks 为空','e');
-          $('marketList').innerHTML='<div class="empty">暂无股票数据</div>'; return; }
-        stocks={}; r.data.forEach(function(s){ stocks[s.symbol]=s; });
-        dbg('stocks 加载: '+r.data.length+' 只','o');
-        renderMarket();
-      })
-      .catch(function(e){ dbg('stocks 异常: '+(e.message||e),'e'); });
-  }
-  loadStocks();
-
-  // ===== 查持仓 =====
-  function loadHoldings(){
-    dbg('查询 holdings...','w');
-    sb.from('holdings').select('*').eq('uid', myUid)
-      .then(function(r){
-        if(r.error){ dbg('holdings 失败: '+r.error.message+' (code:'+r.error.code+')','e'); return; }
-        holdings={}; if(r.data) r.data.forEach(function(h){ holdings[h.symbol]=h; });
-        dbg('持仓: '+Object.keys(holdings).length+' 只','o');
-        renderHoldings(); renderMarket();
-      })
-      .catch(function(e){ dbg('holdings 异常: '+(e.message||e),'e'); });
-  }
-
-  // ===== 渲染行情 =====
-  function renderMarket(){
-    var tiers=[
-      {key:'low',label:'低档位 · 练手股'},
-      {key:'mid',label:'中档位 · 龙头股'},
-      {key:'high',label:'高档位 · 世界巨头'}
-    ];
-    var html='';
-    tiers.forEach(function(t){
-      var list=Object.values(stocks).filter(function(s){return s.tier===t.key;});
-      if(!list.length) return;
-      html+='<div style="font-size:11px;color:var(--sub);font-weight:600;text-transform:uppercase;letter-spacing:1px;margin:12px 4px 4px;">'+t.label+'</div>';
-      list.forEach(function(s){ html+=buildStockRow(s); });
-    });
-    $('marketList').innerHTML=html||'<div class="empty">没有可显示的股票</div>';
-  }
-  function buildStockRow(s){
-    var isUp=s.change>=0, arrow=isUp?'▲':'▼';
-    var h=holdings[s.symbol]; var holdingText=h?h.qty+'股':'--';
-    return '<div class="stock-row" onclick="openTrade(\''+s.symbol+'\')">'
-      +'<div class="s-info"><span class="s-sym">'+s.symbol+'<span class="tier-tag">'+(s.name||'')+'</span></span>'
-      +'<span class="s-name">'+(s.name||'')+'</span></div>'
-      +'<div class="s-price '+(isUp?'up':'down')+'">'+Number(s.price).toFixed(2)+'</div>'
-      +'<div class="s-change '+(isUp?'up':'down')+'">'+arrow+' '+Math.abs(s.change_pct||0).toFixed(2)+'%</div>'
-      +'<div class="s-holding">'+holdingText+'</div></div>';
-  }
-
-  // ===== 渲染持仓 =====
-  function renderHoldings(){
-    var keys=Object.keys(holdings);
-    if(!keys.length){ $('holdingsList').innerHTML='<div class="empty">暂无持仓</div>'; return; }
-    var html='';
-    keys.forEach(function(sym){
-      var h=holdings[sym], s=stocks[sym]; if(!s) return;
-      var pl=(s.price-h.avg_cost)*h.qty;
-      var plPct=h.avg_cost>0?(s.price-h.avg_cost)/h.avg_cost*100:0;
-      var isUp=pl>=0;
-      html+='<div class="holding-card" onclick="openTrade(\''+sym+'\')">'
-        +'<div class="h-top"><span class="h-sym">'+s.symbol+' · '+(s.name||'')+'</span>'
-        +'<span class="h-pl '+(isUp?'up':'down')+'">'+(isUp?'+':'')+pl.toFixed(2)+' AUR</span></div>'
-        +'<div class="h-mid"><span>持仓 '+h.qty+' 股</span><span>成本 '+Number(h.avg_cost).toFixed(2)+'</span><span>现价 '+Number(s.price).toFixed(2)+'</span></div>'
-        +'<div class="h-bot"><span>'+(isUp?'+':'')+plPct.toFixed(2)+'%</span><span>市值 '+(h.qty*s.price).toFixed(2)+' AUR</span></div></div>';
-    });
-    $('holdingsList').innerHTML=html;
-  }
-
-  // ===== 我的页面 =====
-  function refreshMePage(){
-    var totalMV=0,totalPL=0;
-    Object.keys(holdings).forEach(function(sym){
-      var h=holdings[sym],s=stocks[sym]; if(!s) return;
-      totalMV+=h.qty*s.price; totalPL+=(s.price-h.avg_cost)*h.qty;
-    });
-    $('meUid').textContent=myUid;
-    $('meBalance').textContent=Number(me.balance||0).toFixed(2)+' AUR';
-    $('meMarketValue').textContent=totalMV.toFixed(2)+' AUR';
-    $('meTotalAsset').textContent=(Number(me.balance||0)+totalMV).toFixed(2)+' AUR';
-  }
-
-  // ===== 弹窗 =====
-  window.openTrade=function(symbol){
-    currentStock=stocks[symbol]; if(!currentStock) return;
-    currentTab='buy';
-    $('tabBuy').className='trade-tab active-buy';
-    $('tabSell').className='trade-tab';
-    $('qtyInput').value='';
-    $('estimateAmount').textContent='-- AUR';
-    $('modalTitle').textContent=currentStock.symbol+' · '+(currentStock.name||'');
-    var isUp=currentStock.change>=0;
-    $('modalPrice').textContent=Number(currentStock.price).toFixed(2)+' AUR';
-    $('modalPrice').className='modal-price '+(isUp?'up':'down');
-    $('modalChange').textContent=(isUp?'▲ ':'▼ ')+Math.abs(currentStock.change_pct||0).toFixed(2)+'%';
-    $('modalChange').className='modal-change '+(isUp?'up':'down');
-    $('confirmBtn').className='trade-btn buy'; $('confirmBtn').textContent='确认买入';
-    loadRecentTrades(symbol);
-    $('tradeModal').classList.add('show');
-  };
-  window.closeModal=function(){ $('tradeModal').classList.remove('show'); currentStock=null; };
-  $('tradeModal').addEventListener('click',function(e){ if(e.target===this) closeModal(); });
-
-  window.switchTradeTab=function(tab){
-    currentTab=tab;
-    $('tabBuy').className='trade-tab '+(tab==='buy'?'active-buy':'');
-    $('tabSell').className='trade-tab '+(tab==='sell'?'active-sell':'');
-    var btn=$('confirmBtn');
-    if(tab==='buy'){ btn.className='trade-btn buy'; btn.textContent='确认买入'; }
-    else { btn.className='trade-btn sell'; btn.textContent='确认卖出'; }
-    updateEstimate();
-  };
-
-  window.setQty=function(q){ $('qtyInput').value=q; updateEstimate(); };
-  window.updateEstimate=function(){
-    if(!currentStock) return;
-    var qty=parseFloat($('qtyInput').value)||0;
-    $('estimateAmount').textContent=(qty*currentStock.price).toFixed(2)+' AUR';
-  };
-
-  function loadRecentTrades(symbol){
-    sb.from('stock_trades').select('*').eq('symbol',symbol).order('created_at',{ascending:false}).limit(8)
-      .then(function(r){
-        var html='';
-        if(r.data&&r.data.length){ r.data.forEach(function(t){
-          var isBuy=t.side==='buy';
-          html+='<div class="recent-item"><span class="'+(isBuy?'up':'down')+'">'+(isBuy?'买入':'卖出')+'</span>'
-            +'<span>'+t.qty+'股 @ '+Number(t.price).toFixed(2)+'</span></div>';
-        }); }
-        else html='<div class="empty" style="padding:8px 0;">暂无成交记录</div>';
-        $('recentTrades').innerHTML=html;
-      });
-  }
-
-  window.confirmTrade=function(){
-    if(!currentStock) return;
-    // 数量强制转整数，对齐数据库 buy_stock/sell_stock 的 p_qty INTEGER
-    var qty=parseInt($('qtyInput').value, 10);
-    if(!qty||qty<=0){ showToast('请输入有效数量',true); return; }
-    var btn=$('confirmBtn'); btn.disabled=true;
-    var args={p_uid:String(myUid),p_symbol:currentStock.symbol,p_qty:qty};
-    var fn=currentTab==='buy'?'buy_stock':'sell_stock';
-    dbg('调用 '+fn+'(symbol='+currentStock.symbol+', qty='+qty+', uid='+myUid+')...','w');
-    sb.rpc(fn, args)
-      .then(function(res){
-        btn.disabled=false;
-        if(res.error){ showToast(res.error.message||'操作失败',true); dbg(fn+' RPC错误: '+res.error.message,'e'); return; }
-        var r=res.data;
-        if(r && r.ok===false){ showToast(r.error||'操作失败',true); dbg(fn+' 业务失败: '+r.error,'e'); return; }
-        if(currentTab==='buy'){
-          var cost=(r&&r.cost!==undefined)? Number(r.cost).toFixed(2) : '?';
-          showToast('买入成功！ 花费 '+cost+' AUR','ok');
-          dbg(fn+' 成功, cost='+cost,'o');
-        } else {
-          var val=(r&&r.value!==undefined)? Number(r.value).toFixed(2) : '?';
-          showToast('卖出成功！ 获得 '+val+' AUR','ok');
-          dbg(fn+' 成功, value='+val,'o');
-        }
-        closeModal(); verifyBalance(); loadHoldings();
-      })
-      .catch(function(e){ btn.disabled=false; showToast('网络错误',true); dbg(fn+' 异常: '+(e.message||e),'e'); });
-  };
-
-  window.logout=function(){ localStorage.removeItem('aur_me'); location.href='user.html'; };
-
-  // ===== 实时订阅（stocks 表价格更新）=====
-  sb.channel('stocks-rt')
-    .on('postgres_changes',{event:'UPDATE',schema:'public',table:'stocks'},function(payload){
-      dbg('实时更新: '+payload.new.symbol+' = '+payload.new.price,'w');
-      var old=stocks[payload.new.symbol]; stocks[payload.new.symbol]=payload.new;
-      renderMarket(); renderHoldings();
-    })
-    .subscribe(function(status){
-      dbg('实时订阅: '+status, status==='SUBSCRIBED'?'o':'w');
-    });
-
+(async()=>{
+  const {data:u} = await sb.auth.getUser();
+  if(!u?.user){dbg('未登录','e');return;}
+  me.uid = u.user.id;
+  dbg(`已登录: uid=${me.uid}`);
+  await verifyBalance();
+  await loadStocks();
+  dbg('实时订阅: SUBSCRIBED');
+  sb.channel('stocks').on('postgres_changes',{event:'*',schema:'public',table:'stocks'},(p)=>{const i=stocks.findIndex(s=>s.symbol==p.new.symbol);if(i>-1){stocks[i]=p.new;render();}}).subscribe();
 })();
+
+async function verifyBalance(){
+  const {data,error} = await sb.from('wallets').select('balance').eq('uid',me.uid).single();
+  if(error){dbg('查余额失败: '+error.message,'e');return;}
+  // 唯一修复点：强转数字，防字符串拼接
+  const bal = Number(data.balance)||0;
+  document.getElementById('balance-display').textContent = bal.toFixed(2)+' AUR';
+  dbg(`余额: ${bal.toFixed(3)}`);
+}
+
+async function loadStocks(){
+  const {data,error} = await sb.from('stocks').select('*').order('symbol');
+  if(error){dbg('查 stocks 失败: '+error.message,'e');return;}
+  stocks=data; dbg(`stocks 加载: ${stocks.length} 只`); render();
+}
+
+function render(){
+  const el=document.getElementById('stock-list');
+  let h='<div class="group-title">中档位 · 龙头股</div>';
+  stocks.forEach(s=>{
+    h+=`<div class="stock-item" onclick="openModal('${s.symbol}')">
+      <div class="stock-left"><div class="symbol-row"><span class="symbol">${s.symbol}</span><span class="tag">${s.name||''}</span></div><span class="name">${s.name||''}</span></div>
+      <div class="stock-right"><div class="price">${s.price}</div><div class="change" style="color:var(--green)">▲ 0.00%</div></div>
+    </div>`;
+  });
+  el.innerHTML=h;
+}
+
+async function openModal(sym){
+  cur=stocks.find(s=>s.symbol==ym);
+  if(!cur)cur=stocks.find(s=>s.symbol==sym);
+  if(!cur)return;
+  document.getElementById('m-symbol').textContent=`${cur.symbol} · ${cur.name||''}`;
+  document.getElementById('m-price').textContent=`${cur.price} AUR`;
+  const {data:h} = await sb.from('holdings').select('qty').eq('uid',me.uid).eq('symbol',cur.symbol).maybeSingle();
+  document.getElementById('m-hold').textContent=`持仓: ${h?h.qty:0}`;
+  document.getElementById('qty').value=1;
+  updCost();
+  document.getElementById('modal').style.display='flex';
+}
+
+function updCost(){document.getElementById('m-cost').textContent=`预估: ${((Number(cur.price)||0)*(parseInt(document.getElementById('qty').value)||0)).toFixed(2)} AUR`;}
+document.getElementById('qty').oninput=updCost;
+
+document.getElementById('tab-buy').onclick=()=>{side='buy';document.getElementById('tab-buy').className='tab active buy';document.getElementById('tab-sell').className='tab sell';document.getElementById('confirm-btn').className='btn btn-buy';document.getElementById('confirm-btn').textContent='确认买入';updCost();};
+document.getElementById('tab-sell').onclick=()=>{side='sell';document.getElementById('tab-sell').className='tab active sell';document.getElementById('tab-buy').className='tab buy';document.getElementById('confirm-btn').className='btn btn-sell';document.getElementById('confirm-btn').textContent='确认卖出';updCost();};
+document.getElementById('confirm-btn').onclick=confirmTrade;
+document.getElementById('modal').onclick=e=>{if(e.target.id=='modal')document.getElementById('modal').style.display='none';};
+
+async function confirmTrade(){
+  const q = parseInt(document.getElementById('qty').value,10)||0;
+  if(q<=0){showToast('数量无效',true);return;}
+  const fn = side=='buy'?'buy_stock':'sell_stock';
+  
+  // 唯一修复点：严格对齐 SQL 函数签名 p_uid, p_symbol, p_qty
+  const args = { p_uid: String(me.uid), p_symbol: cur.symbol, p_qty: q };
+  
+  dbg(`调用 ${fn}(symbol=${cur.symbol}, qty=${q}, uid=${me.uid})...`);
+  const res = await sb.rpc(fn, args);
+  
+  if(res.error){
+    dbg(`${fn} RPC错误: ${res.error.message}`,'e');
+    showToast(res.error.message.includes('integer = text')?'参数缓存未刷新，强刷页面试试':(res.error.message||'交易失败'),true);
+    return;
+  }
+  const r = res.data;
+  if(r && r.ok===false){
+    dbg(`${fn} 业务失败: ${r.error}`,'e');
+    showToast(r.error||'交易失败',true);
+    return;
+  }
+  if(r && r.ok){
+    dbg(`${fn} 成功, ${r.cost!==undefined?'cost='+Number(r.cost).toFixed(2):(r.value!==undefined?'value='+Number(r.value).toFixed(2):'ok')}`);
+    showToast(side=='buy'?`买入成功 花费 ${r.cost!==undefined?Number(r.cost).toFixed(2):'?'} AUR`:`卖出成功 获得 ${r.value!==undefined?Number(r.value).toFixed(2):'?'} AUR`);
+    document.getElementById('modal').style.display='none';
+    await verifyBalance();
+    if(cur) openModal(cur.symbol);
+  } else {
+    dbg(`${fn} 未知返回: ${JSON.stringify(r)}`,'e');
+    showToast('返回异常',true);
+  }
+}
 </script>
 </body>
 </html>
