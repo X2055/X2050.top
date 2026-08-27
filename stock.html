@@ -23,7 +23,6 @@
     overscroll-behavior-y:none;}
   #app{max-width:520px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;position:relative;}
 
-  /* ---- top bar ---- */
   .topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;
     padding:14px 16px;background:rgba(10,14,23,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--border);}
   .brand{display:flex;align-items:center;gap:8px;font-weight:700;font-size:17px;letter-spacing:.3px;}
@@ -31,7 +30,6 @@
   .balance{font-size:13px;color:var(--sub);text-align:right;}
   .balance b{display:block;color:var(--gold);font-size:16px;font-weight:700;}
 
-  /* ---- pages ---- */
   .page{flex:1;padding:12px 12px 90px;display:none;}
   .page.active{display:block;}
 
@@ -59,7 +57,6 @@
   .flash-up{animation:flashUp .6s ease-out;}
   .flash-down{animation:flashDown .6s ease-out;}
 
-  /* ---- holdings page ---- */
   .hold-card{background:var(--card);border-radius:14px;padding:14px;margin-bottom:10px;border:1px solid var(--border);}
   .hc-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
   .hc-name{font-weight:700;font-size:15px;}
@@ -69,16 +66,14 @@
   .hc-grid b{color:var(--text);font-weight:600;}
   .empty-state{text-align:center;color:var(--sub);padding:60px 20px;font-size:13px;line-height:1.7;}
 
-  /* ---- me page ---- */
   .me-card{background:var(--card);border-radius:14px;padding:18px;margin-bottom:12px;border:1px solid var(--border);}
   .me-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);font-size:14px;}
   .me-row:last-child{border-bottom:none;}
   .me-row span:first-child{color:var(--sub);}
-  .me-row b{font-variant-numeric:tabular-nums;}
+  .me-row b{font-variant-numeric:tabular-nums;word-break:break-all;text-align:right;max-width:65%;}
   .btn-logout{width:100%;padding:13px;border-radius:12px;border:1px solid var(--border);background:var(--card);
     color:var(--down);font-weight:600;font-size:14px;margin-top:6px;}
 
-  /* ---- bottom tabs ---- */
   .tabbar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:520px;
     display:flex;background:rgba(19,23,34,.95);backdrop-filter:blur(10px);border-top:1px solid var(--border);
     padding:8px 0 max(8px,env(safe-area-inset-bottom));z-index:25;}
@@ -87,7 +82,6 @@
   .tab-item.active{color:var(--gold);}
   .tab-icon{font-size:19px;line-height:1;}
 
-  /* ---- trade modal ---- */
   .sheet-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:40;opacity:0;pointer-events:none;transition:opacity .2s;}
   .sheet-backdrop.show{opacity:1;pointer-events:auto;}
   .sheet{position:fixed;left:50%;bottom:0;transform:translate(-50%,100%);width:100%;max-width:520px;
@@ -132,7 +126,6 @@
   .recent-row .rside-buy{color:var(--up);}
   .recent-row .rside-sell{color:var(--down);}
 
-  /* ---- toast ---- */
   .toast{position:fixed;top:14px;left:50%;transform:translateX(-50%) translateY(-60px);z-index:80;
     padding:11px 20px;border-radius:12px;font-size:13px;font-weight:600;color:#fff;opacity:0;
     transition:all .25s ease;max-width:88%;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,.4);}
@@ -140,7 +133,6 @@
   .toast.ok{background:var(--up);color:#08170d;}
   .toast.err{background:var(--down);color:#fff;}
 
-  /* ---- debug panel ---- */
   .dbg-fab{position:fixed;right:14px;bottom:78px;z-index:60;width:40px;height:40px;border-radius:50%;
     background:var(--card2);border:1px solid var(--border);color:var(--sub);font-size:16px;
     display:flex;align-items:center;justify-content:center;opacity:.7;}
@@ -165,20 +157,17 @@
     <div class="balance">余额<b id="balanceVal">-- AUR</b></div>
   </div>
 
-  <!-- 行情页 -->
   <div class="page active" id="page-market">
     <div id="marketList"><div class="loading-msg">加载行情中…</div></div>
   </div>
 
-  <!-- 持仓页 -->
   <div class="page" id="page-holdings">
     <div id="holdingsList"><div class="loading-msg">加载持仓中…</div></div>
   </div>
 
-  <!-- 我的页 -->
   <div class="page" id="page-me">
     <div class="me-card">
-      <div class="me-row"><span>UID</span><b id="meUid">--</b></div>
+      <div class="me-row"><span>身份标识</span><b id="meUid">--</b></div>
       <div class="me-row"><span>现金余额</span><b id="meCash">--</b></div>
       <div class="me-row"><span>持仓市值</span><b id="meMarketVal">--</b></div>
       <div class="me-row"><span>总资产估值</span><b id="meTotal">--</b></div>
@@ -192,7 +181,6 @@
     <div class="tab-item" data-tab="me"><div class="tab-icon">👤</div>我的</div>
   </div>
 
-  <!-- 交易弹窗 -->
   <div class="sheet-backdrop" id="sheetBackdrop"></div>
   <div class="sheet" id="tradeSheet">
     <div class="sheet-handle"></div>
@@ -269,7 +257,7 @@
     while (dbgPanel.children.length > 200) dbgPanel.removeChild(dbgPanel.firstChild);
   }
   function escapeHtml(s){
-    return s.replace(/[&<>"']/g, c => ({"&":"&","<":"<",">":">",'"':""","'":"'"}[c]));
+    return s.replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   }
   dbgFab.addEventListener("click", () => dbgPanel.classList.toggle("show"));
 
@@ -286,12 +274,17 @@
   }
 
   // ------------------------------------------------------------------
-  // 登录态
+  // 登录态 / 身份标识解析
+  // 【重要修复】线上 wallets 表的主键实际是 address（钱包地址文本），不是 uid。
+  // 这里按优先级尝试从 aur_me 里取出能匹配 wallets.address 的字段：
+  // address / addr / wallet / walletAddress → 都没有的话兜底用 uid（字符串化）。
+  // 如果你的挖矿模块里 aur_me 用的字段名不在这个列表里，请把实际字段名告诉我，
+  // 我再改成精确匹配。
   // ------------------------------------------------------------------
   let me = null;
   try { me = JSON.parse(localStorage.getItem("aur_me")); } catch(e) { me = null; }
 
-  if (!me || !me.uid) {
+  if (!me) {
     document.getElementById("app").innerHTML =
       '<div style="padding:60px 24px;text-align:center;color:#8b92a5;">' +
       '<div style="font-size:40px;margin-bottom:16px;">🔒</div>' +
@@ -299,8 +292,20 @@
       '<div style="font-size:13px;line-height:1.7;">请先在挖矿模块登录，再打开 AUR 证券。</div></div>';
     throw new Error("未检测到 aur_me 登录信息");
   }
-  const myUid = String(me.uid);
-  dbg("登录态 OK，uid=" + myUid);
+
+  const myKey = me.address || me.addr || me.wallet || me.walletAddress ||
+                (me.uid !== undefined && me.uid !== null ? String(me.uid) : null);
+
+  if (!myKey) {
+    document.getElementById("app").innerHTML =
+      '<div style="padding:60px 24px;text-align:center;color:#8b92a5;">' +
+      '<div style="font-size:40px;margin-bottom:16px;">⚠️</div>' +
+      '<div style="font-size:15px;color:#e4e8f1;font-weight:600;margin-bottom:8px;">无法识别登录身份</div>' +
+      '<div style="font-size:13px;line-height:1.7;">aur_me 中没有找到 address / uid 等可用字段，请联系开发者确认字段名。</div></div>';
+    throw new Error("aur_me 缺少可用身份字段: " + JSON.stringify(me));
+  }
+  const myAddress = String(myKey);
+  dbg("登录态 OK，身份标识(address)=" + myAddress);
 
   // ------------------------------------------------------------------
   // Supabase 初始化
@@ -311,11 +316,11 @@
   // ------------------------------------------------------------------
   // 状态
   // ------------------------------------------------------------------
-  let stocksMap = {};     // symbol -> stock row
-  let holdingsMap = {};   // symbol -> holding row
+  let stocksMap = {};
+  let holdingsMap = {};
   let balance = 0;
   let activeSymbol = null;
-  let sheetSide = "buy";  // 'buy' | 'sell'
+  let sheetSide = "buy";
 
   // ------------------------------------------------------------------
   // 格式化辅助
@@ -329,8 +334,9 @@
   // ------------------------------------------------------------------
   async function loadBalance(){
     try{
-      const { data, error } = await sb.from("wallets").select("balance").eq("uid", myUid).maybeSingle();
-      if (error) { dbg("查询余额出错: " + error.message, "r"); return; }
+      const { data, error } = await sb.from("wallets").select("balance").eq("address", myAddress).maybeSingle();
+      if (error) { dbg("查询余额出错: " + error.message, "r"); toast("查询余额失败: " + error.message, false); return; }
+      if (!data) { dbg("wallets 中找不到 address=" + myAddress + " 的记录", "r"); }
       balance = Number(data && data.balance) || 0;
       document.getElementById("balanceVal").textContent = fmt2(balance) + " AUR";
       dbg("余额刷新: " + fmt2(balance) + " AUR");
@@ -340,7 +346,7 @@
   async function loadStocks(){
     try{
       const { data, error } = await sb.from("stocks").select("*").order("tier").order("symbol");
-      if (error) { dbg("查询股票列表出错: " + error.message, "r"); return; }
+      if (error) { dbg("查询股票列表出错: " + error.message, "r"); toast("加载行情失败: " + error.message, false); return; }
       stocksMap = {};
       (data || []).forEach(s => { stocksMap[s.symbol] = s; });
       dbg("股票列表已加载，共 " + (data ? data.length : 0) + " 只");
@@ -350,7 +356,7 @@
 
   async function loadHoldings(){
     try{
-      const { data, error } = await sb.from("holdings").select("*").eq("uid", myUid);
+      const { data, error } = await sb.from("holdings").select("*").eq("address", myAddress);
       if (error) { dbg("查询持仓出错: " + error.message, "r"); return; }
       holdingsMap = {};
       (data || []).forEach(h => { holdingsMap[h.symbol] = h; });
@@ -431,7 +437,7 @@
   // 渲染：我的页
   // ------------------------------------------------------------------
   function renderMe(){
-    document.getElementById("meUid").textContent = myUid;
+    document.getElementById("meUid").textContent = myAddress;
     document.getElementById("meCash").textContent = fmt2(balance) + " AUR";
     let marketVal = 0;
     Object.values(holdingsMap).forEach(h => {
@@ -565,10 +571,10 @@
     const btn = document.getElementById("confirmBtn");
     btn.disabled = true;
     const fn = sheetSide === "buy" ? "buy_stock" : "sell_stock";
-    dbg("调用 RPC: " + fn + " uid=" + myUid + " symbol=" + activeSymbol + " qty=" + qty, "y");
+    dbg("调用 RPC: " + fn + " address=" + myAddress + " symbol=" + activeSymbol + " qty=" + qty, "y");
 
     try{
-      const { data, error } = await sb.rpc(fn, { p_uid: String(myUid), p_symbol: activeSymbol, p_qty: qty });
+      const { data, error } = await sb.rpc(fn, { p_address: myAddress, p_symbol: activeSymbol, p_qty: qty });
       if (error){
         dbg("RPC 异常: " + error.message, "r");
         toast("网络/权限错误: " + error.message, false);
@@ -622,7 +628,7 @@
   }
 
   // ------------------------------------------------------------------
-  // 前端兜底定时 tick（即使 pg_cron / Edge Function 未部署也能跑起来）
+  // 前端兜底定时 tick
   // ------------------------------------------------------------------
   function startTickLoop(){
     setInterval(async () => {
