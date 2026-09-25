@@ -1549,7 +1549,7 @@ function caughtClass(reason){
   scream(); redFlash = 1; shake = 20; chord(70, 2, 'sawtooth', 0.2);
   var msg = reason === 'bell'
     ? ['下 课 了','铃响得比你想的快。<br>课代表收走课时精炼，你的那一页只写了一半。<br><br>「没写完的，办公室来一趟。」']
-    : ['被 点 名 了','粉笔头精准地砸在你桌上。<br>「张×，低头在干什么？」<br><br>全班都转过头来。<br>——生物作业，被他当场收走。'];
+    : ['被 点 名 了','粉笔头精准地砸在你桌上。<br>「xx×，低头在干什么？」<br><br>全班都转过头来。<br>——生物作业，被他当场收走。'];
   setTimeout(function(){ showEnd(false, msg[0], msg[1], null); }, 900);
 }
 function winClass(){
@@ -2368,7 +2368,7 @@ $('btnScene').addEventListener('touchstart', function(e){ e.preventDefault(); sc
 
 var INTRO = {
   escape: ['晚自习的铃响了。','王甲峰抱着一摞作业本，从走廊尽头走来。','而你的作业本上——<em style="color:#d94f4f;font-style:normal">一个字都没有</em>。'],
-  write: ['他停在你的桌边。<br>「作业。」','「……」','「一个字都没写？出去。<br>走廊里补完再进来。」','走廊的灯，坏了一半。'],
+  write: ['他停在你的桌边!。<br>「作业。」','「……」','「一个字都没写？出去。<br>走廊里补完再进来。」','走廊的灯，坏了一半。'],
   infiltrate: ['晚自习结束，你背书包回了家。','直到躺下才想起来——<em style="color:#d94f4f;font-style:normal">生物作业还压在教室抽屉里</em>。','你翻墙进了学校。<br>教室在二楼最里面，门锁了。'],
   class: ['第二天，第一节就是生物。','抽屉里的生物作业，还是<em style="color:#d94f4f;font-style:normal">空白的</em>。','他背过身去写板书的那几秒——<br>就是你全部的机会。']
 };
