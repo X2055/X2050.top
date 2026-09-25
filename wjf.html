@@ -112,6 +112,56 @@
     border:2px solid #f0d060;display:none;align-items:center;justify-content:center;font-size:26px;
     box-shadow:0 0 24px rgba(240,200,90,.7);pointer-events:auto;z-index:8;}
 
+  /* 第五章：充电宝大作战（格斗） */
+  #btui{position:absolute;inset:0;z-index:7;pointer-events:none;}
+  #btop{position:absolute;top:calc(10px + env(safe-area-inset-top,0px));left:10px;right:10px;
+    display:flex;align-items:flex-start;gap:8px;}
+  .bpane{flex:1;min-width:0;}
+  .bname{font-size:11px;letter-spacing:1px;color:#e8e2d8;text-shadow:0 0 6px #000;
+    display:flex;justify-content:space-between;align-items:center;height:14px;}
+  .bpane.right .bname{color:#ffb3b3;}
+  #btAwaken{font-size:9px;color:#ffd24d;border:1px solid #a08020;padding:0 4px;border-radius:2px;opacity:0;}
+  #btAwaken.on{opacity:1;animation:flick .9s infinite;}
+  .bhpbar{height:12px;background:rgba(0,0,0,.65);border:1px solid #6a2020;margin-top:3px;
+    overflow:hidden;border-radius:2px;}
+  .bhpbar i{display:block;height:100%;width:100%;transition:width .12s linear;}
+  #btPhp{background:linear-gradient(90deg,#2f8f5a,#8ef0b0);box-shadow:0 0 8px rgba(120,240,160,.5);}
+  #btEhp{background:linear-gradient(90deg,#8f2f2f,#f08080);box-shadow:0 0 8px rgba(240,120,120,.5);}
+  .bcpbar{height:6px;background:rgba(0,0,0,.65);border:1px solid #2a4a6a;margin-top:3px;
+    overflow:hidden;border-radius:2px;}
+  #btPcp{display:block;height:100%;width:40%;background:linear-gradient(90deg,#2a6ad8,#8ad0ff);
+    box-shadow:0 0 8px rgba(120,190,255,.6);transition:width .1s linear;}
+  #btvs{font-size:13px;font-weight:900;color:#c9a54a;padding-top:14px;text-shadow:0 0 8px #000;}
+  #btsay{position:absolute;left:14px;right:14px;top:26%;text-align:center;font-size:15px;font-weight:700;
+    color:#f4ecd8;text-shadow:0 0 10px #000,0 0 3px #000;opacity:0;transition:opacity .3s;
+    background:rgba(10,8,8,.55);border-left:2px solid #c9a54a;border-right:2px solid #c9a54a;padding:6px 10px;}
+  #btsay.on{opacity:1;}
+  #btsay.en{color:#ff9b9b;border-color:#a00;}
+  #btHelp{position:absolute;left:0;right:0;bottom:calc(152px + env(safe-area-inset-bottom,0px));
+    text-align:center;font-size:10px;color:#8a8578;line-height:1.6;text-shadow:0 0 6px #000;}
+  #btpad{position:absolute;left:0;right:0;bottom:0;padding:0 10px calc(14px + env(safe-area-inset-bottom,0px));
+    display:flex;justify-content:space-between;align-items:flex-end;}
+  .btkeys{display:flex;align-items:center;gap:8px;}
+  .bkey{pointer-events:auto;width:56px;height:56px;border-radius:50%;border:1px solid #4a5a6a;
+    background:radial-gradient(circle,rgba(60,80,100,.45),rgba(0,0,0,.5));color:#dfe8f0;font-size:20px;font-weight:900;}
+  .bkey.on{background:rgba(90,160,220,.5);color:#fff;}
+  .bkey.sm{width:44px;height:44px;font-size:13px;}
+  .btr{display:flex;flex-direction:column;align-items:flex-end;gap:6px;}
+  .bultrow{display:flex;align-items:center;gap:8px;}
+  #bUlt{pointer-events:auto;width:128px;height:40px;border-radius:6px;font-size:12px;font-weight:900;letter-spacing:1px;
+    border:1px solid #6a5a10;background:#241f08;color:#8a7a3a;}
+  #bUlt.on{border-color:#ffd24d;background:#4a3c08;color:#ffe89a;box-shadow:0 0 16px rgba(255,210,80,.6);
+    animation:flick 1.1s infinite;}
+  #bBread{pointer-events:auto;width:42px;height:42px;border-radius:50%;font-size:19px;border:1px solid #7a5a20;
+    background:radial-gradient(circle,rgba(240,200,90,.55),rgba(120,90,20,.4));}
+  #bBread.off{opacity:.32;}
+  .bskgrid{display:grid;grid-template-columns:repeat(2,58px);grid-auto-rows:44px;gap:6px;}
+  .bsk{pointer-events:auto;border-radius:6px;font-size:12px;font-weight:700;letter-spacing:1px;
+    border:1px solid #7a1010;background:#2a0707;color:#ffdede;}
+  .bsk.on{background:#5a1010;color:#fff;}
+  .bsk.off{opacity:.32;}
+  #bAtk{background:#3a0a0a;border-color:#a02020;font-size:15px;}
+
   /* 遮罩层 */
   .screen{position:absolute;inset:0;z-index:20;display:flex;flex-direction:column;
     align-items:center;justify-content:center;text-align:center;padding:26px;
@@ -209,6 +259,44 @@
   </div>
 </div>
 
+<!-- 第五章：充电宝大作战 UI -->
+<div id="btui" class="hide">
+  <div id="btop">
+    <div class="bpane left">
+      <div class="bname"><span>任 绣 绮</span><span id="btAwaken">觉醒</span></div>
+      <div class="bhpbar"><i id="btPhp"></i></div>
+      <div class="bcpbar"><i id="btPcp"></i></div>
+    </div>
+    <div id="btvs">VS</div>
+    <div class="bpane right">
+      <div class="bname"><span id="btPhaseLbl">第一阶段</span><span>王 甲 峰</span></div>
+      <div class="bhpbar"><i id="btEhp"></i></div>
+      <div class="bcpbar"><i style="width:0"></i></div>
+    </div>
+  </div>
+  <div id="btsay"></div>
+  <div id="btHelp">电脑 A/D 移动 · W 跳 · J 拳 · K 充电宝 · L 数据线 · 空格 替身 · U 奥义 · H 家豪</div>
+  <div id="btpad">
+    <div class="btkeys">
+      <button class="bkey" id="bLeft">◀</button>
+      <button class="bkey" id="bRight">▶</button>
+      <button class="bkey sm" id="bJump">跳</button>
+    </div>
+    <div class="btr">
+      <div class="bultrow">
+        <button id="bUlt">雷遁·两万毫安</button>
+        <button id="bBread">🍞</button>
+      </div>
+      <div class="bskgrid">
+        <button class="bsk" id="bAtk">拳</button>
+        <button class="bsk" id="bProj">充电宝</button>
+        <button class="bsk" id="bDash">数据线</button>
+        <button class="bsk" id="bSub">替身</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- 主页面 -->
 <div id="menu" class="screen">
   <h1>逃离王甲峰</h1>
@@ -218,6 +306,7 @@
     <button class="mitem" data-act="write">第二章 · 走廊补作业<small>被赶出教室，限时补完</small></button>
     <button class="mitem" data-act="infiltrate">第三章 · 潜入教室<small>生物作业落在抽屉里了</small></button>
     <button class="mitem" data-act="class">第四章 · 上课补生物作业<small>他背过身去的那几秒</small></button>
+    <button class="mitem" data-act="battle">第五章 · 充电宝大作战<small>后排充电被没收 · 任绣绮 VS 王甲峰</small></button>
     <button class="mitem about" data-act="about">关 于</button>
   </div>
   <div class="keys">手机：屏幕任意处拖动移动 · 右下角按钮冲刺/蹲下<br>电脑：WASD 移动 · Shift 冲刺</div>
@@ -240,6 +329,7 @@
   <div class="mbox">
     <h2>关 于</h2>
     <p>本游戏基于Gemini进行个性化修改，版权归属©Gator,角色原型山东省莒南第一中学2025级17班生物老师兼班主任王甲峰</p>
+    <p style="margin-top:10px;color:#8a8a8a">第五章「充电宝大作战」为火影风格格斗玩法：任绣绮 VS 王甲峰。<br>电脑 A/D 移动 · W 跳 · J 拳 · K 充电宝 · L 数据线 · 空格 替身 · U 奥义 · H 家豪助战</p>
     <div class="btn" id="btnAboutClose">知 道 了</div>
   </div>
 </div>
@@ -745,6 +835,9 @@ var CFG = {
     crouch:false, scare:false, exitLbl:'后门', startDist:7, jiahao:false},
   class: {name:'上课补生物作业', cw:7, ch:7, style:'room', books:0, batts:0, bookLbl:'生物作业',
     foeSpeed:138, patrolSpeed:88, lightMin:80, lightMax:108, battDrain:0,
+    crouch:false, scare:false, exitLbl:'后门', startDist:5, jiahao:false},
+  battle:{name:'充电宝大作战', cw:7, ch:7, style:'room', books:0, batts:0, bookLbl:'充电宝',
+    foeSpeed:138, patrolSpeed:88, lightMin:80, lightMax:108, battDrain:0,
     crouch:false, scare:false, exitLbl:'后门', startDist:5, jiahao:false}
 };
 var MODE = 'escape';
@@ -825,6 +918,7 @@ function reset(){
 window.addEventListener('keydown', function(e){
   var k = e.key.toLowerCase();
   keys[k] = true;
+  if(BT && MODE === 'battle') btPushKey(k);
   if([' ','arrowup','arrowdown','arrowleft','arrowright'].indexOf(k)>=0) e.preventDefault();
 });
 window.addEventListener('keyup', function(e){ keys[e.key.toLowerCase()] = false; });
@@ -832,7 +926,7 @@ window.addEventListener('keyup', function(e){ keys[e.key.toLowerCase()] = false;
 var R = 46;
 function uiTarget(t){
   if(!t || !t.closest) return false;
-  return !!t.closest('.btn,.wb,.pad,#mute,.mitem,.screen,.modal,#writeui,#clsui,#bread');
+  return !!t.closest('.btn,.wb,.pad,#mute,.mitem,.screen,.modal,#writeui,#clsui,#btui,#bread');
 }
 function stickStart(x,y){
   if(STATE !== 'play' || MODE === 'write' || MODE === 'class') return;
@@ -935,6 +1029,7 @@ function updateHUD(){
   $('battLbl').textContent = MODE === 'infiltrate' ? '手机屏光' : '手电电量';
 }
 function tip(t){
+  if(MODE === 'battle'){ if(BT){ btFx('text', BT.p.x, btGY()-140, t, '#ffd24d'); } return; }
   if(MODE === 'write'){ $('whint').textContent = t; return; }
   if(MODE === 'class'){ $('chint').textContent = t; return; }
   var el = $('tip');
@@ -1567,7 +1662,8 @@ function winClass(){
 
 function showEnd(ok, title, text, extra){
   Lecture.pause(); Music.stop();
-  ['hud','dash','crouch','fstick','mute','tip','writeui','clsui','bread','btnHere'].forEach(function(id){ $(id).classList.add('hide'); });
+  ['hud','dash','crouch','fstick','mute','tip','writeui','clsui','btui','bread','btnHere'].forEach(function(id){ $(id).classList.add('hide'); });
+  $('btsay').className = '';
   $('btnHere').style.display = 'none';
   $('bread').style.display = 'none';
   hideTalk();
@@ -2309,6 +2405,752 @@ function drawTeacher(x, yBase, h, facing, t, walkPh, walking){
   ctx.restore();
 }
 
+/* ================= 第五章：充电宝大作战 · 任绣绮 VS 王甲峰 ================= */
+var BT = null;
+var BT_P = {                       /* 任绣绮 招式表 */
+  p1:{dur:.30, hit:.10, dmg:7,  reach:58, kb:130, cp:7,  sfx:1, label:'直拳'},
+  p2:{dur:.32, hit:.10, dmg:9,  reach:60, kb:170, cp:7,  sfx:1, label:'摆拳'},
+  p3:{dur:.46, hit:.14, dmg:15, reach:72, kb:380, cp:9,  sfx:2, label:'书包砸'},
+  pw:{dur:.40, hit:.14, dmg:14, cp:-12, proj:true, sfx:3, label:'充电宝投掷'},
+  rs:{dur:.54, hit:.12, dmg:19, reach:80, kb:460, cp:-22, move:300, sfx:3, label:'数据线突刺'},
+  sb:{dur:.62, invul:true, cp:-28, sfx:4, label:'替身术'},
+  ul:{dur:1.70, hit:.85, dmg:50, reach:320, kb:600, cp:-100, ult:true, sfx:5, label:'雷遁·两万毫安'}
+};
+var BT_E = {                       /* 王甲峰 招式表 */
+  clip :{dur:.68, hit:.24, dmg:11, reach:72,  kb:230, sfx:2, yell:''},
+  chalk:{dur:.58, hit:.22, dmg:9,  proj:true, sfx:3, yell:'「粉笔头！」'},
+  shout:{dur:1.05, hit:.60, dmg:16, reach:104, kb:380, sfx:5, yell:'「任——绣——绮！」'},
+  paren:{dur:1.35, hit:.74, dmg:20, reach:136, kb:470, sfx:5, yell:'「我现在就叫家长！」'}
+};
+
+function btGY(){ return Math.round(VH*0.66); }
+function btFighter(isP){
+  return {p:isP, x:0, oy:0, vx:0, vy:0, face:isP?1:-1,
+    hp:isP?150:120, maxhp:isP?150:120, cp:isP?40:100,
+    st:'idle', stT:0, atk:null, key:null, chain:0, chainT:0,
+    walkPh:0, invul:0, hurtT:0, sp:isP?168:92,
+    aiCD:1.4, hitFlash:0, ko:false};
+}
+function rr(x,y,w,h,r){
+  ctx.beginPath(); ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y);
+  ctx.quadraticCurveTo(x+w,y,x+w,y+r); ctx.lineTo(x+w,y+h-r);
+  ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h); ctx.lineTo(x+r,y+h);
+  ctx.quadraticCurveTo(x,y+h,x,y+h-r); ctx.lineTo(x,y+r);
+  ctx.quadraticCurveTo(x,y,x+r,y); ctx.closePath(); ctx.fill();
+}
+function btSfx(k){
+  if(!AC || muted) return;
+  if(k===1) step(0.16);
+  else if(k===2){ thump(0.16); chord(150,0.24,'square',0.09); }
+  else if(k===3){ pick(); chord(420,0.2,'triangle',0.07); }
+  else if(k===4){ musicBox(880, AC.currentTime, 0.14); musicBox(1174.7, AC.currentTime+0.08, 0.12); }
+  else if(k===5){ chord(110,1.1,'sawtooth',0.18); thump(0.22); stab(180, AC.currentTime, 0.09, 0.7); }
+}
+function btSay(txt, who){
+  var el = $('btsay');
+  el.textContent = txt;
+  el.className = 'on' + (who==='e' ? ' en' : '');
+  BT.sayT = who==='e' ? 2.2 : 1.8;
+}
+function btFx(k, x, y, txt, col){
+  BT.fx.push({k:k, x:x, y:y, t:0, dur:(k==='dmg'?0.75:(k==='big'?1.5:(k==='bolt'?0.7:0.42))),
+    txt:txt, col:col, rot:(k==='slash'? (Math.random()<0.5?-0.5:0.9) : 0)});
+}
+
+function initBattle(){
+  BT = {
+    t:0, state:'intro', stateT:0, phase:1,
+    p:btFighter(true), e:btFighter(false),
+    projs:[], fx:[], hold:{}, kb:{}, q:[], prev:{}, done:false,
+    combo:0, comboT:0, awaken:0, jhCD:5, rescued:false, revive:false,
+    shake:0, red:0, white:0, sayT:0, introIdx:0, endT:0
+  };
+  BT.p.x = Math.max(60, VW*0.32);
+  BT.e.x = Math.min(VW-60, VW*0.70);
+  BT.intro = [
+    {at:0.4,  who:'e', txt:'「你还敢来要？」'},
+    {at:1.6,  who:'p', txt:'「那是我自己的充电宝，两万毫安的。」'},
+    {at:3.0,  who:'e', txt:'「上课充电，还有理了？叫家长。」'},
+    {at:4.4,  who:'p', txt:'「……今天，谁也别想拿走。」'},
+    {at:5.6,  fight:true}
+  ];
+  $('btPhaseLbl').textContent = '第一阶段';
+  $('btsay').className = '';
+  Music.setLevel(1);
+}
+
+/* ---- 输入 ---- */
+function btHeld(a){ return !!BT.hold[a] || !!BT.kb[a]; }
+var BT_KEYMAP = {a:'L', arrowleft:'L', d:'R', arrowright:'R', w:'J', arrowup:'J',
+  j:'atk', k:'proj', l:'rush', ' ':'sub', u:'ult', h:'bread'};
+function btPushKey(k){
+  if(!BT) return;
+  var a = BT_KEYMAP[k];
+  if(a) BT.q.push(a);
+}
+function btInput(){
+  BT.kb['L'] = !!(keys['a'] || keys['arrowleft']);
+  BT.kb['R'] = !!(keys['d'] || keys['arrowright']);
+}
+function btBtnBind(){
+  function bind(id, act){
+    var el = $(id); if(!el) return;
+    function on(e){
+      if(BT){ BT.hold[act] = true; BT.q.push(act); }
+      el.classList.add('on'); if(e && e.preventDefault) e.preventDefault();
+    }
+    function off(e){ if(BT) BT.hold[act] = false; el.classList.remove('on'); if(e && e.preventDefault) e.preventDefault(); }
+    el.addEventListener('touchstart', on, {passive:false});
+    el.addEventListener('touchend', off, {passive:false});
+    el.addEventListener('touchcancel', off, {passive:false});
+    el.addEventListener('mousedown', on);
+    el.addEventListener('mouseup', off);
+    el.addEventListener('mouseleave', off);
+  }
+  bind('bLeft','L'); bind('bRight','R'); bind('bJump','J');
+  bind('bAtk','atk'); bind('bProj','proj'); bind('bDash','rush');
+  bind('bSub','sub'); bind('bUlt','ult'); bind('bBread','bread');
+}
+
+/* ---- 攻击 / 伤害 ---- */
+function btCanAct(f){ return (f.st==='idle' || f.st==='walk' || (f.st==='jump' && f.oy<-6)) && !f.ko; }
+function btStartAtk(f, a, key){
+  f.st = 'atk'; f.stT = 0; f.atk = {dur:a.dur, hit:a.hit, done:false, def:a}; f.key = key;
+  if(a.invul) f.invul = a.dur + 0.06;
+  if(a.cp) f.cp = clamp(f.cp + a.cp, 0, 100);
+  if(a.sfx) btSfx(a.sfx);
+  if(!a.ult && a.yell) btSay(a.yell, 'e');
+  if(a.ult){
+    btFx('big', VW/2, VH*0.34, '雷遁 · 两万毫安', '#ffe89a');
+    BT.white = 0.9; BT.shake = 14;
+  }
+}
+function btAtkStep(f, def, dt){
+  var a = f.atk, d = a.def;
+  f.stT += dt;
+  if(d.move && f.stT < 0.34) f.x += f.face * d.move * dt * 3.1;
+  if(!a.done && d.hit != null && f.stT >= d.hit){
+    a.done = true;
+    if(d.proj) btSpawnProj(f, d);
+    else btMelee(f, def, d);
+  }
+  if(f.stT >= d.dur){ f.st = 'idle'; f.atk = null; f.key = null; f.stT = 0; }
+}
+function btMelee(f, def, d){
+  var dx = def.x - f.x, dirOK = dx * f.face > -12;
+  var reach = (d.reach || 60) + 24;
+  var dmg = d.dmg * (f.p && BT.awaken > 0 ? 1.55 : 1);
+  var gy = btGY();
+  if(d.ult){
+    BT.white = 1; BT.shake = 26; BT.red = 0.6;
+    for(var i=0;i<7;i++) btFx('bolt', f.x + f.face*(30+i*38), gy - 120 - Math.random()*60);
+    if(Math.abs(dx) < reach || Math.abs(dx) < 340) btDamage(def, dmg, f.face, d.kb, true);
+    btSay('「两万毫安——全！功！率！」', 'p');
+    return;
+  }
+  if(Math.abs(dx) <= reach && dirOK && Math.abs(def.oy - f.oy) < 52){
+    btDamage(def, dmg, f.face, d.kb, false);
+    btFx('slash', f.x + f.face*reach*0.62, gy - 54 + f.oy, null, f.p ? '#bfe6ff' : '#ffd9b0');
+  }else{
+    btSfx(1);
+  }
+}
+function btSpawnProj(f, d){
+  var gy = btGY();
+  if(f.p){
+    BT.projs.push({x:f.x+f.face*26, y:gy-56+f.oy, vx:f.face*440, dmg:14*(BT.awaken>0?1.5:1), own:'p', r:12, t:0, k:'power'});
+    btSay('「接着！」', 'p');
+  }else{
+    BT.projs.push({x:f.x+f.face*24, y:gy-62, vx:f.face*340, dmg:9, own:'e', r:9, t:0, k:'chalk'});
+  }
+  btSfx(3);
+}
+function btDamage(def, dmg, dir, kb, big){
+  if(def.invul > 0){
+    if(def.key === 'sb'){
+      var att = def.p ? BT.e : BT.p;
+      btFx('text', def.x, btGY()-110, '替身术！', '#8ef0b0');
+      btRaw(att, 14, -dir, 300, false);
+      def.cp = clamp(def.cp + 24, 0, 100);
+      btSfx(4);
+    }
+    return;
+  }
+  btRaw(def, dmg, dir, kb, big);
+}
+function btRaw(def, dmg, dir, kb, big){
+  def.hp = Math.max(0, def.hp - dmg);
+  def.hitFlash = 0.2;
+  def.st = 'hurt'; def.stT = 0; def.atk = null; def.key = null;
+  def.hurtT = big ? 0.7 : 0.34;
+  def.vx = dir * kb * 0.55;
+  def.invul = 0.24;
+  BT.shake = Math.max(BT.shake, big ? 20 : 9);
+  btSfx(big ? 5 : 2);
+  btFx('dmg', def.x + rnd(-6,6), btGY()-92+def.oy, '-'+Math.round(dmg), def.p ? '#ff7b7b' : '#ffd24d');
+  if(def.p){
+    BT.combo = 0; BT.comboT = 0;
+    def.cp = clamp(def.cp + 9, 0, 100);
+  }else{
+    def.aiCD = Math.max(def.aiCD, 0.55);
+    BT.combo++; BT.comboT = 2.2;
+    BT.p.cp = clamp(BT.p.cp + 7, 0, 100);
+    if(BT.combo === 10){
+      BT.p.cp = clamp(BT.p.cp + 26, 0, 100);
+      btFx('text', BT.p.x, btGY()-128, '连击 x10！查克拉暴涨', '#8ef0b0');
+      btSfx(4);
+    }
+  }
+}
+
+/* ---- 家豪助战 ---- */
+function btBread(){
+  if(BT.jhCD > 0 || BT.state !== 'fight') return;
+  BT.jhCD = 17;
+  BT.p.hp = Math.min(BT.p.maxhp, BT.p.hp + 30);
+  BT.p.cp = clamp(BT.p.cp + 10, 0, 100);
+  var e = BT.e;
+  e.st = 'hurt'; e.stT = 0; e.hurtT = 1.5; e.atk = null; e.key = null;
+  e.vx = -e.face * 90; e.aiCD = 1.6;
+  jhSound();
+  btSay('张哥张哥，先吃个面包！', 'p');
+  btFx('bread', BT.p.x + 20, btGY()-70);
+  btFx('text', BT.p.x, btGY()-150, '+30 体力', '#8ef0b0');
+}
+
+/* ---- 阶段推进 ---- */
+function btPhase2(){
+  BT.phase = 2;
+  var e = BT.e;
+  e.hp = 100; e.maxhp = 100; e.sp = 126;
+  e.st = 'idle'; e.atk = null; e.key = null; e.stT = 0; e.invul = 1.3; e.aiCD = 1.4;
+  BT.p.hp = Math.min(BT.p.maxhp, BT.p.hp + 40);
+  BT.p.invul = 1.3;
+  BT.p.cp = 100;
+  BT.awaken = 9;
+  BT.red = 1.6; BT.shake = 24;
+  $('btPhaseLbl').textContent = '暴走 · 叫家长';
+  btSay('「你、你敢还手？！我现在就叫家长！」', 'e');
+  btFx('big', VW/2, VH*0.3, '第 二 形 态 · 叫 家 长', '#ff7b7b');
+  scream(); chord(90, 1.8, 'sawtooth', 0.2);
+  Music.setLevel(2);
+}
+
+/* ---- 主更新 ---- */
+function updateBattle(dt){
+  if(!BT) return;
+  BT.t += dt;
+  btInput();
+  if(BT.state === 'intro') btIntro(dt);
+  else if(BT.state === 'fight') btFight(dt);
+  else btEnding(dt);
+
+  /* 特效 */
+  var i;
+  for(i=BT.fx.length-1;i>=0;i--){
+    var f = BT.fx[i]; f.t += dt;
+    if(f.t >= f.dur) BT.fx.splice(i,1);
+  }
+  for(i=BT.projs.length-1;i>=0;i--){
+    var pj = BT.projs[i]; pj.t += dt;
+    pj.x += pj.vx*dt;
+    var tgt = pj.own === 'p' ? BT.e : BT.p;
+    var gy = btGY();
+    if(!tgt.ko && Math.abs(pj.x - tgt.x) < 24 && Math.abs(pj.y - (gy-50+tgt.oy)) < 40){
+      btDamage(tgt, pj.dmg, pj.vx>0?1:-1, 240, false);
+      btFx('ring', pj.x, pj.y, null, pj.own==='p' ? '#8ad0ff' : '#ffe9c0');
+      BT.projs.splice(i,1); continue;
+    }
+    if(pj.x < -40 || pj.x > VW+40 || pj.t > 3) BT.projs.splice(i,1);
+  }
+  if(BT.awaken > 0) BT.awaken -= dt;
+  if(BT.jhCD > 0) BT.jhCD -= dt;
+  if(BT.comboT > 0){ BT.comboT -= dt; if(BT.comboT <= 0) BT.combo = 0; }
+  if(BT.sayT > 0){ BT.sayT -= dt; if(BT.sayT <= 0) $('btsay').className = ''; }
+  if(BT.shake > 0) BT.shake = Math.max(0, BT.shake - dt*26);
+  if(BT.red > 0) BT.red -= dt*1.5;
+  if(BT.white > 0) BT.white -= dt*2.6;
+  btHUD();
+}
+function btIntro(dt){
+  BT.q.length = 0;
+  var s = BT.intro[BT.introIdx];
+  while(s && BT.t >= s.at){
+    if(s.fight){
+      BT.state = 'fight'; BT.stateT = 0;
+      btFx('big', VW/2, VH*0.3, '开 打 ！', '#ffd24d');
+      btFx('text', VW/2, VH*0.44, '贴身连打攒查克拉 · 满槽放奥义', '#8ef0b0');
+      chord(196, 0.8, 'square', 0.16); Music.setLevel(2);
+      BT.p.face = 1; BT.e.face = -1;
+    }else btSay(s.txt, s.who);
+    BT.introIdx++;
+    s = BT.intro[BT.introIdx];
+  }
+  btMove(BT.p, 0, dt); btMove(BT.e, 0, dt);
+}
+function btFight(dt){
+  var p = BT.p, e = BT.e;
+  var dx = e.x - p.x, dist = Math.abs(dx);
+
+  /* 玩家指令 */
+  while(BT.q.length){
+    var a = BT.q.shift();
+    if(p.ko) continue;
+    if(a === 'L' || a === 'R' || a === 'J') continue;
+    if(p.st === 'hurt') continue;
+    if(a === 'J'){
+      if((p.st === 'idle' || p.st === 'walk') && p.oy === 0 && p.vy === 0){ p.vy = -520; p.st = 'jump'; step(0.1); }
+      continue;
+    }
+    if(a === 'atk'){
+      if(btCanAct(p)){
+        var key = p.chain === 0 ? 'p1' : (p.chain === 1 ? 'p2' : 'p3');
+        btStartAtk(p, BT_P[key], key);
+        p.chain = (p.chain + 1) % 3; p.chainT = 0.6;
+      }
+    }else if(a === 'proj'){
+      if(btCanAct(p) && p.cp >= 12) btStartAtk(p, BT_P.pw, 'pw');
+    }else if(a === 'rush'){
+      if(btCanAct(p) && p.cp >= 22) btStartAtk(p, BT_P.rs, 'rs');
+    }else if(a === 'sub'){
+      if(btCanAct(p) && p.cp >= 28) btStartAtk(p, BT_P.sb, 'sb');
+    }else if(a === 'ult'){
+      if(btCanAct(p) && p.cp >= 100){ btStartAtk(p, BT_P.ul, 'ul'); BT.awaken = Math.max(BT.awaken, 9); }
+    }else if(a === 'bread'){ btBread(); }
+  }
+  if(p.chainT > 0){ p.chainT -= dt; if(p.chainT <= 0) p.chain = 0; }
+
+  var mv = 0;
+  if(btHeld('L')) mv -= 1;
+  if(btHeld('R')) mv += 1;
+  if(p.st === 'atk') mv = 0;
+  btMove(p, mv, dt);
+  btMove(e, 0, dt);
+  btAI(e, p, dt);
+
+  /* 站位与分离 */
+  dx = e.x - p.x;
+  if(!p.ko && !e.ko){
+    p.face = dx > 0 ? 1 : -1;
+    e.face = dx > 0 ? -1 : 1;
+  }
+  if(Math.abs(dx) < 40){
+    var s2 = dx > 0 ? 1 : -1, push = (40 - Math.abs(dx)) / 2;
+    p.x -= s2*push; e.x += s2*push;
+  }
+  p.x = clamp(p.x, 34, VW-34); e.x = clamp(e.x, 34, VW-34);
+
+  /* 查克拉自然回复 */
+  p.cp = clamp(p.cp + (BT.awaken > 0 ? 6 : 3.2)*dt, 0, 100);
+
+  /* 濒死救援：家豪立刻到 */
+  if(!BT.rescued && p.hp < p.maxhp*0.3){
+    BT.rescued = true; BT.jhCD = 0;
+    btFx('text', p.x, btGY()-160, '「张哥！接着！」', '#8ef0b0');
+  }
+
+  /* 不屈：任绣绮第一次倒下会再站起来一次 */
+  if(p.hp <= 0 && !BT.revive){
+    BT.revive = true;
+    p.hp = 45; p.invul = 2.2; p.st = 'idle'; p.atk = null; p.vx = 0;
+    BT.awaken = 9; BT.p.cp = Math.max(BT.p.cp, 60);
+    BT.red = 1.2; BT.shake = 20;
+    btFx('big', VW/2, VH*0.3, '不 屈 · 再 战', '#ffd24d');
+    btSay('「还没完呢。」', 'p');
+    chord(196, 1.4, 'square', 0.18); scream();
+    e.st = 'hurt'; e.stT = 0; e.hurtT = 1.2; e.atk = null;
+  }
+
+  /* 胜负判定 */
+  if(e.hp <= 0 && BT.phase === 1) btPhase2();
+  else if(e.hp <= 0){
+    e.hp = 0; e.ko = true; e.st = 'ko'; e.atk = null;
+    BT.state = 'win'; BT.endT = 0;
+    btSay('「……充电宝，还给你。下次别在课上充。」', 'e');
+    Music.setLevel(0); chord(261, 2.0, 'sine', 0.18);
+  }
+  if(p.hp <= 0 && BT.state === 'fight'){
+    p.hp = 0; p.ko = true; p.st = 'ko'; p.atk = null;
+    BT.state = 'lose'; BT.endT = 0;
+    btSay('「叫家长。明天。」', 'e');
+    Music.setLevel(0); scream();
+  }
+  Music.setLevel(e.hp < e.maxhp*0.35 ? 2 : 1);
+}
+function btMove(f, mv, dt){
+  var gy = btGY();
+  /* 垂直 */
+  if(f.oy < 0 || f.vy !== 0){
+    f.vy += 1500*dt; f.oy += f.vy*dt;
+    if(f.oy >= 0){ f.oy = 0; f.vy = 0; if(f.st === 'jump') f.st = 'idle'; }
+  }
+  /* 击退 */
+  if(f.vx !== 0){
+    f.x += f.vx*dt;
+    f.vx *= Math.pow(0.02, dt);
+    if(Math.abs(f.vx) < 6) f.vx = 0;
+  }
+  if(f.st === 'hurt'){
+    f.stT += dt;
+    if(f.stT >= f.hurtT){ f.st = 'idle'; f.stT = 0; }
+    if(f.invul > 0) f.invul -= dt;
+    if(f.hitFlash > 0) f.hitFlash -= dt;
+    return;
+  }
+  if(f.ko){ if(f.hitFlash > 0) f.hitFlash -= dt; return; }
+  if(f.invul > 0) f.invul -= dt;
+  if(f.hitFlash > 0) f.hitFlash -= dt;
+
+  if(f.st === 'atk'){ btAtkStep(f, f.p ? BT.e : BT.p, dt); return; }
+  var sp = f.sp * (f.p && BT.awaken > 0 ? 1.22 : 1);
+  if(f.p && mv !== 0){
+    f.st = 'walk'; f.x += mv*sp*dt; f.walkPh += dt*11;
+  }else if(f.p){
+    f.st = f.oy < -4 ? 'jump' : 'idle';
+  }
+}
+function btAI(e, p, dt){
+  if(e.ko || e.st === 'hurt' || e.st === 'atk') return;
+  var dx = p.x - e.x, dist = Math.abs(dx);
+  e.aiCD -= dt;
+  if(e.aiCD > 0){
+    if(dist > 82){ e.st = 'walk'; e.x += e.face*e.sp*dt; e.walkPh += dt*9; }
+    else if(dist < 46){ e.st = 'walk'; e.x -= e.face*e.sp*0.6*dt; e.walkPh += dt*9; }
+    else e.st = 'idle';
+    return;
+  }
+  var r = Math.random();
+  var a = null, key = null;
+  if(dist > 250 && r < 0.6){ a = BT_E.chalk; key = 'chalk'; }
+  else if(BT.phase === 2 && dist < 150 && r < 0.32){ a = BT_E.paren; key = 'paren'; }
+  else if(dist < 108 && r < 0.34){ a = BT_E.shout; key = 'shout'; }
+  else if(dist < 96){ a = BT_E.clip; key = 'clip'; }
+  else if(dist > 200 && r < 0.5){ a = BT_E.chalk; key = 'chalk'; }
+  if(!a){
+    e.st = 'walk'; e.x += e.face*e.sp*dt; e.walkPh += dt*9; e.aiCD = 0.3;
+    return;
+  }
+  btStartAtk(e, a, key);
+  e.aiCD = a.dur + (BT.phase === 2 ? rnd(0.4, 0.85) : rnd(0.75, 1.35));
+}
+function btEnding(dt){
+  BT.q.length = 0;
+  BT.endT += dt;
+  btMove(BT.p, 0, dt); btMove(BT.e, 0, dt);
+  if(BT.state === 'win' && BT.endT > 2.4 && !BT.done){
+    BT.done = true; STATE = 'over';
+    showEnd(true, '充 电 宝 保 卫 成 功',
+      '王甲峰扶着讲台喘了半天，把充电宝拍回你桌上。<br>「……下次上课别充。」<br><br>你插上手机。<br><em style="color:#8ef0b0;font-style:normal">电量：100%。</em><br><br>——任绣绮，赢。',
+      null);
+  }
+  if(BT.state === 'lose' && BT.endT > 2.4 && !BT.done){
+    BT.done = true; STATE = 'over';
+    showEnd(false, '充 电 宝 没 收',
+      '「叫家长。明天。」<br>你攥着空空的口袋回到座位。<br><br>后排的插座还在那里。<br>——但它已经不属于你了。',
+      null);
+  }
+}
+function btHUD(){
+  $('btPhp').style.width = (BT.p.hp/BT.p.maxhp*100) + '%';
+  $('btEhp').style.width = (BT.e.hp/BT.e.maxhp*100) + '%';
+  $('btPcp').style.width = BT.p.cp + '%';
+  $('btAwaken').className = BT.awaken > 0 ? 'on' : '';
+  $('bUlt').className = (BT.p.cp >= 100 && BT.state === 'fight') ? 'on' : '';
+  $('bBread').className = BT.jhCD > 0 ? 'off' : '';
+  $('bProj').className = BT.p.cp >= 12 ? '' : 'off';
+  $('bDash').className = BT.p.cp >= 22 ? '' : 'off';
+  $('bSub').className  = BT.p.cp >= 28 ? '' : 'off';
+}
+
+/* ---- 渲染 ---- */
+function renderBattle(){
+  if(!BT) return;
+  var gy = btGY();
+  ctx.save();
+  if(BT.shake > 0.4) ctx.translate(rnd(-BT.shake,BT.shake), rnd(-BT.shake,BT.shake));
+  btRoom(gy);
+  btBody(BT.e, gy);
+  btBody(BT.p, gy);
+  btProjs();
+  btDrawFx();
+  ctx.restore();
+  if(BT.combo >= 2 && BT.comboT > 0){
+    ctx.save();
+    ctx.textAlign = 'left'; ctx.font = '900 21px system-ui,sans-serif';
+    ctx.fillStyle = '#ffd24d'; ctx.shadowColor = '#000'; ctx.shadowBlur = 8;
+    ctx.fillText(BT.combo + ' HIT', 14, gy - 46);
+    ctx.restore();
+  }
+  if(BT.awaken > 0){
+    ctx.save();
+    ctx.textAlign = 'center'; ctx.font = '900 13px system-ui,sans-serif';
+    ctx.fillStyle = 'rgba(255,210,80,' + (0.5 + 0.4*Math.sin(BT.t*9)) + ')';
+    ctx.fillText('觉 醒 · 剩余 ' + BT.awaken.toFixed(1) + 's', VW/2, gy - 26);
+    ctx.restore();
+  }
+  if(BT.white > 0){ ctx.fillStyle = 'rgba(255,255,255,' + Math.min(0.8, BT.white*0.7) + ')'; ctx.fillRect(0,0,VW,VH); }
+  if(BT.red > 0){ ctx.fillStyle = 'rgba(170,0,0,' + Math.min(0.42, BT.red*0.28) + ')'; ctx.fillRect(0,0,VW,VH); }
+}
+function btRoom(gy){
+  var g = ctx.createLinearGradient(0,0,0,gy);
+  g.addColorStop(0,'#191d24'); g.addColorStop(1,'#333944');
+  ctx.fillStyle = g; ctx.fillRect(0,0,VW,gy);
+  var g2 = ctx.createLinearGradient(0,gy,0,VH);
+  g2.addColorStop(0,'#3d342a'); g2.addColorStop(1,'#161310');
+  ctx.fillStyle = g2; ctx.fillRect(0,gy,VW,VH-gy);
+  ctx.strokeStyle = 'rgba(0,0,0,.32)'; ctx.lineWidth = 1;
+  for(var i=1;i<6;i++){
+    var yy = gy + (VH-gy)*i/6;
+    ctx.beginPath(); ctx.moveTo(0,yy); ctx.lineTo(VW,yy); ctx.stroke();
+  }
+  /* 黑板 */
+  var bw = Math.min(VW*0.60, 380), bh = Math.min(gy*0.40, 118);
+  var bx = VW*0.06, by = Math.max(24, gy*0.26);
+  ctx.fillStyle = '#6b4a2a'; rr(bx-7, by-7, bw+14, bh+14, 4);
+  ctx.fillStyle = '#1e3a2e'; ctx.fillRect(bx, by, bw, bh);
+  ctx.strokeStyle = 'rgba(255,255,255,.08)'; ctx.lineWidth = 1;
+  ctx.strokeRect(bx+.5, by+.5, bw-1, bh-1);
+  ctx.save();
+  ctx.fillStyle = 'rgba(232,232,222,.55)';
+  ctx.font = '600 ' + Math.max(11, Math.min(16, bw*0.055)) + 'px "PingFang SC",serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('生物 §3.2  细胞呼吸', bx+12, by+26);
+  ctx.fillText('上课充电 = 违纪（×3）', bx+12, by+50);
+  ctx.fillStyle = 'rgba(255,150,150,.45)';
+  ctx.fillText('没收：充电宝 ×1', bx+12, by+bh-14);
+  ctx.restore();
+  /* 窗户 */
+  var wx = VW*0.70, wy = gy*0.20, ww = VW*0.27, wh = gy*0.46;
+  var wg = ctx.createLinearGradient(wx,wy,wx,wy+wh);
+  wg.addColorStop(0,'#16243c'); wg.addColorStop(1,'#0b1220');
+  ctx.fillStyle = wg; ctx.fillRect(wx, wy, ww, wh);
+  ctx.strokeStyle = '#4a4640'; ctx.lineWidth = 3;
+  ctx.strokeRect(wx, wy, ww, wh);
+  ctx.beginPath(); ctx.moveTo(wx+ww/2, wy); ctx.lineTo(wx+ww/2, wy+wh);
+  ctx.moveTo(wx, wy+wh/2); ctx.lineTo(wx+ww, wy+wh/2); ctx.stroke();
+  ctx.fillStyle = 'rgba(255,255,255,.10)';
+  ctx.beginPath(); ctx.arc(wx+ww*0.3, wy+wh*0.28, 5, 0, 6.3); ctx.fill();
+  /* 吊灯 */
+  for(var k=0;k<2;k++){
+    var lx = VW*(0.24+k*0.44);
+    ctx.strokeStyle = '#2a2a2a'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(lx, 0); ctx.lineTo(lx, 18); ctx.stroke();
+    ctx.fillStyle = '#3a352c'; rr(lx-16, 18, 32, 8, 3);
+    ctx.fillStyle = 'rgba(255,240,200,.06)';
+    ctx.beginPath(); ctx.moveTo(lx-16,26); ctx.lineTo(lx+16,26); ctx.lineTo(lx+42,gy); ctx.lineTo(lx-42,gy); ctx.closePath(); ctx.fill();
+  }
+  /* 课桌剪影 */
+  ctx.fillStyle = '#15171c';
+  for(var d=0; d<6; d++){
+    var dx2 = (VW/6)*d + 8;
+    rr(dx2, gy-30, VW/6-16, 30, 3);
+    ctx.fillStyle = 'rgba(255,255,255,.05)';
+    ctx.fillRect(dx2+4, gy-29, VW/6-24, 3);
+    ctx.fillStyle = '#15171c';
+  }
+  /* 插座（伏笔） */
+  ctx.fillStyle = '#c9c4b4'; rr(14, gy-24, 16, 22, 2);
+  ctx.fillStyle = '#222';
+  ctx.fillRect(18, gy-18, 3, 5); ctx.fillRect(24, gy-18, 3, 5);
+}
+function btBody(f, gy){
+  var x = f.x, y = gy + f.oy, h = 84;
+  var isP = f.p;
+  /* 影子 */
+  ctx.fillStyle = 'rgba(0,0,0,.42)';
+  ctx.beginPath();
+  ctx.ellipse(x, gy+3, 26*(1 - Math.min(0.55, -f.oy/240)), 7, 0, 0, 6.3); ctx.fill();
+  /* 觉醒气场 */
+  if(isP && BT.awaken > 0){
+    ctx.save();
+    for(var a=0;a<3;a++){
+      ctx.strokeStyle = 'rgba(255,210,80,' + (0.16 + 0.12*Math.sin(BT.t*8+a)) + ')';
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.ellipse(x, y-42, 26+a*6, 48+a*7, 0, 0, 6.3); ctx.stroke();
+    }
+    ctx.restore();
+  }
+  ctx.save();
+  ctx.translate(x, y);
+  if(f.face < 0) ctx.scale(-1, 1);
+  var fl = f.hitFlash > 0;
+  var skin = fl ? '#fff' : (isP ? '#f2cba6' : '#e2b791');
+  var hair = fl ? '#fff' : (isP ? '#3b2a22' : '#a0a0a0');
+  var top  = fl ? '#fff' : (isP ? '#eef1f6' : '#d8d2c4');
+  var down = fl ? '#fff' : (isP ? '#28324a' : '#22262c');
+  var tie  = fl ? '#fff' : (isP ? '#2f5fa8' : '#4a2a2a');
+  if(f.st === 'ko') ctx.rotate(-1.15);
+  else if(f.st === 'hurt') ctx.rotate(-0.22);
+
+  var sw = 0;
+  if(f.st === 'walk') sw = Math.sin(f.walkPh)*8;
+  /* 腿 */
+  ctx.fillStyle = down;
+  ctx.fillRect(-12 + sw*0.3, -h*0.44, 10, h*0.44);
+  ctx.fillRect(2 - sw*0.3, -h*0.44, 10, h*0.44);
+  ctx.fillStyle = fl ? '#fff' : '#15171b';
+  ctx.fillRect(-14 + sw*0.3, -7, 14, 7);
+  ctx.fillRect(0 - sw*0.3, -7, 14, 7);
+  /* 躯干 */
+  ctx.fillStyle = top; rr(-15, -h*0.86, 30, h*0.46, 6);
+  ctx.fillStyle = tie; rr(-15, -h*0.86, 30, 7, 3);
+  if(isP){ ctx.fillStyle = fl ? '#fff' : '#2f5fa8'; ctx.fillRect(-3, -h*0.80, 6, 16); }
+  else{ ctx.fillStyle = fl ? '#fff' : '#3a3f4a'; rr(-15, -h*0.80, 9, h*0.40, 3); rr(6, -h*0.80, 9, h*0.40, 3); }
+  /* 手臂 */
+  var fa = 0.35, ba = 0.35, ax = -h*0.80, ay = -h*0.80;
+  if(f.st === 'walk'){ fa = 0.3 + Math.sin(f.walkPh)*0.3; ba = 0.3 - Math.sin(f.walkPh)*0.3; }
+  if(f.atk && f.atk.def){
+    var dd = f.atk.def;
+    if(dd.invul){ fa = -1.1; ba = -1.1; }
+    else if(dd.ult){ fa = -0.5 + 0.2*Math.sin(f.stT*24); ba = -0.5 - 0.2*Math.sin(f.stT*24); }
+    else{
+      var ph = clamp(f.stT / (dd.hit || 0.15), 0, 1);
+      fa = -1.35 + 1.45*ph;
+      if(f.stT > (dd.hit || 0.15)) fa = 0.05 + 0.12*Math.sin(f.stT*22);
+    }
+  }
+  if(f.st === 'ko'){ fa = 1.2; ba = 1.2; }
+  function arm(ang, len, w, col){
+    ctx.save(); ctx.translate(9, ay); ctx.rotate(ang);
+    ctx.fillStyle = col; rr(0, -w/2, len, w, w/2); ctx.restore();
+  }
+  arm(ba, 22, 8, fl ? '#fff' : (isP ? '#e6e9f0' : '#cdc7b9'));
+  /* 道具：充电宝 / 讲义夹 */
+  if(isP){
+    ctx.save(); ctx.translate(9, ay); ctx.rotate(ba);
+    ctx.fillStyle = fl ? '#fff' : '#3a86ff';
+    rr(14, -8, 15, 16, 3);
+    if(!fl){
+      ctx.fillStyle = '#8ef0b0';
+      for(var q=0;q<4;q++) ctx.fillRect(16+q*3.2, -5, 2, 4);
+    }
+    ctx.restore();
+  }else{
+    ctx.save(); ctx.translate(9, ay); ctx.rotate(ba);
+    ctx.fillStyle = fl ? '#fff' : '#c9c0a4';
+    rr(16, -11, 11, 22, 2);
+    ctx.restore();
+  }
+  /* 头 */
+  var hy = -h*0.98, hr = h*0.17;
+  ctx.fillStyle = skin;
+  ctx.beginPath(); ctx.arc(0, hy, hr, 0, 6.3); ctx.fill();
+  /* 头发 */
+  ctx.fillStyle = hair;
+  ctx.beginPath(); ctx.arc(0, hy-2, hr+1.5, Math.PI*1.06, Math.PI*1.94); ctx.fill();
+  if(isP){
+    ctx.beginPath(); ctx.arc(0, hy-3, hr+2, Math.PI*0.95, Math.PI*1.5); ctx.fill();
+    ctx.fillRect(-hr-1, hy-4, hr+4, 7);
+  }else{
+    ctx.fillRect(-hr-1, hy-6, 3.5, 9);
+    ctx.fillRect(hr-2.5, hy-6, 3.5, 9);
+  }
+  /* 表情 */
+  if(!fl){
+    ctx.fillStyle = '#22201e';
+    if(f.st === 'hurt' || f.st === 'ko'){
+      ctx.fillRect(-7, hy-1, 5, 1.6); ctx.fillRect(2, hy-1, 5, 1.6);
+      ctx.fillRect(-4, hy+4, 8, 1.6);
+    }else if(!isP && f.st === 'atk'){
+      ctx.fillRect(-8, hy-2, 6, 4); ctx.fillRect(2, hy-2, 6, 4);
+      ctx.fillStyle = '#8a2020'; rr(-5, hy+6, 10, 4, 2);
+    }else{
+      ctx.fillRect(-7, hy-1, 4, 4); ctx.fillRect(3, hy-1, 4, 4);
+      ctx.fillRect(-3, hy+5, 6, 1.6);
+    }
+    if(!isP){
+      ctx.strokeStyle = 'rgba(40,40,40,.85)'; ctx.lineWidth = 1.2;
+      ctx.beginPath(); ctx.arc(-5, hy, 5.5, 0, 6.3); ctx.stroke();
+      ctx.beginPath(); ctx.arc(5, hy, 5.5, 0, 6.3); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(0, hy); ctx.lineTo(-1, hy); ctx.stroke();
+    }
+  }
+  arm(fa, 26, 9, fl ? '#fff' : (isP ? '#f2cba6' : '#e2b791'));
+  /* 攻击时的武器 */
+  if(f.atk && f.atk.def && !f.atk.def.invul){
+    ctx.save(); ctx.translate(9, ay); ctx.rotate(fa);
+    if(isP){
+      ctx.strokeStyle = 'rgba(140,220,255,.85)'; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.moveTo(20, 0); ctx.quadraticCurveTo(34, -8, 44, 4); ctx.stroke();
+    }else if(f.atk.def.proj){
+      ctx.fillStyle = '#f2efe4'; rr(24, -3, 12, 6, 2);
+    }else{
+      ctx.fillStyle = fl ? '#fff' : '#c9c0a4'; rr(22, -14, 14, 28, 2);
+    }
+    ctx.restore();
+  }
+  ctx.restore();
+  /* 替身术：木头 */
+  if(f.atk && f.atk.def && f.atk.def.invul){
+    ctx.save();
+    ctx.globalAlpha = 0.55;
+    ctx.fillStyle = '#8a6a3a'; rr(x-14, gy-42+f.oy, 28, 42, 5);
+    ctx.fillStyle = '#5a4426'; ctx.fillRect(x-14, gy-28+f.oy, 28, 3);
+    ctx.restore();
+  }
+}
+function btProjs(){
+  for(var i=0;i<BT.projs.length;i++){
+    var p = BT.projs[i];
+    ctx.save();
+    if(p.k === 'power'){
+      ctx.fillStyle = '#3a86ff'; ctx.shadowColor = '#8ad0ff'; ctx.shadowBlur = 12;
+      rr(p.x-13, p.y-9, 26, 18, 4);
+      ctx.fillStyle = '#8ef0b0';
+      for(var q=0;q<4;q++) ctx.fillRect(p.x-10+q*6, p.y-5, 3, 5);
+      ctx.strokeStyle = 'rgba(190,230,255,' + (0.35+0.35*Math.sin(p.t*30)) + ')';
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(p.x-13-Math.random()*10, p.y); ctx.lineTo(p.x-24, p.y+rnd(-8,8)); ctx.stroke();
+    }else{
+      ctx.translate(p.x, p.y); ctx.rotate(p.t*14);
+      ctx.fillStyle = '#f6f2e6'; ctx.shadowColor = '#fff'; ctx.shadowBlur = 6;
+      ctx.beginPath(); ctx.moveTo(0,-9); ctx.lineTo(8,0); ctx.lineTo(0,9); ctx.lineTo(-8,0); ctx.closePath(); ctx.fill();
+    }
+    ctx.restore();
+  }
+}
+function btDrawFx(){
+  for(var i=0;i<BT.fx.length;i++){
+    var f = BT.fx[i], pr = clamp(f.t/f.dur, 0, 1);
+    ctx.save();
+    if(f.k === 'slash'){
+      ctx.globalAlpha = 1-pr;
+      ctx.strokeStyle = f.col || '#fff'; ctx.lineWidth = 6*(1-pr)+1.5;
+      ctx.beginPath(); ctx.arc(f.x, f.y, 18+44*pr, -0.95+f.rot, 0.95+f.rot); ctx.stroke();
+    }else if(f.k === 'ring'){
+      ctx.globalAlpha = 1-pr;
+      ctx.strokeStyle = f.col || '#fff'; ctx.lineWidth = 3*(1-pr)+1;
+      ctx.beginPath(); ctx.arc(f.x, f.y, 6+34*pr, 0, 6.3); ctx.stroke();
+    }else if(f.k === 'bolt'){
+      ctx.globalAlpha = 1-pr;
+      ctx.strokeStyle = '#ffe89a'; ctx.lineWidth = 3; ctx.shadowColor = '#ffd24d'; ctx.shadowBlur = 14;
+      ctx.beginPath(); ctx.moveTo(f.x, f.y);
+      var yy = f.y;
+      for(var s=0;s<4;s++){ yy += 46; ctx.lineTo(f.x + rnd(-16,16), yy); }
+      ctx.stroke();
+    }else if(f.k === 'bread'){
+      ctx.globalAlpha = 1-pr;
+      ctx.font = '24px serif'; ctx.textAlign = 'center';
+      ctx.fillText('🍞', f.x, f.y - 46*pr);
+    }else if(f.k === 'big'){
+      ctx.globalAlpha = pr < 0.15 ? pr/0.15 : (pr > 0.75 ? (1-pr)/0.25 : 1);
+      ctx.textAlign = 'center';
+      ctx.font = '900 ' + Math.min(30, VW*0.078) + 'px "PingFang SC",system-ui,sans-serif';
+      ctx.fillStyle = f.col || '#ffd24d';
+      ctx.shadowColor = '#000'; ctx.shadowBlur = 12;
+      ctx.fillText(f.txt, VW/2, f.y - 20*pr);
+    }else{
+      ctx.globalAlpha = 1-pr*pr;
+      ctx.textAlign = 'center';
+      ctx.font = '900 ' + (f.k === 'dmg' ? 23 : 15) + 'px system-ui,sans-serif';
+      ctx.fillStyle = f.col || '#ffd24d';
+      ctx.shadowColor = '#000'; ctx.shadowBlur = 7;
+      ctx.fillText(f.txt, f.x, f.y - 46*pr);
+    }
+    ctx.restore();
+  }
+}
+
 /* ================= 主循环 ================= */
 var last = performance.now();
 function loop(now){
@@ -2317,10 +3159,12 @@ function loop(now){
   if(STATE === 'play'){
     if(MODE === 'write'){ updateWrite(dt); renderWrite(); }
     else if(MODE === 'class'){ updateClass(dt); renderClass(); }
+    else if(MODE === 'battle'){ updateBattle(dt); renderBattle(); }
     else { update(dt); render(); }
   }else if(STATE === 'over'){
     if(MODE === 'write') renderWrite();
     else if(MODE === 'class') renderClass();
+    else if(MODE === 'battle') renderBattle();
     else render();
   }
   requestAnimationFrame(loop);
@@ -2340,7 +3184,7 @@ function once(fn){
 /* ================= 场景与流程 ================= */
 var sceneLines = [], sceneIdx = 0, sceneDone = null;
 function showScene(lines, done){
-  ['menu','end','about','hud','tip','dash','crouch','fstick','mute','writeui','clsui','bread','btnHere'].forEach(function(id){ $(id).classList.add('hide'); });
+  ['menu','end','about','hud','tip','dash','crouch','fstick','mute','writeui','clsui','btui','bread','btnHere'].forEach(function(id){ $(id).classList.add('hide'); });
   $('bread').style.display = 'none';
   $('btnHere').style.display = 'none';
   hideTalk(); stickEnd();
@@ -2370,6 +3214,12 @@ var INTRO = {
   escape: ['晚自习的铃响了。','王甲峰抱着一摞作业本，从走廊尽头走来。','而你的作业本上——<em style="color:#d94f4f;font-style:normal">一个字都没有</em>。'],
   write: ['他停在你的桌边!。<br>「作业。」','「……」','「一个字都没写？出去。<br>走廊里补完再进来。」','走廊的灯，坏了一半。'],
   infiltrate: ['晚自习结束，你背书包回了家。','直到躺下才想起来——<em style="color:#d94f4f;font-style:normal">生物作业还压在教室抽屉里</em>。','你翻墙进了学校。<br>教室在二楼最里面，门锁了。'],
+  battle: ['后排。充电宝插上手机，3% 跳到 4%。',
+    '一只手按住了它。<br>「任、绣、绮。上课充电？」',
+    '「没收。毕业再来拿。」',
+    '课后你敲开办公室的门——<br>「老师，那是我自己的充电宝……」',
+    '「你还有脸来要？」<br>「上课充电，还有理了？叫家长。」',
+    '你摸了摸口袋里那根<em style="color:#d94f4f;font-style:normal">数据线</em>。<br>忍术，是时候用了。'],
   class: ['第二天，第一节就是生物。','抽屉里的生物作业，还是<em style="color:#d94f4f;font-style:normal">空白的</em>。','他背过身去写板书的那几秒——<br>就是你全部的机会。']
 };
 
@@ -2398,6 +3248,13 @@ function startMode(m){
     $('calert').style.display = 'none';
     $('btnHere').style.display = 'none';
     $('bread').style.display = 'none';
+  }else if(MODE === 'battle'){
+    initBattle();
+    ['hud','tip','dash','crouch','fstick','writeui','clsui','bread','btnHere'].forEach(function(id){ $(id).classList.add('hide'); });
+    $('btnHere').style.display = 'none';
+    $('bread').style.display = 'none';
+    $('btui').classList.remove('hide');
+    $('mute').classList.remove('hide');
   }else{
     reset();
     ['hud','tip'].forEach(function(id){ $(id).classList.remove('hide'); });
@@ -2413,7 +3270,8 @@ function toMenu(){
   Music.stop();
   Lecture.stop();
   stickEnd(); hideTalk();
-  ['hud','tip','dash','crouch','fstick','mute','writeui','clsui','end','scene','about','bread'].forEach(function(id){ $(id).classList.add('hide'); });
+  ['hud','tip','dash','crouch','fstick','mute','writeui','clsui','btui','end','scene','about','bread'].forEach(function(id){ $(id).classList.add('hide'); });
+  $('btsay').className = '';
   $('btnHere').style.display = 'none';
   $('bread').style.display = 'none';
   $('menu').classList.remove('hide');
@@ -2446,6 +3304,7 @@ $('mute').addEventListener('click', function(){
 
 writeBind();
 classBind();
+btBtnBind();
 resize();
 requestAnimationFrame(loop);
 })();
