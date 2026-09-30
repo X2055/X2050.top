@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#3390ec">
-<title>Telegram 风格聊天室</title>
+<title>匿名聊天室</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{
@@ -448,6 +448,69 @@ $('send').onclick=sendText;
 $('input').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendText()}});
 $('input').addEventListener('input',autoGrow);
 
+/* ============ 同步引擎：Realtime 优先 + 轮询兜底 ============ */
+let seenIds = new Set();      // 去重，防止 Realtime 与轮询重复插入
+let lastTs  = null;           // 已同步到的最新时间戳
+let rtOK    = false;          // Realtime 是否真的连上
+let pollOK  = false;          // 轮询是否可用
+let newCnt  = 0;              // 轮询拉到的新消息计数
+
+function updateSyncStatus(){
+  if(rtOK)        setRt('实时已连接','#7ee787');
+  else if(pollOK) setRt('轮询同步中','#ffd166');
+  else            setRt('同步失败','#ff6b6b');
+}
+
+// 把一批消息并入缓存（去重 + 推进 lastTs）
+function mergeMessages(rows){
+  let added = 0;
+  (rows||[]).forEach(m=>{
+    if(!m || seenIds.has(m.id)) return;
+    seenIds.add(m.id);
+    messagesCache.push(m);
+    added++;
+    const ts = m.created_at || m.ts;
+    if(!lastTs || (ts && ts > lastTs)) lastTs = ts;
+  });
+  if(messagesCache.length > 500){
+    const dropped = messagesCache.splice(0, messagesCache.length - 500);
+    dropped.forEach(d=>seenIds.delete(d.id)); // 防止 Set 无限增长
+  }
+  return added;
+}
+
+// 增量轮询：只拉比 lastTs 新的
+async function pollOnce(){
+  try{
+    let q = sb.from('chat_messages').select('*').order('created_at',{ascending:true}).limit(50);
+    if(lastTs) q = q.gt('created_at', lastTs);
+    const { data, error } = await q;
+    if(error){ pollOK = false; console.warn('[轮询]', error.message); return 0; }
+    pollOK = true;
+    const n = mergeMessages(data);
+    if(n > 0) newCnt += n;
+    return n;
+  }catch(e){
+    pollOK = false;
+    console.warn('[轮询异常]', e.message);
+    return 0;
+  }
+}
+
+// 自适应轮询：Realtime 通了就放慢，没通就加快
+let pollTimer = null;
+async function pollLoop(){
+  const n = await pollOnce();
+  if(n > 0){
+    render();
+    main.scrollTop = main.scrollHeight;
+  }
+  updateSyncStatus();
+  const delay = rtOK ? 8000 : 1500;   // Realtime 通 → 8s 兜底；不通 → 1.5s
+  clearTimeout(pollTimer);
+  pollTimer = setTimeout(pollLoop, delay);
+}
+
 /* ============ 启动自检：区分 RLS / CORS / file:// ============ */
 async function selfTest(){
   const url = SUPABASE_URL + '/rest/v1/chat_messages?select=id&limit=1';
@@ -456,14 +519,11 @@ async function selfTest(){
     const r = await fetch(url, { headers:{ apikey:SUPABASE_ANON, Authorization:'Bearer '+SUPABASE_ANON } });
     console.log('[自检] HTTP', r.status, Date.now()-t0+'ms');
     if(r.status === 403){
-      setRt('403:RLS仍拦截','#ff6b6b');
-      toast('后端返回403，RLS没关掉 → 执行关闭RLS的SQL');
+      console.warn('后端403：RLS未关闭或IP被项目网络限制拦截');
     } else if(r.status === 401){
-      setRt('401:key无效','#ff6b6b'); toast('anon key 无效或已过期');
+      console.warn('anon key 无效或过期');
     } else if(r.ok){
-      setRt('后端可达','#7ee787');
-    } else {
-      setRt('HTTP '+r.status,'#ffd166');
+      console.log('后端可达 ✓');
     }
   }catch(e){
     console.error('[自检] 失败', e);
@@ -478,8 +538,14 @@ async function selfTest(){
 /* ============ 历史 & 实时 ============ */
 async function loadHistory(){
   const{data,error}=await sb.from('chat_messages').select('*').order('created_at',{ascending:true}).limit(200);
-  if(error){console.error('loadHistory:',error);toast('历史加载失败:'+error.message);return}
-  messagesCache=data||[];render();main.scrollTop=main.scrollHeight;
+  if(error){console.error('loadHistory:',error);toast('历史加载失败:'+msgOf(error));return}
+  messagesCache = [];
+  seenIds.clear();
+  lastTs = null;
+  mergeMessages(data);
+  pollOK = true;
+  render();
+  main.scrollTop = main.scrollHeight;
 }
 function msgOf(e){
   const m = (e && (e.message || e.error_description || e.details)) || String(e);
@@ -499,14 +565,14 @@ function setRt(text,color){
 }
 function subscribeRealtime(){
   sb.channel('public:chat_messages').on('postgres_changes',{event:'INSERT',schema:'public',table:'chat_messages'},p=>{
-    messagesCache.push(p.new);if(messagesCache.length>500)messagesCache.shift();
-    render();main.scrollTop=main.scrollHeight;
+    const added = mergeMessages([p.new]);   // 走同一个去重入口
+    if(added > 0){ render(); main.scrollTop = main.scrollHeight; }
   }).subscribe(st=>{
     console.log('[Realtime]',st);
-    if(st==='SUBSCRIBED'){setRt('实时已连接','#7ee787');toast('已连接实时服务')}
-    else if(st==='CHANNEL_ERROR'){setRt('失败:查RLS/发布','#ff6b6b')}
-    else if(st==='TIMED_OUT'){setRt('超时,重连中…','#ffd166')}
-    else if(st==='CLOSED'){setRt('已断开','#ff6b6b')}
+    if(st==='SUBSCRIBED'){ rtOK = true; updateSyncStatus(); }
+    else if(st==='CHANNEL_ERROR'){ rtOK = false; updateSyncStatus(); console.warn('Realtime 不通，已切轮询'); }
+    else if(st==='TIMED_OUT'){ rtOK = false; updateSyncStatus(); }
+    else if(st==='CLOSED'){ rtOK = false; updateSyncStatus(); }
   });
 }
 
@@ -544,7 +610,9 @@ document.addEventListener('click',e=>{if(!ep.contains(e.target)&&e.target!==$('b
   if(!me){openName(true);me=me||'匿名用户'}
   syncMe();heartbeat();$('input').focus();
   await selfTest();
-  await loadHistory();subscribeRealtime();
+  await loadHistory();
+  subscribeRealtime();
+  pollLoop();
 })();
 </script>
 </body>
