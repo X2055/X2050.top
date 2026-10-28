@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Tor-SI</title>
+<style>
+:root{
+  --bg:#f2f2f7;--surface:#fff;--surface2:#f9f9fb;--nav:rgba(255,255,255,.88);
+  --border:rgba(60,60,67,.12);--text:#000;--text2:#3c3c43;--text3:#8e8e93;
+  --tint:#007aff;--green:#34c759;--danger:#ff3b30;--warn:#ff9500;
+  --bubble-me:#007aff;--bubble-me-t:#fff;--bubble-ai:#fff;--bubble-ai-t:#000;
+  --shadow:0 1px 3px rgba(0,0,0,.06);
+  --blur:saturate(180%) blur(20px);
+}
+[data-theme=dark]{
+  --bg:#000;--surface:#1c1c1e;--surface2:#2c2c2e;--nav:rgba(28,28,30,.88);
+  --border:rgba(120,120,128,.3);--text:#fff;--text2:#ebebf5;--text3:#8e8e93;
+  --tint:#0a84ff;--green:#30d158;--danger:#ff453a;--warn:#ff9f0a;
+  --bubble-me:#0a84ff;--bubble-me-t:#fff;--bubble-ai:#2c2c2e;--bubble-ai-t:#fff;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
+body{font:15px/1.6 -apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);height:100dvh;display:flex;flex-direction:column;overflow:hidden;transition:background .3s,color .3s}
+a{color:var(--tint);text-decoration:none}
+
+/* 导航 */
+.nav{height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 12px;background:var(--nav);backdrop-filter:var(--blur);border-bottom:.5px solid var(--border);position:sticky;top:0;z-index:30}
+.nav .title{flex:1;text-align:center;font-size:16px;font-weight:600;opacity:.95}
+.nav-btn{width:34px;height:34px;border-radius:50%;border:none;background:var(--surface);color:var(--text2);font-size:17px;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:var(--shadow);transition:transform .15s}
+.nav-btn:active{transform:scale(.86)}
+.nav-btn.hidden{display:none}
+
+/* 状态条 */
+.statusbar{height:30px;display:flex;align-items:center;justify-content:center;gap:6px;font-size:11px;color:var(--text3);background:var(--bg);border-bottom:.5px solid var(--border)}
+.statusbar .dot{width:6px;height:6px;border-radius:50%;background:var(--text3);transition:background .3s}
+.statusbar .dot.on{background:var(--green)}
+.statusbar .dot.warn{background:var(--warn)}
+.statusbar .dot.err{background:var(--danger)}
+
+/* 聊天区 */
+.chat{flex:1;overflow-y:auto;padding:14px 12px;scroll-behavior:smooth}
+.chat::-webkit-scrollbar{width:4px}
+.chat::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.empty{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--text3);text-align:center;padding:20px}
+.empty .logo{font-size:52px;animation:float 3s ease-in-out infinite}
+@keyframes float{50%{transform:translateY(-8px)}}
+.empty h2{font-size:19px;font-weight:700;color:var(--text2)}
+.empty p{font-size:13px;max-width:300px;line-height:1.7}
+.empty .features{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:6px}
+.empty .chip{font-size:11px;padding:4px 10px;border-radius:12px;background:var(--surface);border:.5px solid var(--border);color:var(--text2)}
+
+/* 消息 */
+.row{display:flex;margin-bottom:14px;animation:in .25s ease-out}
+@keyframes in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.row.me{justify-content:flex-end}
+.row.ai{justify-content:flex-start}
+.row.sys{justify-content:center}
+.bubble{max-width:82%;padding:9px 13px;border-radius:18px;white-space:pre-wrap;word-break:break-word;box-shadow:var(--shadow);line-height:1.6}
+.row.me .bubble{background:var(--bubble-me);color:var(--bubble-me-t);border-bottom-right-radius:6px}
+.row.ai .bubble{background:var(--bubble-ai);color:var(--bubble-ai-t);border-bottom-left-radius:6px;border:.5px solid var(--border)}
+.row.sys .bubble{background:transparent;color:var(--text3);font-size:12px;box-shadow:none;padding:2px 8px}
+.bubble .meta{display:block;font-size:10px;opacity:.5;margin-top:6px;font-weight:500}
+.bubble .sources{margin-top:8px;padding-top:8px;border-top:.5px solid var(--border);display:flex;flex-direction:column;gap:4px}
+.bubble .sources a{font-size:12px;display:flex;align-items:flex-start;gap:4px;line-height:1.4}
+.bubble .sources .num{color:var(--tint);font-weight:600;flex-shrink:0}
+
+/* 光标 */
+.cursor{display:inline-block;width:2px;height:1.1em;background:currentColor;margin-left:2px;vertical-align:-2px;animation:blink 1s steps(2) infinite;opacity:.7}
+@keyframes blink{50%{opacity:0}}
+.typing{display:inline-flex;gap:4px;padding:2px 0}
+.typing span{width:6px;height:6px;border-radius:50%;background:var(--text3);animation:b 1.2s infinite}
+.typing span:nth-child(2){animation-delay:.15s}
+.typing span:nth-child(3){animation-delay:.3s}
+@keyframes b{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-5px);opacity:1}}
+
+/* 输入区 */
+.bar{background:var(--nav);backdrop-filter:var(--blur);border-top:.5px solid var(--border);padding:8px 10px;padding-bottom:max(8px,env(safe-area-inset-bottom));display:flex;gap:8px;align-items:flex-end}
+.bar textarea{flex:1;min-height:36px;max-height:120px;resize:none;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:18px;padding:8px 14px;font:inherit;outline:none;transition:border-color .2s}
+.bar textarea:focus{border-color:var(--tint)}
+.bar textarea:disabled{opacity:.5}
+.send-btn{width:36px;height:36px;border-radius:50%;border:none;background:var(--tint);color:#fff;font-size:16px;font-weight:700;flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .15s,opacity .2s}
+.send-btn:active{transform:scale(.85)}
+.send-btn:disabled{opacity:.35;cursor:default}
+.send-btn.stop{background:var(--danger)}
+
+/* 快捷 */
+.quick{display:flex;gap:6px;overflow-x:auto;padding:0 2px 8px;scrollbar-width:none}
+.quick::-webkit-scrollbar{display:none}
+.quick-chip{flex-shrink:0;font-size:12px;padding:6px 12px;border-radius:980px;background:var(--surface);border:.5px solid var(--border);color:var(--tint);cursor:pointer;transition:transform .15s}
+.quick-chip:active{transform:scale(.92)}
+
+/* 遮罩 */
+.mask{position:fixed;inset:0;background:var(--bg);z-index:100;display:none;flex-direction:column;align-items:center;justify-content:center;gap:18px;text-align:center;padding:30px}
+.mask.show{display:flex}
+.spin{width:42px;height:42px;border:3px solid var(--border);border-top-color:var(--tint);border-radius:50%;animation:sp .8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.mask .text{font-size:14px;color:var(--text2);max-width:280px;line-height:1.6}
+.mask .sub{font-size:12px;color:var(--text3)}
+.mask .btn{background:var(--tint);color:#fff;border:none;padding:10px 28px;border-radius:980px;font-size:15px;font-weight:600;cursor:pointer;margin-top:6px}
+.mask .btn.ghost{background:var(--surface);color:var(--text2);border:.5px solid var(--border)}
+
+/* 弹窗 */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:60;display:none;align-items:center;justify-content:center;padding:20px}
+.modal.show{display:flex;animation:fade .2s}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.sheet{background:var(--surface);border-radius:18px;width:100%;max-width:360px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3);animation:up .3s cubic-bezier(.2,.8,.2,1)}
+@keyframes up{from{transform:translateY(24px);opacity:0}to{transform:none;opacity:1}}
+.sheet h3{margin:0;padding:16px;text-align:center;font-size:17px;font-weight:700;border-bottom:.5px solid var(--border)}
+.group{padding:6px 0}
+.group-title{font-size:12px;font-weight:600;color:var(--text3);padding:10px 16px 4px}
+.cell{display:flex;align-items:center;justify-content:space-between;padding:11px 16px;gap:10px}
+.cell:active{background:var(--surface2)}
+.cell .lb{flex:1}
+.cell .lb .desc{font-size:11px;color:var(--text3);margin-top:2px}
+.cell .vl{font-size:13px;color:var(--text3);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cell input,.cell select{flex:1;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:14px;outline:none;min-width:0}
+.sw{width:50px;height:30px;border-radius:15px;background:var(--border);position:relative;cursor:pointer;flex-shrink:0;transition:background .25s}
+.sw.on{background:var(--green)}
+.sw::after{content:"";position:absolute;width:26px;height:26px;border-radius:50%;background:#fff;top:2px;left:2px;box-shadow:0 2px 4px rgba(0,0,0,.2);transition:transform .25s cubic-bezier(.4,1.3,.6,1)}
+.sw.on::after{transform:translateX(20px)}
+.foot{padding:10px 12px;display:flex;gap:8px;border-top:.5px solid var(--border)}
+.foot button{flex:1;padding:11px;border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer}
+.foot .primary{background:var(--tint);color:#fff}
+.foot .secondary{background:var(--surface2);color:var(--text)}
+.danger-txt{color:var(--danger)!important}
+
+/* Toast */
+.toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(12px);background:rgba(0,0,0,.88);color:#fff;padding:9px 18px;border-radius:980px;font-size:13px;opacity:0;transition:.3s;z-index:200;max-width:80%;text-align:center;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%)}
+
+/* 拖拽 */
+.drop{position:fixed;inset:0;background:rgba(0,122,255,.12);border:4px dashed var(--tint);z-index:90;display:none;align-items:center;justify-content:center;font-size:22px;font-weight:600;color:var(--tint)}
+.drop.show{display:flex}
+</style>
+</head>
+<body data-theme="light">
+
+<div class="nav">
+  <button class="nav-btn hidden" id="backBtn">‹</button>
+  <div class="title" id="title">智能助手</div>
+  <button class="nav-btn hidden" id="newBtn">✎</button>
+  <button class="nav-btn" id="menuBtn">⚙</button>
+</div>
+
+<div class="statusbar">
+  <span class="dot" id="statusDot"></span>
+  <span id="statusText">启动中…</span>
+</div>
+
+<div class="chat" id="chat">
+  <div class="empty" id="empty">
+    <div class="logo">✦</div>
+    <h2>智能助手</h2>
+    <p>规则推理 + 必应联网搜索<br>所有对话在本地处理</p>
+    <div class="features">
+      <span class="chip">语义问答</span>
+      <span class="chip">必应搜索</span>
+      <span class="chip">因果推理</span>
+      <span class="chip">数学计算</span>
+      <span class="chip">长文理解</span>
+    </div>
+    <button class="nav-btn" style="width:auto;height:auto;padding:9px 22px;border-radius:980px;font-size:15px;margin-top:8px" onclick="document.getElementById('torInput').click()">加载知识库 (.tor)</button>
+    <input type="file" id="torInput" accept=".tor" hidden>
+    <div style="font-size:11px;color:var(--text3);margin-top:4px">不加载也能用，只是回答范围更窄</div>
+  </div>
+</div>
+
+<div class="quick" id="quick" style="display:none;padding:0 12px 8px">
+  <span class="quick-chip" data-q="今天有什么热点新闻">📰 今日热点</span>
+  <span class="quick-chip" data-q="给我讲个笑话">😄 讲个笑话</span>
+  <span class="quick-chip" data-q="用大白话解释一下量子计算">🔬 科普一下</span>
+  <span class="quick-chip" data-q="帮我润色一段文案">✨ 润色文案</span>
+  <span class="quick-chip" data-q="北京今天天气怎么样">🌤 查天气</span>
+  <span class="quick-chip" data-q="推荐几本好书">📚 推荐书单</span>
+</div>
+
+<div class="bar">
+  <textarea id="inp" placeholder="问点什么…（Enter 发送，Shift+Enter 换行）" rows="1" disabled></textarea>
+  <button class="send-btn" id="sendBtn" disabled>↑</button>
+</div>
+
+<div class="drop" id="drop">松开加载 .tor 文件</div>
+
+<div class="mask" id="mask">
+  <div class="spin"></div>
+  <div class="text" id="maskText">正在启动…</div>
+  <div class="sub" id="maskSub"></div>
+</div>
+
+<div class="modal" id="modal">
+  <div class="sheet">
+    <h3>设置</h3>
+    <div class="group">
+      <div class="group-title">外观</div>
+      <div class="cell" onclick="ui.toggleTheme()"><div class="lb"><div>深色模式</div><div class="desc">切换深色/浅色主题</div></div><div class="sw" id="swTheme"></div></div>
+    </div>
+    <div class="group">
+      <div class="group-title">联网搜索</div>
+      <div class="cell" onclick="ui.toggleSearch()"><div class="lb"><div id="searchLbl">必应搜索</div><div class="desc" id="searchDesc">无需 API Key，直接调用 cn.bing.com</div></div><div class="sw on" id="swSearch"></div></div>
+      <div class="cell"><div class="lb"><div>搜索模式</div><div class="desc">多重试不同的抓取策略</div></div><select id="searchMode" onchange="app.setSearchMode(this.value)" onblur="event.stopPropagation()"><option value="auto">自动（推荐）</option><option value="rss">RSS 优先</option><option value="html">HTML 解析</option></select></div>
+    </div>
+    <div class="group">
+      <div class="group-title">回答风格</div>
+      <div class="cell"><div class="lb">语气</div><select id="styleSel" onchange="app.setStyle(this.value)" onblur="event.stopPropagation()"><option value="friendly">友好</option><option value="professional">专业</option><option value="casual">随意</option></select></div>
+      <div class="cell"><div class="lb">详细度</div><select id="verbSel" onchange="app.setVerbosity(this.value)" onblur="event.stopPropagation()"><option value="brief">简短</option><option value="medium" selected>适中</option><option value="detailed">详细</option></select></div>
+    </div>
+    <div class="group">
+      <div class="group-title">知识库</div>
+      <div class="cell" onclick="document.getElementById('torInput').click()"><div class="lb"><div>加载 .tor 文件</div><div class="desc" id="torDesc">未加载</div></div><span style="color:var(--tint)">›</span></div>
+      <div class="cell" onclick="app.unloadTor()"><div class="lb danger-txt">卸载知识库</div><div class="desc">释放内存</div></div>
+    </div>
+    <div class="group">
+      <div class="group-title">对话</div>
+      <div class="cell" onclick="app.clearChat()"><div class="lb">清空对话</div><div class="desc">删除当前所有消息</div></div>
+      <div class="cell" onclick="app.exportChat()"><div class="lb">导出对话</div><div class="desc">保存为 Markdown</div></div>
+    </div>
+    <div class="foot"><button class="secondary" onclick="ui.closeModal()">关闭</button></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+//======================================================================
+// 工具函数
+//======================================================================
+const $ = (s) => document.querySelector(s);
+const tokenize = (t) => {
+  const cjk = (t || '').match(/[\u4e00-\u9fa5]/g) || [];
+  const en = (t || '').toLowerCase().match(/[a-z]+/g) || [];
+  const num = (t || '').match(/\d+(?:\.\d+)?/g) || [];
+  return [...cjk, ...en, ...num];
+};
+const bigramTokenize = (t) => {
+  const w = tokenize(t);
+  const g = [];
+  for (let i = 0; i < w.length; i++) { g.push(w[i]); if (i < w.length - 1) g.push(w[i] + w[i + 1]); }
+  return g;
+};
+function similarity(a, b) {
+  const wa = bigramTokenize(a), wb = bigramTokenize(b);
+  if (!wa.length || !wb.length) return 0;
+  const all = [...new Set([...wa, ...wb])];
+  const va = all.map(w => wa.filter(x => x === w).length);
+  const vb = all.map(w => wb.filter(x => x === w).length);
+  const dot = va.reduce((s, v, i) => s + v * vb[i], 0);
+  const magA = Math.sqrt(va.reduce((s, v) => s + v * v, 0));
+  const magB = Math.sqrt(vb.reduce((s, v) => s + v * v, 0));
+  return dot / (magA * magB || 1);
+}
+function cosine(a, b) {
+  const len = Math.max(a.length, b.length);
+  const va = [...a, ...Array(len - a.length).fill(0)];
+  const vb = [...b, ...Array(len - b.length).fill(0)];
+  const dot = va.reduce((s, v, i) => s + v * vb[i], 0);
+  const magA = Math.sqrt(va.reduce((s, v) => s + v * v, 0));
+  const magB = Math.sqrt(vb.reduce((s, v) => s + v * v, 0));
+  return dot / (magA * magB || 1);
+}
+const random = (arr) => arr[Math.floor(Math.random() * arr.length)];
+const splitSentences = (t) => t.replace(/([。！？!?\n])\s*/g, '$1\n').split('\n').map(s => s.trim()).filter(s => s.length > 0);
+const splitParagraphs = (t) => t.split(/\n\s*\n/).map(p => p.trim()).filter(p => p.length > 0);
+const dedup = (arr) => [...new Set(arr.filter(Boolean))];
+function cleanText(t) {
+  return (t || '')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"')
+    .replace(/\[\d+\]/g, '').replace(/\(https?:\/\/\S+\)/g, '')
+    .replace(/\s{2,}/g, ' ').replace(/([。！？，；：])\1+/g, '$1').replace(/^[，。！？；：\s]+/, '').trim();
+}
+
+//======================================================================
+// 必应搜索模块 —— 无 API Key，纯前端抓取 cn.bing.com
+//======================================================================
+class BingSearch {
+  constructor() {
+    this.ua = navigator.userAgent.includes('Mobile')
+      ? 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1'
+      : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+    this.mode = 'auto'; // auto | rss | html
+    this.timeout = 12000;
+  }
+
+  async search(query) {
+    const q = encodeURIComponent(query);
+    const errors = [];
+
+    if (this.mode === 'rss' || this.mode === 'auto') {
+      try {
+        const r = await this._rss(q);
+        if (r && r.length) return { results: r, via: 'rss' };
+      } catch (e) { errors.push('rss:' + e.message); }
+    }
+    if (this.mode === 'html' || this.mode === 'auto') {
+      try {
+        const r = await this._html(q);
+        if (r && r.length) return { results: r, via: 'html' };
+      } catch (e) { errors.push('html:' + e.message); }
+      try {
+        const r = await this._htmlAlt(q);
+        if (r && r.length) return { results: r, via: 'html-alt' };
+      } catch (e) { errors.push('alt:' + e.message); }
+    }
+    throw new Error('必应搜索暂不可用（可能受浏览器跨域限制），可在设置中切换到 HTML 模式重试。细节：' + errors.join(' | '));
+  }
+
+  // 通道1：RSS —— 最稳，返回标准 XML
+  async _rss(q) {
+    const url = `https://cn.bing.com/search?q=${q}&ensearch=0&format=rss&count=12`;
+    const text = await this._fetch(url);
+    if (!/<item>/.test(text) && !/<entry>/.test(text)) throw new Error('RSS 无结果');
+    const items = text.match(/<item>[\s\S]*?<\/item>/gi) || text.match(/<entry>[\s\S]*?<\/entry>/gi) || [];
+    return items.slice(0, 8).map(it => {
+      const title = cleanText((it.match(/<title>([\s\S]*?)<\/title>/i) || [])[1] || '');
+      const link = cleanText((it.match(/<link[^>]*>([\s\S]*?)<\/link>/i) || it.match(/<link[^>]*href="([^"]+)"/i) || [])[1] || '');
+      const desc = cleanText((it.match(/<description>([\s\S]*?)<\/description>/i) || [])[1] || '');
+      const date = cleanText((it.match(/<pubDate>([\s\S]*?)<\/pubDate>/i) || [])[1] || '');
+      return { title, url: link, snippet: desc.slice(0, 220), publishedAt: date };
+    }).filter(r => r.title && r.url);
+  }
+
+  // 通道2：HTML 解析 cn.bing.com 结果页
+  async _html(q) {
+    const url = `https://cn.bing.com/search?q=${q}&ensearch=0&count=12`;
+    const text = await this._fetch(url);
+    return this._parseBingHtml(text);
+  }
+
+  async _htmlAlt(q) {
+    const url = `https://www.bing.com/search?q=${q}&cc=CN&setlang=zh-CN&count=12`;
+    const text = await this._fetch(url);
+    return this._parseBingHtml(text);
+  }
+
+  _parseBingHtml(text) {
+    // 检测风控页
+    if (/我们已检测到|请验证|verify you are human|captcha/i.test(text)) throw new Error('触发必应风控验证');
+    if (/没有与此相关的结果/i.test(text)) throw new Error('无结果');
+
+    const out = [];
+    // 提取重定向包装的 URL
+    const unescape = (s) => s.replace(/\\u0026/g, '&').replace(/\\u002f/g, '/').replace(/\\u0027/g, "'").replace(/\\"/g, '"');
+
+    // 匹配 b_algo / b_results 区域
+    const groups = text.match(/<li[^>]*class="[^"]*b_algo[^"]*"[^>]*>([\s\S]*?)<\/li>/gi) || [];
+
+    for (const g of groups) {
+      const titleMatch = g.match(/<h2[^>]*>([\s\S]*?)<\/h2>/i);
+      if (!titleMatch) continue;
+      const title = cleanText(titleMatch[1]);
+      if (!title || title.length < 3) continue;
+
+      // URL：优先取 b_attribution 或 h2 里的链接
+      let url = '';
+      const h2link = g.match(/<h2[^>]*>[\s\S]*?<a[^>]*href="([^"]+)"([\s\S]*?)<\/h2>/i);
+      if (h2link) url = h2link[1];
+      else {
+        const aLink = g.match(/<a[^>]*href="([^"]+)"/i);
+        if (aLink) url = aLink[1];
+      }
+      url = unescape(url);
+
+      // 摘要：b_caption / b_lineclamp
+      let snippet = '';
+      const cap = g.match(/class="b_caption"[^>]*>([\s\S]*?)<\/div>/i) || g.match(/class="b_lineclamp\d*"[^>]*>([\s\S]*?)<\/div>/i);
+      if (cap) snippet = cleanText(cap[1]);
+      if (!snippet) {
+        const p = g.match(/<p[^>]*>([\s\S]*?)<\/p>/i);
+        if (p) snippet = cleanText(p[1]);
+      }
+
+      if (url && !/^https?:\/\//.test(url)) continue; // 跳过非 http 链接
+      out.push({ title, url, snippet: snippet.slice(0, 240) });
+      if (out.length >= 8) break;
+    }
+
+    if (!out.length) throw new Error('HTML 解析无结果');
+    return out;
+  }
+
+  _fetch(url) {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), this.timeout);
+    return fetch(url, {
+      signal: ctrl.signal,
+      headers: { 'User-Agent': this.ua, 'Accept': '*/*', 'Accept-Language': 'zh-CN,zh;q=0.9' }
+    }).then(r => {
+      clearTimeout(t);
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.text();
+    }).catch(e => {
+      clearTimeout(t);
+      throw e;
+    });
+  }
+}
+
+//======================================================================
+// 长文处理
+//======================================================================
+class LongText {
+  constructor() { this.segments = []; this.vectors = []; this.max = 30; }
+  ingest(text) {
+    const paras = splitParagraphs(text);
+    this.segments = []; this.vectors = [];
+    for (let i = 0; i < Math.min(paras.length, this.max); i++) {
+      const p = paras[i];
+      const w = tokenize(p);
+      const freq = new Map();
+      for (const x of w) freq.set(x, (freq.get(x) || 0) + 1);
+      const sorted = [...freq.entries()].sort((a, b) => b[1] - a[1]).slice(0, 40);
+      const maxF = sorted[0] ? sorted[0][1] : 1;
+      this.segments.push({ original: p.slice(0, 320), keywords: sorted.slice(0, 8).map(([k]) => k) });
+      this.vectors.push(sorted.map(([, c]) => c / maxF));
+    }
+    return this.segments.length;
+  }
+  retrieve(query, topK = 3) {
+    if (!this.segments.length) return [];
+    const qw = tokenize(query);
+    const scores = this.segments.map((seg, i) => {
+      const overlap = seg.keywords.filter(k => qw.some(q => q.includes(k) || k.includes(q))).length;
+      return { i, score: overlap * 0.3 + cosine(this._vec(qw), this.vectors[i]) * 0.7, seg };
+    });
+    scores.sort((a, b) => b.score - a.score);
+    return scores.slice(0, topK).filter(s => s.score > 0.05);
+  }
+  _vec(words) {
+    const freq = new Map();
+    for (const w of words) freq.set(w, (freq.get(w) || 0) + 1);
+    const sorted = [...freq.entries()].sort((a, b) => b[1] - a[1]).slice(0, 40);
+    const max = sorted[0] ? sorted[0][1] : 1;
+    return sorted.map(([, c]) => c / max);
+  }
+}
+
+//======================================================================
+// 因果推理
+//======================================================================
+class Reasoner {
+  constructor() { this.rules = []; }
+  load(text) {
+    this.rules = [];
+    (text || '').split('\n').forEach(line => {
+      line = line.trim();
+      if (!line || line.startsWith('#')) return;
+      const p = line.split('=>');
+      if (p.length === 2) this.rules.push({ if: p[0].trim(), then: p[1].trim() });
+    });
+  }
+  reason(fact, maxDepth = 5) {
+    const chain = [{ step: 0, fact, source: 'input' }];
+    let cur = fact;
+    for (let d = 0; d < maxDepth; d++) {
+      let found = false;
+      const cLow = cur.toLowerCase();
+      for (const r of this.rules) {
+        const rLow = r.if.toLowerCase();
+        if (cLow.includes(rLow) || rLow.includes(cLow)) {
+          chain.push({ step: d + 1, fact: cur, conclusion: r.then, rule: r.if + ' => ' + r.then });
+          cur = r.then;
+          found = true;
+          break;
+        }
+      }
+      if (!found) break;
+    }
+    return chain;
+  }
+  decompose(problem) {
+    const conns = ['因为', '所以', '如果', '那么', '首先', '其次', '最后', '而且', '但是', '然而', '由于', '导致', '使得'];
+    const parts = [];
+    let rem = problem;
+    for (const c of conns) {
+      const idx = rem.indexOf(c);
+      if (idx > 0) { parts.push(rem.slice(0, idx).trim()); rem = c + rem.slice(idx + c.length); }
+    }
+    if (rem.trim()) parts.push(rem.trim());
+    if (parts.length <= 1) return problem.split(/[，,；;]/).filter(p => p.trim()).map((p, i) => ({ id: i, question: p.trim(), dep: i > 0 ? [i - 1] : [] }));
+    return parts.map((p, i) => ({ id: i, question: p.trim(), dep: i > 0 ? [i - 1] : [] }));
+  }
+}
+
+//======================================================================
+// 上下文
+//======================================================================
+class Context {
+  constructor() { this.entities = new Map(); this.topics = []; this.history = []; this.turn = 0; }
+  update(text) {
+    this.history.push(text);
+    if (this.history.length > 20) this.history.shift();
+    this.turn++;
+    const loc = text.match(/(北京|上海|广州|深圳|杭州|成都|重庆|武汉|西安|南京|长沙|天津|苏州|郑州|青岛|大连|厦门|合肥|福州|南昌|昆明|贵阳|南宁|三亚|哈尔滨|长春|沈阳)/);
+    if (loc) this.entities.set('location', loc[1]);
+    const time = text.match(/(今天|明天|昨天|这周|下周|\d+月\d+[日号])/);
+    if (time) this.entities.set('time', time[1]);
+    const w = tokenize(text).filter(x => x.length >= 2);
+    if (w.length) { this.topics.push(w.slice(0, 5)); if (this.topics.length > 8) this.topics.shift(); }
+  }
+  recent() { return this.history.slice(-6); }
+}
+
+//======================================================================
+// 主大脑
+//======================================================================
+class Brain {
+  constructor() {
+    this.loaded = false;
+    this.knowledge = [];
+    this.fragments = {
+      greeting: ['你好呀', '嗨，我在', '你好，说吧'],
+      thanks: ['不客气', '应该的', '随时找我'],
+      bye: ['再见', '拜拜，下次聊', '走了？好，下次见'],
+      fallback: ['这个问题我暂时回答不了，换个问法试试？', '我还在学习中，换个方式问我吧。', '这个超出我范围了，要不问点别的？']
+    };
+    this.personality = { name: '智能助手', style: 'friendly', verbosity: 'medium' };
+    this.searchEnabled = true;
+    this.searcher = new BingSearch();
+    this.longText = new LongText();
+    this.reasoner = new Reasoner();
+    this.context = new Context();
+    this.mathHandlers = [
+      { m: /(\d+(?:\.\d+)?)\s*[\+\＋]\s*(\d+(?:\.\d+)?)/, f: (a, b) => a + b },
+      { m: /(\d+(?:\.\d+)?)\s*[\-\－]\s*(\d+(?:\.\d+)?)/, f: (a, b) => a - b },
+      { m: /(\d+(?:\.\d+)?)\s*[\*\×\x]\s*(\d+(?:\.\d+)?)/, f: (a, b) => a * b },
+      { m: /(\d+(?:\.\d+)?)\s*[\/\÷]\s*(\d+(?:\.\d+)?)/, f: (a, b) => b !== 0 ? +(a / b).toFixed(4) : '除数不能为 0' },
+      { m: /(\d+(?:\.\d+)?)\s*%/, f: a => a / 100 },
+      { m: /sqrt\s*\(?(\d+(?:\.\d+)?)\)?/, f: a => Math.sqrt(a) },
+      { m: /(\d+(?:\.\d+)?)\s*的\s*(\d+(?:\.\d+)?)\s*次方/, f: (a, b) => Math.pow(a, b) },
+    ];
+  }
+
+  setSearchMode(m) { this.searcher.mode = m; }
+
+  async loadTor(file) {
+    const buf = new Uint8Array(await file.arrayBuffer());
+    let o = 0;
+    const magic = String.fromCharCode(...buf.slice(0, 4));
+    if (!['TOR3', 'TOR2', 'TOR1'].includes(magic)) throw new Error('不是有效的 .tor 文件');
+    o += 4;
+    const count = buf[o + 3] === undefined ? 0 : (buf[o] | (buf[o + 1] << 8) | (buf[o + 2] << 16) | (buf[o + 3] << 24));
+    o += 8;
+    let parsed = 0;
+    for (let i = 0; i < count && o < buf.length; i++) {
+      const keyLen = buf[o] | (buf[o + 1] << 8); o += 2;
+      if (o + keyLen > buf.length) break;
+      const key = new TextDecoder().decode(buf.slice(o, o + keyLen)); o += keyLen;
+      const valLen = buf[o] | (buf[o + 1] << 8) | (buf[o + 2] << 16) | (buf[o + 3] << 24); o += 4;
+      if (o + valLen > buf.length) break;
+      const val = new TextDecoder().decode(buf.slice(o, o + valLen)); o += valLen;
+      const type = buf[o]; o++;
+      switch (type) {
+        case 0: this.knowledge.push({ q: key, a: val }); parsed++; break;
+        case 1: this.fragments[key] = val.split('|'); break;
+        case 2:
+          if (key === 'personality') this.personality = { ...this.personality, ...JSON.parse(val) };
+          if (key === 'causalRules') this.reasoner.load(val);
+          break;
+        case 3: this.reasoner.load(val); break;
+        case 4: this.longText.ingest(val); break;
+      }
+    }
+    this.loaded = true;
+    return { knowledge: parsed, rules: this.reasoner.rules.length, longText: this.longText.segments.length };
+  }
+
+  unload() {
+    this.knowledge = [];
+    this.longText = new LongText();
+    this.reasoner = new Reasoner();
+    this.loaded = false;
+  }
+
+  // 生成答案 —— 返回 {text, source, refs}
+  async answer(question) {
+    this.context.update(question);
+    const intents = this._intent(question);
+
+    // 1. 数学
+    for (const h of this.mathHandlers) {
+      const m = question.match(h.m);
+      if (m) return { text: String(h.f(Number(m[1]), m[2] ? Number(m[2]) : 0)), source: 'math', refs: [] };
+    }
+
+    // 2. 长文
+    if (this.longText.segments.length) {
+      const rel = this.longText.retrieve(question, 3);
+      if (rel.length) {
+        return { text: '根据已加载的文档内容：\n\n' + rel.map(r => r.seg.original).join('\n\n').slice(0, 700), source: 'longtext', refs: [] };
+      }
+    }
+
+    // 3. 因果推理
+    if (/如果|因为|导致|使得|为什么/.test(question) && this.reasoner.rules.length) {
+      const chain = this.reasoner.reason(question);
+      if (chain.length > 1) {
+        return { text: chain.filter(c => c.conclusion).map(c => '→ ' + c.conclusion).join('\n'), source: 'reasoning', refs: [] };
+      }
+    }
+
+    // 4. 知识库语义匹配
+    let best = null, bestScore = 0;
+    for (const item of this.knowledge) {
+      const s = similarity(question, item.q);
+      if (s > bestScore) { bestScore = s; best = item; }
+    }
+    if (bestScore > 0.35 && best) return { text: best.a, source: 'knowledge', refs: [] };
+
+    // 5. 联网搜索
+    if (this.searchEnabled) {
+      try {
+        const { results, via } = await this.searcher.search(question);
+        if (results && results.length) {
+          // 从搜索结果中找最相关的一段作为答案
+          const qw = tokenize(question);
+          const scored = results.map(r => ({
+            r,
+            score: cosine(this._bow(qw), this._bow(tokenize(r.title + ' ' + r.snippet)))
+          })).sort((a, b) => b.score - a.score);
+
+          const top = scored.slice(0, 3);
+          const summary = this._composeFromResults(question, top.map(x => x.r));
+          const refs = results.slice(0, 5).map(r => ({ title: r.title, url: r.url }));
+          return { text: summary, source: 'web', refs, via };
+        }
+      } catch (e) {
+        return { text: this._fallback(intents) + '\n\n（联网搜索失败：' + e.message + '）', source: 'fallback', refs: [] };
+      }
+    }
+
+    // 6. 意图兜底
+    if (intents.includes('greeting')) return { text: random(this.fragments.greeting), source: 'intent', refs: [] };
+    if (intents.includes('thanks')) return { text: random(this.fragments.thanks), source: 'intent', refs: [] };
+    if (intents.includes('bye')) return { text: random(this.fragments.bye), source: 'intent', refs: [] };
+
+    // 7. 终极兜底
+    return { text: this._fallback(intents), source: 'fallback', refs: [] };
+  }
+
+  _bow(words) {
+    const freq = new Map();
+    for (const w of words) freq.set(w, (freq.get(w) || 0) + 1);
+    return [...freq.entries()].sort((a, b) => b[1] - a[1]).slice(0, 40);
+  }
+
+  _composeFromResults(question, results) {
+    const verbosity = this.personality.verbosity;
+    const len = verbosity === 'brief' ? 1 : verbosity === 'detailed' ? 3 : 2;
+    const picked = results.slice(0, len);
+    let out = '';
+    if (verbosity === 'detailed') {
+      out = `关于「${question}」，综合必应搜索到的信息：\n\n`;
+      out += picked.map((r, i) => `${i + 1}. ${r.title}\n   ${r.snippet}`).join('\n\n');
+    } else if (verbosity === 'brief') {
+      out = picked[0].snippet || picked[0].title;
+    } else {
+      out = picked.map((r, i) => `${i + 1}. ${r.snippet || r.title}`).join('\n\n');
+    }
+    return out.trim();
+  }
+
+  _fallback(intents) {
+    if (intents.includes('howto')) return '这个我没整理好步骤，换个问法我试试？或者让我上网搜一下。';
+    if (intents.includes('compare')) return '对比的话得看具体维度，你说说要比哪方面？';
+    if (intents.includes('explain')) return '这个术语我暂时没有准确定义，你能说说在什么场景下遇到的吗？';
+    return random(this.fragments.fallback);
+  }
+
+  _intent(t) {
+    const i = [];
+    if (/怎么|如何|什么方法|教程/.test(t)) i.push('howto');
+    if (/为什么|原因|为啥/.test(t)) i.push('why');
+    if (/如果.*那么|因为.*所以/.test(t)) i.push('reasoning');
+    if (/查一下|搜一下|搜索|找一下|看看/.test(t)) i.push('search');
+    if (/天气|新闻|热点|最新|今天|现在/.test(t)) i.push('realtime');
+    if (/比较|区别|不同|vs/.test(t)) i.push('compare');
+    if (/解释|什么意思|含义|定义|科普/.test(t)) i.push('explain');
+    if (/你好|嗨|在吗|hi/i.test(t)) i.push('greeting');
+    if (/谢谢|感谢/i.test(t)) i.push('thanks');
+    if (/再见|拜拜|bye/i.test(t)) i.push('bye');
+    if (/笑话|搞笑|段子/.test(t)) i.push('joke');
+    return i.length ? i : ['general'];
+  }
+
+  polish(text) {
+    const style = this.personality.style;
+    let pre = '', suf = '';
+    if (Math.random() > 0.55) {
+      const p = { friendly: ['嗯，', '好嘞，', '好的，', ''], professional: ['', '根据现有信息，', ''], casual: ['', '哈，', 'emmm，'] };
+      pre = random(p[style] || p.friendly);
+    }
+    if (Math.random() > 0.78) {
+      const s = { friendly: ['还有什么想聊的吗？', '随时找我~', ''], professional: ['', '如需进一步信息请补充。'], casual: ['', '就这样', '懂我意思吧'] };
+      suf = random(s[style] || ['']);
+    }
+    return pre + text + suf;
+  }
+}
+
+//======================================================================
+// UI 层
+//======================================================================
+const app = {
+  brain: new Brain(),
+  busy: false,
+  streaming: false,
+  waiting: null,
+
+  init() {
+    this._initTheme();
+    this._bind();
+    this._bindDrag();
+    this._updateStatus('就绪', 'ready');
+    this._showWelcome();
+    this.brain.searcher.mode = 'auto';
+    // 自动自检：试试必应能不能通
+    this._selfCheck();
+  },
+
+  _initTheme() {
+    const d = localStorage.getItem('theme') === 'dark';
+    document.body.setAttribute('data-theme', d ? 'dark' : 'light');
+    $('#swTheme').classList.toggle('on', d);
+  },
+
+  _bind() {
+    $('#menuBtn').onclick = () => $('#modal').classList.add('show');
+    $('#modal').onclick = (e) => { if (e.target.id === 'modal') $('#modal').classList.remove('show'); };
+    $('#sendBtn').onclick = () => this._submit();
+    $('#inp').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); this._submit(); }
+    });
+    $('#inp').addEventListener('input', function () {
+      this.style.height = 'auto';
+      this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+    });
+    $('#torInput').onchange = (e) => {
+      const f = e.target.files[0];
+      if (f) this._loadTor(f);
+    };
+    $('#quick').onclick = (e) => {
+      const chip = e.target.closest('.quick-chip');
+      if (chip && chip.dataset.q) this._submit(chip.dataset.q);
+    };
+    $('#styleSel').value = this.brain.personality.style;
+    $('#verbSel').value = this.brain.personality.verbosity;
+  },
+
+  _bindDrag() {
+    const drop = $('#drop');
+    let counter = 0;
+    document.addEventListener('dragenter', (e) => { e.preventDefault(); counter++; drop.classList.add('show'); });
+    document.addEventListener('dragover', (e) => e.preventDefault());
+    document.addEventListener('dragleave', () => { counter--; if (counter <= 0) { counter = 0; drop.classList.remove('show'); } });
+    document.addEventListener('drop', (e) => {
+      e.preventDefault();
+      counter = 0;
+      drop.classList.remove('show');
+      const f = e.dataTransfer.files[0];
+      if (f) {
+        if (f.name.endsWith('.tor')) this._loadTor(f);
+        else ui.toast('请选择 .tor 文件');
+      }
+    });
+  },
+
+  async _selfCheck() {
+    try {
+      const { results } = await this.brain.searcher.search('test');
+      if (results && results.length) this._updateStatus('就绪 · 必应已连通', 'ready');
+    } catch (e) {
+      this._updateStatus('就绪 · 必应不可用，仅本地', 'warn');
+    }
+  },
+
+  setSearchMode(m) {
+    this.brain.setSearchMode(m);
+    ui.toast('搜索模式：' + ({ auto: '自动', rss: 'RSS 优先', html: 'HTML 解析' }[m] || m));
+  },
+  setStyle(v) { this.brain.personality.style = v; },
+  setVerbosity(v) { this.brain.personality.verbosity = v; },
+
+  async _loadTor(file) {
+    $('#mask').classList.add('show');
+    $('#maskText').textContent = '解析 ' + file.name + '...';
+    $('#maskSub').textContent = '';
+    try {
+      const info = await this.brain.loadTor(file);
+      $('#mask').classList.remove('show');
+      $('#empty').style.display = 'none';
+      $('#quick').style.display = 'flex';
+      $('#inp').disabled = false;
+      $('#sendBtn').disabled = false;
+      $('#torDesc').textContent = `${info.knowledge} 条知识 · ${info.rules} 条规则`;
+      this._addMsg('ai', `✅ 知识库已加载\n\n${info.knowledge} 条知识 · ${info.rules} 条推理规则` + (info.longText ? `\n已索引 ${info.longText} 段长文` : ''));
+      ui.toast('知识库加载成功');
+    } catch (e) {
+      $('#mask').classList.remove('show');
+      ui.toast('加载失败：' + e.message);
+    }
+  },
+
+  unloadTor() {
+    this.brain.unload();
+    $('#torDesc').textContent = '未加载';
+    ui.toast('知识库已卸载');
+    $('#modal').classList.remove('show');
+  },
+
+  _submit(preset) {
+    const inp = $('#inp');
+    const text = (preset || inp.value).trim();
+    if (!text || this.busy || this.streaming) return;
+    inp.value = preset ? '' : inp.value;
+    inp.style.height = 'auto';
+    this._addMsg('me', text);
+    this._doAnswer(text);
+  },
+
+  async _doAnswer(question) {
+    this.busy = true;
+    this.streaming = true;
+    $('#sendBtn').disabled = false;
+    $('#sendBtn').textContent = '■';
+    $('#sendBtn').classList.add('stop');
+
+    const bubble = this._addMsg('ai', '', true);
+    let fullText = '';
+    let refs = [];
+
+    try {
+      const result = await this.brain.answer(question);
+      fullText = this.brain.polish(result.text);
+      refs = result.refs || [];
+      const via = result.via ? ` · ${result.via}` : '';
+      // 流式打字效果
+      await this._typewriter(bubble, fullText);
+      if (refs.length) this._appendRefs(bubble, refs);
+      else this._appendMeta(bubble, result.source + via);
+    } catch (e) {
+      await this._typewriter(bubble, '❌ 出错了：' + e.message);
+    }
+
+    this.streaming = false;
+    this.busy = false;
+    $('#sendBtn').textContent = '↑';
+    $('#sendBtn').classList.remove('stop');
+    if (this.brain.loaded || this.brain.searchEnabled) $('#sendBtn').disabled = false;
+  },
+
+  async _typewriter(bubble, text) {
+    bubble.textContent = '';
+    const total = text.length;
+    const step = total > 200 ? 4 : total > 80 ? 2 : 1;
+    for (let i = 0; i <= total; i += step) {
+      const chunk = text.slice(0, Math.min(i + step, total));
+      bubble.textContent = chunk;
+      const cur = document.createElement('span');
+      cur.className = 'cursor';
+      bubble.appendChild(cur);
+      $('#chat').scrollTop = $('#chat').scrollHeight;
+      await new Promise(r => setTimeout(r, 12));
+      if (!this.streaming) { bubble.textContent = text; return; }
+    }
+    bubble.textContent = text;
+  },
+
+  _appendRefs(bubble, refs) {
+    const meta = document.createElement('span');
+    meta.className = 'meta';
+    meta.textContent = '来源：必应搜索';
+    bubble.appendChild(meta);
+    const box = document.createElement('div');
+    box.className = 'sources';
+    refs.forEach((r, i) => {
+      const a = document.createElement('a');
+      a.href = r.url;
+      a.target = '_blank';
+      a.rel = 'noopener';
+      a.innerHTML = `<span class="num">${i + 1}</span><span>${r.title}</span>`;
+      box.appendChild(a);
+    });
+    bubble.appendChild(box);
+  },
+
+  _appendMeta(bubble, text) {
+    const meta = document.createElement('span');
+    meta.className = 'meta';
+    meta.textContent = '来源：' + ({ knowledge: '本地知识库', reasoning: '推理链', math: '本地计算', intent: '本地', fallback: '本地兜底', longtext: '已加载文档' }[text] || text);
+    bubble.appendChild(meta);
+  },
+
+  _addMsg(role, text, streaming) {
+    const empty = $('#empty');
+    if (empty) empty.style.display = 'none';
+    const chat = $('#chat');
+    const row = document.createElement('div');
+    row.className = 'row ' + role;
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    if (streaming) {
+      bubble.innerHTML = '<span class="typing"><span></span><span></span><span></span></span>';
+    } else {
+      bubble.textContent = text;
+    }
+    row.appendChild(bubble);
+    chat.appendChild(row);
+    chat.scrollTop = chat.scrollHeight;
+    return bubble;
+  },
+
+  _showWelcome() {
+    $('#quick').style.display = 'flex';
+    $('#inp').disabled = false;
+    $('#sendBtn').disabled = false;
+    this._updateStatus('就绪 · 必应联网', 'ready');
+  },
+
+  _updateStatus(text, level) {
+    $('#statusText').textContent = text;
+    const dot = $('#statusDot');
+    dot.className = 'dot' + (level === 'ready' ? ' on' : level === 'warn' ? ' warn' : level === 'err' ? ' err' : '');
+  },
+
+  clearChat() {
+    const chat = $('#chat');
+    chat.innerHTML = '';
+    const empty = document.createElement('div');
+    empty.className = 'empty';
+    empty.id = 'empty';
+    empty.innerHTML = `
+      <div class="logo">✦</div>
+      <h2>智能助手</h2>
+      <p>对话已清空，继续聊吧</p>
+      <button class="nav-btn" style="width:auto;height:auto;padding:9px 22px;border-radius:980px;font-size:15px;margin-top:8px" onclick="document.getElementById('torInput').click()">加载知识库 (.tor)</button>`;
+    chat.appendChild(empty);
+    this.brain.context = new Context();
+    $('#modal').classList.remove('show');
+    ui.toast('对话已清空');
+  },
+
+  exportChat() {
+    const rows = $('#chat').querySelectorAll('.row');
+    if (!rows.length) { ui.toast('当前没有对话内容'); return; }
+    let md = '# 智能助手对话记录\n\n> 导出时间：' + new Date().toLocaleString('zh-CN') + '\n\n---\n\n';
+    rows.forEach(r => {
+      if (r.classList.contains('sys')) return;
+      const role = r.classList.contains('me') ? '**我**' : '**助手**';
+      const text = r.querySelector('.bubble').childNodes[0].textContent;
+      if (text.trim()) md += `### ${role}\n\n${text.trim()}\n\n`;
+    });
+    const blob = new Blob([md], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'chat-' + Date.now() + '.md'; a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    ui.toast('已导出');
+    $('#modal').classList.remove('show');
+  }
+};
+
+const ui = {
+  toastTimer: null,
+  toast(msg) {
+    const t = $('#toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(this.toastTimer);
+    this.toastTimer = setTimeout(() => t.classList.remove('show'), 2600);
+  },
+  toggleTheme() {
+    const d = document.body.getAttribute('data-theme') === 'dark';
+    const next = !d;
+    document.body.setAttribute('data-theme', next ? 'dark' : 'light');
+    $('#swTheme').classList.toggle('on', next);
+    localStorage.setItem('theme', next ? 'dark' : 'light');
+  },
+  toggleSearch() {
+    const sw = $('#swSearch');
+    const on = !sw.classList.contains('on');
+    sw.classList.toggle('on', on);
+    app.brain.searchEnabled = on;
+    $('#searchLbl').textContent = on ? '必应搜索' : '必应搜索（已关闭）';
+    ui.toast(on ? '必应搜索已开启' : '必应搜索已关闭');
+  },
+  closeModal() { $('#modal').classList.remove('show'); }
+};
+
+// 暴露给内联处理器
+window.app = app;
+window.ui = ui;
+
+// 启动
+document.addEventListener('DOMContentLoaded', () => app.init());
+</script>
+</body>
+</html>
