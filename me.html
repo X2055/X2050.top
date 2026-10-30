@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Gator · X2050.TOP</title>
+<style>
+:root{
+  --bg:#f6f7fb;
+  --card:#ffffff;
+  --ink:#1c1f26;
+  --ink-dim:#5b6373;
+  --ink-faint:#9aa1af;
+  --line:rgba(28,31,38,.09);
+  --line-soft:rgba(28,31,38,.05);
+  --blue:#1296db;
+  --blue-soft:rgba(18,150,219,.10);
+  --orange:#ffa502;
+  --green:#2ed573;
+  --radius:20px;
+  --sans:-apple-system,BlinkMacSystemFont,"SF Pro Display","PingFang SC","Microsoft YaHei",sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  min-height:100dvh;background:var(--bg);color:var(--ink);
+  font-family:var(--sans);-webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+.aurora{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;}
+.aurora i{position:absolute;border-radius:50%;filter:blur(110px);opacity:.26;animation:drift 24s ease-in-out infinite;}
+.a1{width:520px;height:520px;background:#8ec5ff;top:-180px;left:-120px;}
+.a2{width:460px;height:460px;background:#7be0ff;top:30%;right:-160px;animation-delay:-8s;}
+.a3{width:420px;height:420px;background:#b9a4ff;bottom:-160px;left:20%;animation-delay:-15s;}
+@keyframes drift{
+  0%,100%{transform:translate(0,0) scale(1);}
+  34%{transform:translate(44px,-32px) scale(1.08);}
+  67%{transform:translate(-28px,28px) scale(.95);}
+}
+.wrap{max-width:760px;margin:0 auto;padding:28px 18px 50px;position:relative;z-index:2;}
+
+/* ===== 身份卡 ===== */
+.card{
+  background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  overflow:hidden;box-shadow:0 24px 60px -34px rgba(28,31,38,.35);
+}
+.cover{
+  height:72px;position:relative;overflow:hidden;
+  background:linear-gradient(120deg,#4facfe 0%,#00f2fe 30%,#a18bff 60%,#ff7eb9 100%);
+  background-size:280% 280%;animation:cover 8s ease infinite;
+}
+@keyframes cover{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+.body{padding:0 22px 18px;}
+
+/* 头像 + 昵称横排 */
+.head{display:flex;align-items:flex-end;gap:16px;margin-top:-28px;position:relative;}
+.avatar{
+  width:76px;height:76px;border-radius:18px;overflow:hidden;cursor:pointer;
+  border:3px solid #fff;background:#eef1f8;box-shadow:0 8px 22px -10px rgba(28,31,38,.5);
+  position:relative;flex:0 0 76px;
+}
+.avatar img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .8s cubic-bezier(.16,1,.3,1);}
+.avatar:hover img{transform:scale(1.07);}
+.avatar .scan{position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,transparent 40%,rgba(79,172,254,.35),transparent 60%);transform:translateY(-100%);}
+.avatar.scanning .scan{animation:scan .85s ease;}
+@keyframes scan{to{transform:translateY(100%)}}
+.who{flex:1;padding-bottom:6px;}
+.who h1{font-size:25px;font-weight:800;letter-spacing:-.02em;cursor:default;}
+.who .tag{margin-top:6px;font-size:13px;color:var(--ink-dim);}
+
+/* 分割线 */
+hr.sep{border:0;border-top:1px solid var(--line-soft);margin:14px 0;}
+
+/* 资料表 */
+.list{display:flex;flex-direction:column;gap:1px;}
+.item{
+  display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;
+  cursor:pointer;transition:background .25s,transform .25s;
+}
+.item:hover{background:rgba(28,31,38,.035);transform:translateX(3px);}
+.item .k{font-family:var(--mono);font-size:10px;letter-spacing:.18em;color:var(--ink-faint);width:74px;flex:0 0 74px;}
+.item .v{flex:1;font-size:14.5px;font-weight:600;word-break:break-all;}
+.item .cp{font-size:10.5px;color:var(--ink-faint);opacity:0;transition:opacity .25s;font-weight:700;}
+.item:hover .cp{opacity:1;color:var(--blue);}
+
+/* 返回链接 */
+.back{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  margin-top:14px;padding:10px 14px;border-radius:12px;
+  border:1px dashed var(--line);cursor:pointer;
+  text-decoration:none;color:var(--ink-dim);font-size:13px;font-weight:600;
+  transition:background .25s,color .25s,border-color .25s;
+}
+.back:hover{background:var(--blue-soft);color:var(--blue);border-color:rgba(18,150,219,.35);}
+.back .ar{font-size:12px;opacity:.55;transition:transform .25s;}
+.back:hover .ar{transform:translateX(3px);opacity:1;}
+
+/* 签名 */
+.sign{margin-top:16px;padding-top:12px;border-top:1px dashed var(--line);font-size:12px;color:var(--ink-faint);text-align:center;cursor:pointer;transition:color .25s;}
+.sign:hover{color:var(--ink-dim);}
+
+/* ===== 彩蛋层 ===== */
+.matrix{position:fixed;inset:0;z-index:300;pointer-events:none;opacity:0;transition:opacity .5s;}
+.matrix.on{opacity:.9;}
+.matrix span{position:absolute;top:-3em;font-family:var(--mono);font-size:13px;font-weight:700;color:#1296db;animation:fall linear forwards;white-space:pre;line-height:1.3;}
+@keyframes fall{to{transform:translateY(125vh);opacity:0}}
+.confetti{position:fixed;inset:0;z-index:301;pointer-events:none;overflow:hidden;}
+.confetti i{position:absolute;top:-20px;width:8px;height:14px;border-radius:2px;animation:cf linear forwards;}
+@keyframes cf{to{transform:translateY(112vh) rotate(880deg);opacity:.75}}
+.ripples{position:fixed;inset:0;z-index:299;pointer-events:none;}
+.ripples .rp{position:absolute;border-radius:50%;transform:translate(-50%,-50%) scale(0);animation:rp .68s cubic-bezier(.16,1,.3,1) forwards;}
+@keyframes rp{to{transform:translate(-50%,-50%) scale(1);opacity:0}}
+.toast{
+  position:fixed;left:50%;bottom:40px;z-index:310;
+  transform:translate(-50%,16px);opacity:0;pointer-events:none;
+  padding:12px 24px;border-radius:999px;font-size:13px;font-weight:600;
+  color:#fff;background:var(--ink);box-shadow:0 18px 44px -18px rgba(0,0,0,.5);
+  transition:opacity .35s,transform .35s cubic-bezier(.16,1,.3,1);
+}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.secret{position:fixed;left:14px;bottom:14px;width:26px;height:26px;z-index:100;cursor:pointer;border-radius:50%;background:radial-gradient(circle,rgba(255,165,2,.55),transparent 70%);opacity:0;transition:opacity .4s}
+.secret.on{opacity:.6;animation:sp 2.4s ease-in-out infinite}
+@keyframes sp{0%,100%{box-shadow:0 0 0 0 rgba(255,165,2,.5)}50%{box-shadow:0 0 0 14px transparent}}
+.topb{
+  position:fixed;right:18px;bottom:54px;z-index:99;width:42px;height:42px;border-radius:14px;
+  border:1px solid var(--line);background:rgba(255,255,255,.92);
+  display:grid;place-items:center;cursor:pointer;
+  opacity:0;transform:translateY(12px) scale(.9);pointer-events:none;
+  transition:opacity .35s,transform .35s cubic-bezier(.16,1,.3,1);
+}
+.topb.show{opacity:1;transform:none;pointer-events:auto}
+.topb svg{width:16px;height:16px;fill:var(--ink)}
+
+@media(max-width:560px){
+  .wrap{padding:16px 14px 40px;}
+  .cover{height:56px;}
+  .head{flex-direction:column;align-items:flex-start;gap:10px;margin-top:-22px;}
+  .avatar{width:64px;height:64px;flex:0 0 64px;border-radius:16px;}
+  .body{padding:0 14px 14px;}
+  .who h1{font-size:22px;}
+  hr.sep{margin:12px 0;}
+  .item{padding:9px 10px;}
+  .back{margin-top:12px;padding:9px 12px;}
+  .sign{margin-top:14px;padding-top:10px;}
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="aurora" aria-hidden="true"><i class="a1"></i><i class="a2"></i><i class="a3"></i></div>
+
+<main class="wrap">
+  <section class="card">
+    <div class="cover" aria-hidden="true"></div>
+    <div class="body">
+      <div class="head">
+        <div class="avatar" id="avatar">
+          <img src="https://a1.boltp.com/2026/10/30/6ae4b69f3a95c.jpg" alt="Gator 的头像"
+               onerror="this.style.display='none'">
+          <div class="scan"></div>
+        </div>
+        <div class="who">
+          <h1 id="name">Gator</h1>
+          <div class="tag" id="sign">X2050.TOP 站长 · 孢子协议作者</div>
+        </div>
+      </div>
+
+      <hr class="sep">
+
+      <div class="list">
+        <div class="item" data-copy="2307007253">
+          <span class="k">QQ</span><span class="v">2307007253</span><span class="cp">复制</span>
+        </div>
+        <div class="item" data-copy="SuperGator">
+          <span class="k">微信</span><span class="v">SuperGator</span><span class="cp">复制</span>
+        </div>
+        <div class="item" data-link="https://t.me/Duck230">
+          <span class="k">Telegram</span><span class="v">@Duck230</span><span class="cp">打开</span>
+        </div>
+      </div>
+
+      <a class="back" id="backLink" href="社区0.2.3.html">
+        <span>↩ 返回 X2050.TOP</span><span class="ar">›</span>
+      </a>
+
+      <div class="sign" id="signBox">到此一游~</div>
+    </div>
+  </section>
+</main>
+
+<div class="matrix" id="matrix" aria-hidden="true"></div>
+<div class="confetti" id="confetti" aria-hidden="true"></div>
+<div class="ripples" id="ripples" aria-hidden="true"></div>
+<div class="secret" id="secret" title="?"></div>
+<div class="topb" id="topb" role="button" aria-label="回到顶部"><svg viewBox="0 0 24 24"><path d="M12 4l-8 8h5v8h6v-8h5z"/></svg></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+  var $ = function(s){return document.querySelector(s)};
+  var $$ = function(s){return Array.prototype.slice.call(document.querySelectorAll(s))};
+  var toastEl = $('#toast'), tt = null;
+  function toast(m){toastEl.textContent=m;toastEl.classList.add('show');clearTimeout(tt);tt=setTimeout(function(){toastEl.classList.remove('show')},1800);}
+  function vib(p){if(navigator.vibrate){try{navigator.vibrate(p)}catch(e){}}}
+
+  /* 水波纹 */
+  var rl = $('#ripples');
+  function rip(x,y,c){
+    var e=document.createElement('span');e.className='rp';
+    e.style.left=x+'px';e.style.top=y+'px';
+    e.style.width=e.style.height='10px';
+    e.style.background=c||'rgba(18,150,219,.4)';
+    rl.appendChild(e);setTimeout(function(){e.remove()},740);
+  }
+
+  /* ① 单击昵称 → 换签名 */
+  var SIGNS=['X2050.TOP 站长 · 孢子协议作者','今天也是元气满满的一天','在找新的好玩站点','刚写完一段故事','摸鱼中，别吵'];
+  var si=0, nameEl=$('#name');
+  nameEl.addEventListener('click',function(e){
+    si=(si+1)%SIGNS.length;
+    $('#sign').textContent=SIGNS[si];
+    rip(e.clientX,e.clientY,'rgba(18,150,219,.4)');vib(10);mark(1);
+  });
+
+  /* ② 头像：单击 / 双击 / 三连击 / 长按 */
+  var av=$('#avatar'),ac=0,atm=null,apt=null,isLP=false;
+  av.addEventListener('pointerdown',function(){
+    isLP=false;
+    apt=setTimeout(function(){
+      isLP=true;
+      av.style.boxShadow='0 0 0 3px var(--orange),0 0 30px -4px var(--orange)';
+      vib([20,50,20]);toast('盯久了会不好意思的');
+      setTimeout(function(){av.style.boxShadow=''},1500);
+    },1200);
+  });
+  av.addEventListener('pointerup',function(e){
+    clearTimeout(apt);
+    if(isLP)return;
+    ac++;
+    if(ac===1){atm=setTimeout(function(){ac=0;rain();toast('你在看我？')},300);}
+    else if(ac===2){
+      clearTimeout(atm);
+      av.classList.remove('scanning');void av.offsetWidth;av.classList.add('scanning');
+      setTimeout(function(){av.classList.remove('scanning')},900);
+    }
+    else if(ac===3){clearTimeout(atm);ac=0;shoot();toast('✨ 抓到一只 Gator');vib([18,60,18]);}
+  });
+  av.addEventListener('pointerleave',function(){clearTimeout(apt);});
+
+  /* 数字雨 */
+  var mx=$('#matrix'),mxt=null;
+  function rain(){
+    mx.innerHTML='';
+    var cols=Math.floor(innerWidth/22),cs='01X2050GATOR'.split('');
+    for(var i=0;i<cols;i++){
+      var s=document.createElement('span');
+      s.style.left=(i*22+Math.random()*8)+'px';
+      s.style.animationDuration=(2+Math.random()*3)+'s';
+      s.style.animationDelay=(Math.random()*1.8)+'s';
+      var t='',L=9+Math.floor(Math.random()*13);
+      for(var j=0;j<L;j++)t+=cs[Math.floor(Math.random()*cs.length)]+'\n';
+      s.textContent=t;
+      mx.appendChild(s);
+    }
+    mx.classList.add('on');clearTimeout(mxt);
+    mxt=setTimeout(function(){mx.classList.remove('on')},3600);
+  }
+
+  /* 彩纸 */
+  var cf=$('#confetti');
+  function shoot(){
+    var cs=['#1296db','#a18bff','#ff7eb9','#2ed573','#ffa502','#ff4757'];
+    for(var i=0;i<44;i++){
+      var c=document.createElement('i');
+      c.style.left=(6+Math.random()*88)+'%';
+      c.style.background=cs[Math.floor(Math.random()*cs.length)];
+      c.style.animationDuration=(1.6+Math.random()*2)+'s';
+      c.style.animationDelay=(Math.random()*.4)+'s';
+      cf.appendChild(c);
+      (function(el){setTimeout(function(){el.remove()},4200)})(c);
+    }
+  }
+
+  /* 资料行复制 / 打开 */
+  $$('.item').forEach(function(it){
+    it.addEventListener('pointerdown',function(e){rip(e.clientX,e.clientY,'rgba(161,139,255,.4)');vib(9);});
+    it.addEventListener('click',function(){
+      var cp=it.getAttribute('data-copy'),lk=it.getAttribute('data-link');
+      if(cp){
+        var done=function(){toast('已复制 '+cp);vib(12);};
+        if(navigator.clipboard&&window.isSecureContext){
+          navigator.clipboard.writeText(cp).then(done,function(){fb(cp,done);});
+        }else fb(cp,done);
+      }
+      if(lk)window.open(lk,'_blank','noopener');
+    });
+  });
+  function fb(t,cb){
+    var ta=document.createElement('textarea');ta.value=t;
+    ta.style.cssText='position:fixed;top:0;left:0;opacity:0';
+    document.body.appendChild(ta);ta.select();
+    try{document.execCommand('copy')}catch(e){}
+    ta.remove();cb();
+  }
+
+  /* ④ 隐藏点 */
+  var sec=$('#secret'),sn=0,st=null,unlocked=false;
+  sec.addEventListener('click',function(){
+    if(unlocked){toast('★ 你已经找到我啦');return;}
+    sec.style.opacity='.55';clearTimeout(st);st=setTimeout(function(){sec.style.opacity=''},1000);
+    sn++;vib(10);
+    if(sn>=3){unlocked=true;sec.classList.add('on');shoot();toast('★ 隐藏彩蛋解锁');vib([18,50,18]);}
+  });
+
+  /* ⑤ 密码锁：昵称(1) → 返回链接(2) → 头像(3)，正确 1-2-3 */
+  var CODE=[1,2,3],buf=[],bt=null;
+  function mark(n){
+    buf.push(n);clearTimeout(bt);
+    bt=setTimeout(function(){buf=[]},2500);
+    if(buf.length===3){
+      var ok=buf.every(function(v,i){return v===CODE[i]});
+      setTimeout(function(){
+        buf=[];
+        if(ok){rain();shoot();toast('🔓 密码正确 · X2050');vib([20,60,20,60,20]);}
+        else{
+          toast('密码不对，再试试');
+          document.body.animate([{transform:'translateX(0)'},{transform:'translateX(-7px)'},{transform:'translateX(6px)'},{transform:'translateX(0)'}],{duration:280});
+          vib([40,40]);
+        }
+      },60);
+    }
+  }
+  $('#backLink').addEventListener('click',function(e){e.preventDefault();mark(2);
+    var a=$('#backLink');
+    a.animate([{transform:'scale(1)'},{transform:'scale(.96)'},{transform:'scale(1)'}],{duration:300});
+    setTimeout(function(){window.location.href='社区0.2.3.html'},420);
+  });
+
+  /* ⑥ 签名留白点击 */
+  $('#signBox').addEventListener('click',function(){shoot();toast('✒️ 签个名：Gator was here');vib([18,40,18]);});
+
+  /* 摇一摇（真机） */
+  var lx,ly,lz,sc=0,stm=null;
+  function motion(){
+    if(!window.DeviceMotionEvent)return;
+    window.addEventListener('devicemotion',function(e){
+      var a=e.accelerationIncludingGravity;if(!a||a.x===null)return;
+      if(lx!==undefined){
+        var d=Math.abs(a.x-lx)+Math.abs(a.y-ly)+Math.abs(a.z-lz);
+        if(d>19){sc++;clearTimeout(stm);stm=setTimeout(function(){sc=0},1600);
+          if(sc>=3){sc=0;shoot();toast('📳 摇出彩蛋啦');vib([20,60,20]);}
+        }
+      }
+      lx=a.x;ly=a.y;lz=a.z;
+    });
+  }
+  if(window.DeviceMotionEvent&&typeof DeviceMotionEvent.requestPermission==='function'){
+    document.addEventListener('click',function(){DeviceMotionEvent.requestPermission().then(function(s){if(s==='granted')motion();}).catch(function(){});},{once:true});
+  }else motion();
+
+  /* 回到顶部 */
+  var tb=$('#topb');
+  tb.addEventListener('click',function(){scrollTo({top:0,behavior:'smooth'});vib(12);});
+  addEventListener('scroll',function(){tb.classList.toggle('show',scrollY>400);},{passive:true});
+
+  /* 视差 */
+  if(matchMedia('(pointer:fine)').matches){
+    var au=document.querySelector('.aurora');
+    addEventListener('mousemove',function(e){
+      var x=(e.clientX/innerWidth-.5)*26,y=(e.clientY/innerHeight-.5)*26;
+      au.style.transform='translate3d('+x+'px,'+y+'px,0)';
+    },{passive:true});
+  }
+})();
+</script>
+</body>
+</html>
