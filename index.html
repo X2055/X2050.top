@@ -283,15 +283,15 @@
 
     <div class="carousel-container" id="carouselContainer">
       <div class="carousel-track" id="carouselTrack">
-        <a href="http://x2050.top/" target="_blank" class="slide">
+        <a class="slide" style="pointer-events:none;cursor:default;" aria-disabled="true">
           <img src="https://a1.boltp.com/2026/08/06/6a7410fae4d72.jpg" alt="Slide 1">
           <div class="slide-caption">为中国人民谋幸福，为中华民族谋复兴</div>
         </a>
-        <a href="https://2050.cn.lu/ntest.html" target="_blank" class="slide">
+        <a href="https://2050.cn.lu/ntest.html" target="_blank" rel="noopener noreferrer" class="slide" title="点击前往意识形态测评">
           <img src="https://a1.boltp.com/2026/08/06/6a74182732a33.jpg" alt="Slide 2">
           <div class="slide-caption">普京邀请你测试意识形态，点击即可测试</div>
         </a>
-        <a href="https://www.marxists.org/chinese/" target="_blank" class="slide">
+        <a class="slide" style="pointer-events:none;cursor:default;" aria-disabled="true">
           <img src="https://a1.boltp.com/2026/08/06/6a74132eabc0a.png" alt="Slide 3">
           <div class="slide-caption">巴兰尼科夫同志强调：我们一定要把自由的旗帜插到美国去！</div>
         </a>
@@ -489,8 +489,15 @@
       ct.addEventListener("mousedown",onS);
       window.addEventListener("mousemove",onM);
       window.addEventListener("mouseup",onE);
-      ct.addEventListener("click",e=>{if(Math.abs(mv)>10)e.preventDefault();},true);
+      ct.addEventListener("click",e=>{
+        if(Math.abs(mv)>10){e.preventDefault();return;}
+        const a=e.target.closest("a.slide");
+        if(a && (!a.hasAttribute("href") || a.getAttribute("href")==="#")){e.preventDefault();}
+      },true);
       dt.forEach((d,i)=>d.addEventListener("click",()=>{goS(i);stA();}));
+      const slides=[].slice.call(document.querySelectorAll("#carouselTrack a.slide"));
+      function syncCursor(){slides.forEach((a,i)=>{a.style.cursor=(i===1)?"pointer":"default";});}
+      syncCursor();
       stA();
     }
 
@@ -559,7 +566,7 @@
     document.querySelectorAll('.sidebar-content-item').forEach(item=>{
       item.addEventListener('click', ()=>{
         const link = item.dataset.link;
-        if(link === 'about.html'){ window.location.href = 'me.html'; }
+        if(link === 'me.html'){ window.location.href = 'me.html'; }
       });
     });
 
