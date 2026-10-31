@@ -711,6 +711,28 @@ button.mini,.file-btn.mini{padding:3px 10px;font-size:12px;margin:0}
 .sb-foot b{color:#1a5ba8}
 @media(max-width:900px),(max-height:520px){.shell{flex-direction:column}.sidebar{position:static;width:100%;height:auto;flex-direction:row;overflow-x:auto;padding:8px;border-right:0;border-bottom:1px solid #dce3ed;gap:4px}.nav-item{flex:none;width:auto;border-left:0;border-bottom:3px solid transparent;border-radius:6px;padding:7px 12px}.nav-item.active{border-bottom-color:#4a90d9}.nav-item small,.sb-title,.sb-foot{display:none}.content{padding:14px 12px}}
 @media(max-width:560px){.id-card{flex-direction:column;align-items:flex-start}.led-note{width:100%}}
+
+/* ===== 点击反馈：去掉浏览器默认蓝色/灰色点击框，换成按压 + 涟漪 ===== */
+*{-webkit-tap-highlight-color:transparent}
+button,.file-btn,.drop,summary,.tab-bar button,.seg button,label.file-btn{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;touch-action:manipulation}
+button,.file-btn,.drop,summary,a{outline:none}
+button:focus,.file-btn:focus,summary:focus,a:focus{outline:none}
+button:focus-visible,.file-btn:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid #4a90d9;outline-offset:2px}
+button,.file-btn,.drop{position:relative;overflow:hidden;transition:transform .12s ease,filter .12s ease,box-shadow .15s ease,background .15s ease,border-color .15s ease,color .15s ease}
+button:not(:disabled):active,.file-btn:active{transform:scale(.95);filter:brightness(.88);box-shadow:inset 0 2px 6px rgba(0,0,0,.18)}
+button.secondary:not(:disabled):active,.file-btn:active{background:#d4e5fa;filter:none;box-shadow:inset 0 2px 6px rgba(26,91,168,.22)}
+button.link:active{transform:none;filter:none;box-shadow:none;opacity:.6}
+.drop:active{transform:scale(.99);background:#e6f0fc;border-color:#4a90d9}
+summary{transition:background .15s}
+summary:active{background:rgba(74,144,217,.14);border-radius:6px}
+.tab-bar button:active,.seg button:active{transform:scale(.97)}
+.led-row:active{background:rgba(74,144,217,.08)}
+button:disabled{cursor:not-allowed;opacity:.55}
+.sp-ripple{position:absolute;border-radius:50%;background:currentColor;opacity:.28;transform:scale(0);pointer-events:none;animation:sp-rip .55s ease-out forwards}
+@keyframes sp-rip{to{transform:scale(1);opacity:0}}
+.sp-done{animation:sp-pop .35s ease}
+@keyframes sp-pop{0%{box-shadow:0 0 0 0 rgba(74,144,217,.55)}100%{box-shadow:0 0 0 10px rgba(74,144,217,0)}}
+@media (prefers-reduced-motion:reduce){.sp-ripple,.sp-done{animation:none;display:none}button:not(:disabled):active,.file-btn:active{transform:none}}
 </style>
 </head>
 <body>
@@ -1514,6 +1536,30 @@ window.addEventListener('dragover',e=>e.preventDefault());window.addEventListene
 const h0=location.hash.slice(1);show(h0==='img'||h0==='enc'?'im':h0==='op'||h0==='dec'?'op':'sp');
 })();
 
+</script>
+<script>
+/* 点击涟漪反馈（事件委托，动态生成的按钮同样有效） */
+(function(){
+  const SEL='button:not(:disabled),.file-btn,.drop';
+  document.addEventListener('pointerdown',function(e){
+    if(e.button>0)return;
+    const el=e.target.closest&&e.target.closest(SEL);
+    if(!el||el.matches('button.link'))return;
+    const r=el.getBoundingClientRect(),d=Math.max(r.width,r.height)*2.1;
+    const x=(e.clientX||r.left+r.width/2)-r.left-d/2,y=(e.clientY||r.top+r.height/2)-r.top-d/2;
+    const s=document.createElement('span');s.className='sp-ripple';
+    s.style.cssText='width:'+d+'px;height:'+d+'px;left:'+x+'px;top:'+y+'px';
+    el.appendChild(s);setTimeout(()=>s.remove(),620);
+  },{passive:true});
+  /* 点击完成后让按钮短暂“弹一下”，并放开焦点，避免残留的高亮框 */
+  document.addEventListener('click',function(e){
+    const el=e.target.closest&&e.target.closest('button,.file-btn');
+    if(!el)return;
+    el.classList.remove('sp-done');void el.offsetWidth;el.classList.add('sp-done');
+    setTimeout(()=>el.classList.remove('sp-done'),380);
+    if(e.detail>0&&el.tagName==='BUTTON'&&document.activeElement===el)setTimeout(()=>{try{el.blur()}catch(_){}},400);
+  },true);
+})();
 </script>
 </body>
 </html>
