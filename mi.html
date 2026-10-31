@@ -1047,7 +1047,58 @@ const IC={lock:'<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11
 const ICON=p=>`<span class="ico"><svg viewBox="0 0 24 24">${IC[p]||p}</svg></span>`;
 function toast(m){const t=$('toast');t.textContent=m;t.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('on'),2600)}
 let urls=[];const mkUrl=b=>{const u=URL.createObjectURL(b);urls.push(u);return u};
-const copy=async t=>{try{await navigator.clipboard.writeText(t);toast('已复制')}catch(e){toast('复制失败，请手动选择')}};
+/* ===== 强制复制：Clipboard API → execCommand → 手动复制弹窗 ===== */
+function legacyCopy(t,el){
+  let ta=el,tmp=false;
+  if(!ta){tmp=true;ta=document.createElement('textarea');ta.value=t;ta.setAttribute('readonly','');
+    ta.style.cssText='position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;font-size:16px;border:0;padding:0';
+    document.body.appendChild(ta)}
+  let ok=false;
+  try{
+    const ro=ta.readOnly;ta.readOnly=false;ta.focus({preventScroll:true});ta.select();
+    try{ta.setSelectionRange(0,ta.value.length)}catch(e){}
+    ok=document.execCommand('copy');ta.readOnly=ro;
+  }catch(e){ok=false}
+  if(tmp)ta.remove();
+  return ok;
+}
+async function tryCopy(t,el){
+  try{if(navigator.clipboard&&navigator.clipboard.writeText){await navigator.clipboard.writeText(t);return true}}catch(e){}
+  return legacyCopy(t,el);
+}
+function copyDialog(t,title){
+  const old=document.getElementById('copyFallback');if(old)old.remove();
+  const ov=document.createElement('div');ov.id='copyFallback';
+  ov.style.cssText='position:fixed;inset:0;z-index:2147483000;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:14px;box-sizing:border-box';
+  const box=document.createElement('div');
+  box.style.cssText='background:#fff;color:#222;border-radius:14px;width:100%;max-width:560px;max-height:92vh;overflow:auto;padding:16px 16px 14px;box-sizing:border-box;box-shadow:0 10px 40px rgba(0,0,0,.35);font:14px/1.6 -apple-system,"PingFang SC","Microsoft YaHei",sans-serif';
+  const h=document.createElement('div');h.style.cssText='font-size:17px;font-weight:600;margin-bottom:4px';h.textContent='请手动复制'+(title?'：'+title:'');
+  const p=document.createElement('div');p.style.cssText='font-size:13px;color:#555;margin-bottom:8px';
+  p.textContent='当前浏览器不允许自动复制。下方内容已全选，请长按 / 右键 / Ctrl+C 复制；也可以直接编辑，或点“分享”发送到其它应用。';
+  const ta=document.createElement('textarea');ta.value=t;
+  ta.style.cssText='width:100%;height:'+(t.length>400?'42vh':'22vh')+';min-height:110px;box-sizing:border-box;font:13px/1.5 ui-monospace,Menlo,Consolas,monospace;border:1px solid #c9d2e0;border-radius:8px;padding:8px;resize:vertical;color:#222;background:#fafcff;-webkit-user-select:text;user-select:text';
+  ta.setAttribute('spellcheck','false');ta.setAttribute('autocapitalize','off');ta.setAttribute('autocorrect','off');
+  const msg=document.createElement('div');msg.style.cssText='min-height:20px;font-size:13px;color:#1a7f37;margin:6px 0 2px';
+  const row=document.createElement('div');row.style.cssText='display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end';
+  const mk=(txt,primary,fn)=>{const b=document.createElement('button');b.type='button';b.textContent=txt;
+    b.style.cssText='border:'+(primary?'0':'1px solid #c9d2e0')+';border-radius:8px;padding:9px 16px;font-size:14px;cursor:pointer;background:'+(primary?'#4a90d9':'#f3f6fb')+';color:'+(primary?'#fff':'#222');
+    b.onclick=fn;row.appendChild(b);return b};
+  const selAll=()=>{ta.focus();ta.select();try{ta.setSelectionRange(0,ta.value.length)}catch(e){}};
+  const close=()=>{ov.remove();document.removeEventListener('keydown',esc,true)};
+  const esc=e=>{if(e.key==='Escape'){e.stopPropagation();close()}};
+  mk('全选',false,selAll);
+  mk('再试一次复制',false,async()=>{selAll();const ok=await tryCopy(ta.value,ta);msg.style.color=ok?'#1a7f37':'#b45309';msg.textContent=ok?'已复制 ✓':'仍无法自动复制，请长按选中后手动复制';if(!ok)selAll()});
+  if(navigator.share)mk('分享 / 发送到其它应用',false,async()=>{try{await navigator.share({title:title||'孢子封印',text:ta.value})}catch(e){if(!e||e.name!=='AbortError'){msg.style.color='#b45309';msg.textContent='系统分享不可用，请手动复制'}}});
+  mk('关闭',true,close);
+  box.append(h,p,ta,msg,row);ov.appendChild(box);document.body.appendChild(ov);
+  document.addEventListener('keydown',esc,true);
+  setTimeout(selAll,60);
+}
+const copy=async(t,title)=>{
+  t=String(t==null?'':t);
+  if(await tryCopy(t)){toast('已复制');return true}
+  copyDialog(t,title);return false;
+};
 
 /* ================= 密码学内核 SP-1 ================= */
 async function deriveKeys(pw,kf,salt,iter,pre){
@@ -1196,7 +1247,7 @@ function saveDlg(o){
   $('dlHint').textContent=o.lock?'扩展名固定为 '+o.ext+'（已强制，不会被浏览器改成 .txt）。可修改前面的文件名。':'可修改完整文件名（含扩展名）。';
   $('dlCopy').style.display=o.fp?'':'none';$('dlModal').classList.add('active');setTimeout(()=>{$('dlName').focus();$('dlName').select()},60);
 }
-$('dlCopy').onclick=()=>copy('孢子封印指纹：'+dlCur.fp);
+$('dlCopy').onclick=()=>copy('孢子封印指纹：'+dlCur.fp,'指纹');
 $('dlCancel').onclick=()=>$('dlModal').classList.remove('active');
 $('dlModal').addEventListener('click',e=>{if(e.target.id==='dlModal')$('dlModal').classList.remove('active')});
 $('dlName').addEventListener('keydown',e=>{if(e.key==='Enter')$('dlSave').click()});
@@ -1236,7 +1287,7 @@ $('dlSave').onclick=async()=>{
 $('dlShare').onclick=async()=>{const{name,out}=dlOut;try{await navigator.share({files:[new File([out],name,{type:out.type})],title:name})}catch(e){if(!e||e.name!=='AbortError')toast('系统分享失败，请换其它方式')}};
 $('dlData').onclick=()=>{const{name,out}=dlOut;if(out.size>12*1048576)return toast('文件较大，此方式不可用，请换其它方式');
   const r=new FileReader();r.onload=()=>{const a=document.createElement('a');a.href=r.result;a.download=name;document.body.appendChild(a);a.click();a.remove();toast('已换一种方式再次尝试下载')};r.readAsDataURL(out)};
-$('dlCopyTxt').onclick=async()=>{if(dlOut.out.size>8*1048576)return toast('文本太长，请换其它方式');copy(await dlOut.out.text())};
+$('dlCopyTxt').onclick=async()=>{if(dlOut.out.size>8*1048576)return toast('文本太长，请换其它方式');copy(await dlOut.out.text(),'.sp 文本')};
 $('dlWin').onclick=async()=>{
   const{o,name,out}=dlOut,w=window.open('about:blank','_blank');
   if(!w)return toast('新窗口被拦截：请允许本页弹出窗口，或换其它方式');
@@ -1248,7 +1299,7 @@ $('dlWin').onclick=async()=>{
   const a=d.createElement('a');a.className='b';a.href=url;a.download=name;a.textContent='点此下载 '+name;c.appendChild(a);
   if(isImg){const im=d.createElement('img');im.src=url;c.appendChild(d.createElement('p')).textContent='也可以长按下方图片 → 保存图片';c.appendChild(im)}
   if(isTxt&&text){const b=d.createElement('button');b.textContent='复制全部文本';const t=d.createElement('textarea');t.readOnly=true;t.value=text;
-    b.onclick=async()=>{try{await w.navigator.clipboard.writeText(text);b.textContent='已复制 ✓'}catch(e){t.select();b.textContent='已选中，请手动复制'}};
+    b.onclick=async()=>{try{await w.navigator.clipboard.writeText(text);b.textContent='已复制 ✓';return}catch(e){}t.readOnly=false;t.focus();t.select();try{t.setSelectionRange(0,t.value.length)}catch(e){}let ok=false;try{ok=d.execCommand('copy')}catch(e){}b.textContent=ok?'已复制 ✓':'已全选，请长按 / Ctrl+C 手动复制'};
     c.appendChild(b);c.appendChild(d.createElement('p')).textContent='备选：复制下面的文本，粘贴进任意备忘录，再另存为 '+name+'（或直接在本工具“解密”页的粘贴框里使用）。';c.appendChild(t)}
 };
 /* ================= 表单组件 ================= */
@@ -1260,7 +1311,7 @@ function wirePw(id,gen){
   if(!gen)return;
   $(id).oninput=()=>{const r=checkPasswordStrength($(id).value);$(id+'S').textContent=r.text||'';$(id+'S').className='key-strength strength-'+(r.level||'')};
   $(id+'G').onclick=()=>{$(id).value=generateSecureKey();$(id).type='text';$(id+'E').textContent='隐藏';$(id).oninput()};
-  $(id+'C').onclick=()=>copy($(id).value);
+  $(id+'C').onclick=()=>copy($(id).value,'密码');
 }
 const prog=(id,pct,msg)=>{$(id+'W').style.display='flex';$(id+'P').value=pct;$(id+'L').textContent=Math.round(pct)+'%';if(msg!=null)$(id+'T').textContent=msg};
 const say=(id,html,cls)=>{$(id+'Info').innerHTML=cls?`<span class="${cls}">${html}</span>`:html};
@@ -1426,10 +1477,10 @@ document.addEventListener('click',async e=>{
   const t=e.target,d=t.dataset||{},b=t.closest&&t.closest('[data-act]');
   if(d.i!=null&&d.p){const S=st[d.p];const x=S.items.splice(+d.i,1)[0];if(x)S.gone.add(x.path);draw(d.p)}
   else if(d.clr){const S=st[d.clr];S.items.forEach(x=>S.gone.add(x.path));S.items=[];draw(d.clr)}
-  else if(b){const S=st[b.dataset.p];if(b.dataset.act==='save'&&S.last)saveDlg(S.last);else if(b.dataset.act==='fp'&&S.last)copy('孢子封印指纹：'+S.last.fp);else if(b.dataset.act==='txt'&&S.last){if(S.last.blob.size>5*1048576)toast('文件较大，建议直接保存文件而不是复制文本');else copy(await S.last.blob.text())}}
+  else if(b){const S=st[b.dataset.p];if(b.dataset.act==='save'&&S.last)saveDlg(S.last);else if(b.dataset.act==='fp'&&S.last)copy('孢子封印指纹：'+S.last.fp,'指纹');else if(b.dataset.act==='txt'&&S.last){if(S.last.blob.size>5*1048576)toast('文件较大，建议直接保存文件而不是复制文本');else copy(await S.last.blob.text(),'.sp 文本')}}
   else if(d.pv!=null)pv(+d.pv);else if(d.dl!=null)dlOne(+d.dl);
   else if(t.id==='opZip'){t.disabled=true;try{saveDlg({blob:await zip(res),base:'spore_unsealed',ext:'.zip',lock:true,title:'保存 ZIP 压缩包',meta:res.length+' 个文件 · 保留原目录结构',mime:'application/zip',desc:'ZIP 压缩包'})}catch(x){say('op','打包失败：'+esc(x.message),'err')}t.disabled=false}
-  else if(d.cp){copy('孢子封印指纹：'+d.cp.slice(0,16).replace(/(.{4})/g,'$1 ').trim())}
+  else if(d.cp){copy('孢子封印指纹：'+d.cp.slice(0,16).replace(/(.{4})/g,'$1 ').trim(),'指纹')}
   else if(d.del){ledger.del(d.del);renderLedger()}
   else if(t.id==='ledClr'){if(confirm('清空本机全部封印档案记录？（不影响任何已封印的文件）')){ledger.clear();renderLedger()}}
   else if(t.id==='ledMore'){ledAll=!ledAll;renderLedger()}
